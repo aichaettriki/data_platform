@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+venv/
+
+# Logs
+logs/
+*.log
+
+# PostgreSQL
+pgdata/
+
+# Airflow
+airflow/airflow.db
+airflow/__pycache__/
+
+# MinIO
+minio/.minio.sys/
+minio/data/
+
+# Docker
+docker-compose.override.yml
+*.env
+
+# System
+.DS_Store
+Thumbs.db

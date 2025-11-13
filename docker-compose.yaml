@@ -1,0 +1,159 @@
+version: '3.8'
+
+services:
+
+  # ------------------------
+  # PostgreSQL pour Airflow
+  # ------------------------
+  postgres-airflow:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    ports:
+      - "5435:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    restart: always
+
+  # ------------------------
+  # Airflow Initialization (Windows friendly)
+  # ------------------------
+  airflow-init:
+    build: ./airflow
+    depends_on:
+      - postgres-airflow
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+    command: >
+      bash -c "airflow db init &&
+              airflow users create --username admin --password admin123 --firstname Admin --lastname Admin --email admin@example.org --role Admin || echo 'User already exists'"
+
+
+  # ------------------------
+  # Airflow Webserver
+  # ------------------------
+  airflow-webserver:
+    build: ./airflow
+    depends_on:
+      - postgres-airflow
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+    ports:
+      - "8085:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./minio/raw:/data/raw
+      - ./minio/transformed:/data/transformed
+    command: airflow webserver
+    restart: always
+
+  # ------------------------
+  # Airflow Scheduler
+  # ------------------------
+  airflow-scheduler:
+    build: ./airflow
+    depends_on:
+      - postgres-airflow
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./minio/raw:/data/raw
+      - ./minio/transformed:/data/transformed
+    command: airflow scheduler
+
+    restart: always
+
+  # ------------------------
+  # Airflow Triggerer
+  # ------------------------
+  airflow-triggerer:
+    build: ./airflow
+    depends_on:
+      - postgres-airflow
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./logs:/opt/airflow/logs
+      - ./minio/raw:/data/raw
+      - ./minio/transformed:/data/transformed
+    command: triggerer
+    restart: always
+
+  # ------------------------
+  # MinIO pour stockage
+  # ------------------------
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    ports:
+      - "9000:9000"  # API
+      - "9001:9001"  # Console
+    command: server /data --console-address ":9001"
+    volumes:
+      - ./minio:/data   # raw + transformed
+    restart: always
+
+  # ------------------------
+  # Spark
+  # ------------------------
+  spark:
+    build: ./spark
+    depends_on:
+      - minio
+    environment:
+      SPARK_MASTER_HOST: spark
+      PYSPARK_PYTHON: python3
+    ports:
+      - "7077:7077"    # Master port
+      - "8080:8080"    # Spark UI
+    volumes:
+      - ./spark/jobs:/opt/spark/jobs
+      - ./minio/raw:/data/raw
+      - ./minio/transformed:/data/transformed
+    command: ["/bin/bash", "-c", "/opt/spark/bin/spark-class org.apache.spark.deploy.master.Master"]
+    restart: always
+
+  # ------------------------
+  # Prometheus
+  # ------------------------
+  prometheus:
+    image: prom/prometheus:v2.52.0
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    restart: always
+
+  # ------------------------
+  # Grafana
+  # ------------------------
+  grafana:
+    image: grafana/grafana:10.0.3
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin123
+    restart: always

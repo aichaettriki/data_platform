@@ -1,0 +1,15 @@
+pyspark==3.5.1        # moteur Spark
+pandas                 
+numpy                  
+boto3          
+pyarrow            
+fastparquet           
+requests              
+python-dateutil   
+sqlalchemy             
+scikit-learn          
+matplotlib             
+seaborn                
+openpyxl               
+xlrd                   
+lxml                   

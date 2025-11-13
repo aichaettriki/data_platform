@@ -1,0 +1,31 @@
+# Manipulation de données
+pandas
+numpy
+pyarrow
+fastparquet
+openpyxl
+
+# Communication avec MinIO / S3
+boto3
+s3fs
+minio
+
+# Accès aux APIs
+requests
+httpx
+
+# Transformations de dates
+python-dateutil
+
+# Base de données (Postgres)
+sqlalchemy
+psycopg2-binary
+
+# Logging / utils
+loguru
+
+# ML léger si besoin
+scikit-learn
+
+# Optional: parsing JSON ou XML
+lxml
