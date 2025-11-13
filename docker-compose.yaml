@@ -29,8 +29,9 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
+      - ./airflow/plugins:/opt/airflow/pluginss
     command: >
       bash -c "airflow db init &&
               airflow users create --username admin --password admin123 --firstname Admin --lastname Admin --email admin@example.org --role Admin || echo 'User already exists'"
@@ -50,8 +51,8 @@ services:
     ports:
       - "8085:8080"
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
       - ./minio/raw:/data/raw
       - ./minio/transformed:/data/transformed
     command: airflow webserver
@@ -69,8 +70,8 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
+      - ./airflow/dags:/opt/airflow/dags
+      - ./airflow/logs:/opt/airflow/logs
       - ./minio/raw:/data/raw
       - ./minio/transformed:/data/transformed
     command: airflow scheduler
@@ -117,19 +118,16 @@ services:
   # ------------------------
   spark:
     build: ./spark
-    depends_on:
-      - minio
+    user: root
     environment:
-      SPARK_MASTER_HOST: spark
-      PYSPARK_PYTHON: python3
+      - USER=root
     ports:
-      - "7077:7077"    # Master port
-      - "8080:8080"    # Spark UI
+      - "8080:8080"
     volumes:
-      - ./spark/jobs:/opt/spark/jobs
       - ./minio/raw:/data/raw
       - ./minio/transformed:/data/transformed
     command: ["/bin/bash", "-c", "/opt/spark/bin/spark-class org.apache.spark.deploy.master.Master"]
+
     restart: always
 
   # ------------------------
