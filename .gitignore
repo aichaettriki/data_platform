@@ -18,7 +18,6 @@ airflow/__pycache__/
 
 # MinIO
 minio/.minio.sys/
-minio/data/
 
 # Docker
 docker-compose.override.yml
