@@ -29,7 +29,7 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
     volumes:
-      - ./dags:/opt/airflow/dags
+      - ./airflow/dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
     command: >
       bash -c "airflow db init &&
@@ -50,7 +50,7 @@ services:
     ports:
       - "8085:8080"
     volumes:
-      - ./dags:/opt/airflow/dags
+      - ./airflow/dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./minio/raw:/data/raw
       - ./minio/transformed:/data/transformed
@@ -69,7 +69,7 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
     volumes:
-      - ./dags:/opt/airflow/dags
+      - ./airflow/dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./minio/raw:/data/raw
       - ./minio/transformed:/data/transformed
@@ -89,10 +89,10 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
     volumes:
-      - ./dags:/opt/airflow/dags
+      - ./airflow/dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./minio/raw:/data/raw
-      - ./minio/transformed:/data/transformed
+      - ./minio/transformed:/data/transforme
     command: triggerer
     restart: always
 
