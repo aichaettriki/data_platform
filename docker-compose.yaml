@@ -55,6 +55,8 @@ services:
       - ./airflow/logs:/opt/airflow/logs
       - ./minio/raw:/data/raw
       - ./minio/transformed:/data/transformed
+      - ./data:/opt/airflow/data
+
     command: airflow webserver
     restart: always
 
@@ -74,6 +76,7 @@ services:
       - ./airflow/logs:/opt/airflow/logs
       - ./minio/raw:/data/raw
       - ./minio/transformed:/data/transformed
+      - ./data:/opt/airflow/data
     command: airflow scheduler
 
     restart: always
@@ -94,6 +97,7 @@ services:
       - ./logs:/opt/airflow/logs
       - ./minio/raw:/data/raw
       - ./minio/transformed:/data/transformed
+      - ./data:/opt/airflow/data
     command: triggerer
     restart: always
 
