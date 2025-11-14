@@ -5,6 +5,7 @@ from minio import Minio
 import pandas as pd
 import os
 from io import BytesIO
+from sqlalchemy import create_engine
 
 
 # ---------- CONFIG ----------
@@ -21,7 +22,12 @@ RAW_OBJECT = "clients.csv"
 TRANSFORMED_OBJECT = "clients_cleaned.csv"
 REFINED_OBJECT = "clients_refined.csv"
 
+POSTGRES_USER = "airflow"
+POSTGRES_PWD = "airflow"
+POSTGRES_HOST = "postgres-airflow"
+POSTGRES_DB = "airflow"
 
+TABLE_NAME = "equipe"
 
 # ---------- CLIENT MINIO ----------
 def get_minio_client():
@@ -135,6 +141,31 @@ def refine_data():
 
     print("-------------->>>> REFINED terminé.")
 
+# ---------- TASK 4 : load to postgres ----------
+def load_into_postgres():
+    client = get_minio_client()
+
+    # récupérer fichier refined depuis MinIO
+    response = client.get_object(BUCKET_REFINED, REFINED_OBJECT)
+    df = pd.read_csv(BytesIO(response.read()), sep=";")
+
+    print("\n====== Chargement dans PostgreSQL ======")
+    print(df.head())
+
+    # construire l’URL SQLAlchemy
+    engine = create_engine(
+        f"postgresql://{POSTGRES_USER}:{POSTGRES_PWD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
+    )
+
+    # créer la table si elle n'existe pas (pandas gère)
+    df.to_sql(
+        TABLE_NAME,
+        engine,
+        if_exists="replace",    # ⚠️ remplace la table à chaque run. Peut être "append"
+        index=False
+    )
+
+    print("✅ Données chargées dans PostgreSQL → table 'equipe'.")
 
 
 # ---------- DAG ----------
@@ -161,4 +192,10 @@ with DAG(
         python_callable=refine_data,
     )
 
-    task_upload_raw >> task_transform >> task_refine
+    task_load_postgres = PythonOperator(
+    task_id="load_to_postgres",
+    python_callable=load_into_postgres,
+    )
+
+
+    task_upload_raw >> task_transform >> task_refine >> task_load_postgres
