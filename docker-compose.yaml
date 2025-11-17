@@ -159,3 +159,18 @@ services:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin123
     restart: always
+
+  # ------------------------
+  # Metabase
+  # ------------------------
+  metabase:
+    build:
+      context: ./metabase
+    container_name: metabase
+    restart: always
+    ports:
+      - "3001:3000"
+    env_file:
+      - ./metabase/env/metabase.env
+    depends_on:
+      - postgres-airflow

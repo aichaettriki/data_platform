@@ -24,6 +24,22 @@ data-platform/
 ├─ docker-compose.yml
 └─ README.md
 ```
+# Metabase Module
+
+This folder contains everything required to run Metabase inside the Data Platform.
+
+## Components
+- Dockerfile : custom build of Metabase
+- env/metabase.env : environment variables
+- init/init.sql : initialization script that creates the Metabase PostgreSQL database
+
+## How to access Metabase
+
+Metabase UI will be available on:
+
+http://localhost:3000
+
+Default database connection is configured to PostgreSQL using the environment file.
 
 ## Prérequis
 

@@ -61,14 +61,14 @@ def clean_and_transform():
 
     response = client.get_object(BUCKET_RAW, RAW_OBJECT)
 
-    df = pd.read_csv(BytesIO(response.read()), sep=";")  # ← ICI
+    df = pd.read_csv(BytesIO(response.read()), sep=";")  
 
     print("\n====== Colonnes lues depuis RAW ======")
     print(df.columns.tolist())
 
     df = df.drop_duplicates()
 
-    output = df.to_csv(index=False, sep=";").encode("utf-8")  # ← garder séparateur
+    output = df.to_csv(index=False, sep=";").encode("utf-8") 
 
     if not client.bucket_exists(BUCKET_TRANSFORMED):
         client.make_bucket(BUCKET_TRANSFORMED)
@@ -161,7 +161,7 @@ def load_into_postgres():
     df.to_sql(
         TABLE_NAME,
         engine,
-        if_exists="replace",    # ⚠️ remplace la table à chaque run. Peut être "append"
+        if_exists="replace",   
         index=False
     )
 
