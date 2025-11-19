@@ -138,6 +138,11 @@ services:
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
       --host spark-master --port 7077
+    volumes:
+      - ./minio/raw:/data/raw
+      - ./minio/transformed:/data/transformed
+      - ./minio/refined:/data/refined
+      - ./spark/jobs:/opt/spark/jobs
     restart: always
   spark-worker:
     build: ./spark
@@ -154,6 +159,11 @@ services:
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
       spark://spark-master:7077
+    volumes:
+      - ./minio/raw:/data/raw
+      - ./minio/transformed:/data/transformed
+      - ./minio/refined:/data/refined
+      - ./spark/jobs:/opt/spark/jobs
     restart: always
  
   # ------------------------

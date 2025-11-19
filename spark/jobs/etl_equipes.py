@@ -1,48 +1,48 @@
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, concat_ws, current_timestamp
 
-def main():
-
+def create_spark_session():
     spark = (
         SparkSession.builder
         .appName("ETL Equipe via Spark + MinIO")
         .getOrCreate()
     )
 
-    # --- Config MinIO ---
     hadoopConf = spark._jsc.hadoopConfiguration()
     hadoopConf.set("fs.s3a.access.key", "minio")
     hadoopConf.set("fs.s3a.secret.key", "minio123")
     hadoopConf.set("fs.s3a.endpoint", "http://minio:9000")
     hadoopConf.set("fs.s3a.path.style.access", "true")
+    return spark
 
-    RAW_PATH = "/data/raw/equipe.csv"
-    TRANSFORMED_PATH = "/data/transformed/equipe_transformed.csv"
-    REFINED_PATH = "/data/refined/equipe_refined.csv"
+# 1️⃣ Lire le CSV depuis MinIO
+def read_raw_csv(spark, raw_path):
+    raw_path = "s3a://raw/equipe.csv"
+    df = spark.read.csv(raw_path, header=True, sep=";")
+    df.show(5)
+    return df
 
-
-    # --- READ RAW ---
-    df = spark.read.csv(RAW_PATH, header=True, sep=";")
-
-    # --- CLEAN / TRANSFORM ---
+# 2️⃣ Nettoyage et écriture dans transformed
+def clean_and_write(df, transformed_path):
+    transformed_path = "s3a://transformed/equipe_spark.csv"
     df_clean = df.dropDuplicates()
+    df_clean.coalesce(1).write.csv(transformed_path, mode="overwrite", header=True)
+    return df_clean
 
-    df_clean.write.csv(TRANSFORMED_PATH, mode="overwrite", header=True)
-
-    # --- REFINED ---
+# 3️⃣ Ajout du champ timestamp et écriture dans refined
+def add_timestamp_and_write(df_clean, refined_path):
+    refined_path = refined_path
     df_refined = (
         df_clean
-        .withColumn("nom", col("nom"))
-        .withColumn("prenom", col("prenom"))
         .withColumn("fullname", concat_ws(" ", col("nom"), col("prenom")))
         .withColumn("timestamp", current_timestamp())
     )
+    df_refined.coalesce(1).write.csv(refined_path, mode="overwrite", header=True)
+    return df_refined
 
-    df_refined.write.csv(REFINED_PATH, mode="overwrite", header=True)
-
-    # --- LOAD PostgreSQL ---
-    jdbc_url = "jdbc:postgresql://postgres-airflow:5432/airflow"
-
+# 4️⃣ Enregistrement dans PostgreSQL
+def write_to_postgres(df_refined, jdbc_url):
+    
     df_refined.write \
         .format("jdbc") \
         .option("url", jdbc_url) \
@@ -52,11 +52,27 @@ def main():
         .option("password", "airflow") \
         .mode("overwrite") \
         .save()
-
-    print("ETL Spark Terminé !")
-
-    spark.stop()
-
+import sys
 
 if __name__ == "__main__":
-    main()
+    action = sys.argv[1]   # récupère l’argument envoyé par Airflow
+    spark = create_spark_session()
+
+    if action == "read_raw_csv":
+        df = read_raw_csv(spark, "s3a://raw/equipe.csv")
+
+    elif action == "clean_and_transformed":
+        df = read_raw_csv(spark, "s3a://raw/equipe.csv")
+        clean_and_write(df, "s3a://transformed/equipe_spark.csv")
+
+    elif action == "add_timestamp_refined":
+        df = read_raw_csv(spark, "s3a://raw/equipe.csv")
+        df_clean = clean_and_write(df, "s3a://transformed/equipe_spark.csv")
+        add_timestamp_and_write(df_clean, "s3a://refined/equipe_spark.csv")
+
+    elif action == "write_postgres":
+        df = spark.read.csv("s3a://refined/equipe_spark.csv", header=True)
+        write_to_postgres(df, "jdbc:postgresql://postgres-airflow:5432/airflow")
+
+    else:
+        print("Unknown action:", action)
