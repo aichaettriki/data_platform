@@ -15,21 +15,21 @@ def create_spark_session():
     hadoopConf.set("fs.s3a.path.style.access", "true")
     return spark
 
-# 1️⃣ Lire le CSV depuis MinIO
+
 def read_raw_csv(spark, raw_path):
     raw_path = "s3a://raw/equipe.csv"
     df = spark.read.csv(raw_path, header=True, sep=";")
     df.show(5)
     return df
 
-# 2️⃣ Nettoyage et écriture dans transformed
+
 def clean_and_write(df, transformed_path):
     transformed_path = "s3a://transformed/equipe_spark.csv"
     df_clean = df.dropDuplicates()
     df_clean.coalesce(1).write.csv(transformed_path, mode="overwrite", header=True)
     return df_clean
 
-# 3️⃣ Ajout du champ timestamp et écriture dans refined
+
 def add_timestamp_and_write(df_clean, refined_path):
     refined_path = refined_path
     df_refined = (
@@ -40,7 +40,7 @@ def add_timestamp_and_write(df_clean, refined_path):
     df_refined.coalesce(1).write.csv(refined_path, mode="overwrite", header=True)
     return df_refined
 
-# 4️⃣ Enregistrement dans PostgreSQL
+
 def write_to_postgres(df_refined, jdbc_url):
     
     df_refined.write \
@@ -55,7 +55,7 @@ def write_to_postgres(df_refined, jdbc_url):
 import sys
 
 if __name__ == "__main__":
-    action = sys.argv[1]   # récupère l’argument envoyé par Airflow
+    action = sys.argv[1]  
     spark = create_spark_session()
 
     if action == "read_raw_csv":

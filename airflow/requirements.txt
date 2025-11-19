@@ -32,3 +32,11 @@ lxml
 
 pyspark
 apache-airflow-providers-apache-spark
+
+# Optional: parsing JSON
+# (lxml supprimé car dépendances système manquantes)
+ujson
+
+# Prometheus
+prometheus-client
+prometheus-api-client

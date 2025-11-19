@@ -9,7 +9,7 @@ with DAG(
     catchup=False,
 ) as dag:
 
-    # 1️⃣ Lire le CSV
+    # 1️⃣ read csv
     task_read_raw = SparkSubmitOperator(
         task_id="read_raw_csv",
         application="/opt/spark/jobs/etl_equipes.py",
@@ -19,7 +19,7 @@ with DAG(
         application_args=["read_raw_csv"]
     )
 
-    # 2️⃣ Nettoyage et transformed
+    # 2️⃣ clean and transform
     task_clean_transformed = SparkSubmitOperator(
         task_id="clean_and_transformed",
         application="/opt/spark/jobs/etl_equipes.py",
@@ -30,7 +30,7 @@ with DAG(
     )
     print("----------------> TRANSFORMED OK.")
 
-    # 3️⃣ Ajout timestamp et refined
+    # 3️⃣ add timestamp refined
     task_add_timestamp = SparkSubmitOperator(
         task_id="add_timestamp_refined",
         application="/opt/spark/jobs/etl_equipes.py",
@@ -40,7 +40,7 @@ with DAG(
         application_args=["add_timestamp_refined"]
     )
     print("----------------> REFINED OK.")
-    # 4️⃣ Écriture dans PostgreSQL
+    # 4️⃣ save to postgresql
     task_write_postgres = SparkSubmitOperator(
         task_id="write_postgres",
         application="/opt/spark/jobs/etl_equipes.py",
@@ -50,5 +50,4 @@ with DAG(
         application_args=["write_postgres"]
     )
 
-    # Ordre des tâches
     task_read_raw >> task_clean_transformed >> task_add_timestamp >> task_write_postgres

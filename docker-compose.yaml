@@ -18,6 +18,21 @@ services:
     restart: always
 
   # ------------------------
+  # PostgreSQL Exporter pour Prometheus
+  # ------------------------
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    environment:
+      # Connexion au PostgreSQL Airflow
+      DATA_SOURCE_NAME: "postgresql://airflow:airflow@postgres-airflow:5432/airflow?sslmode=disable"
+    ports:
+      - "9187:9187"
+    depends_on:
+      - postgres-airflow
+    restart: always
+
+
+  # ------------------------
   # Airflow Initialization (Windows friendly)
   # ------------------------
   airflow-init:
@@ -49,6 +64,9 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+      AIRFLOW__METRICS__PROMETHEUS_USE_EXPORTER: 'True'
+      AIRFLOW__METRICS__METRICS_BACKEND: prometheus
+      AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
     ports:
       - "8085:8080"
     volumes:
@@ -73,6 +91,9 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+      AIRFLOW__METRICS__PROMETHEUS_USE_EXPORTER: 'True'
+      AIRFLOW__METRICS__METRICS_BACKEND: prometheus
+      AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -95,6 +116,7 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+      
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -105,6 +127,19 @@ services:
     command: triggerer
     restart: always
 
+  airflow-exporter:
+      build: ./airflow/airflow-exporter
+      environment:
+        EXPORTER_PORT: 9112
+        AIRFLOW_WEBSERVER: "http://airflow-webserver:8080/api/v1"
+        AIRFLOW_USER: "admin"
+        AIRFLOW_PASSWORD: "admin123"
+      ports:
+        - "9112:9112"
+      depends_on:
+        - airflow-webserver
+      restart: always
+
   # ------------------------
   # MinIO pour stockage
   # ------------------------
@@ -113,6 +148,7 @@ services:
     environment:
       MINIO_ROOT_USER: minio
       MINIO_ROOT_PASSWORD: minio123
+      MINIO_PROMETHEUS_AUTH_TYPE: public
     ports:
       - "9000:9000"  # API
       - "9001:9001"  # Console
@@ -185,8 +221,10 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+    - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
     environment:
       GF_SECURITY_ADMIN_USER: admin
       GF_SECURITY_ADMIN_PASSWORD: admin123
