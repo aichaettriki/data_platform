@@ -19,7 +19,10 @@ data-platform/
 ├─ monitoring/
 │    ├─ prometheus/
 │    └─ grafana/
-│       
+├─ metabase/
+│      ├─ env/
+│      │   └─ metabase.env
+│      └─ Dockerfile
 ├─ logs/
 ├─ docker-compose.yml
 └─ README.md

@@ -29,3 +29,6 @@ scikit-learn
 
 # Optional: parsing JSON ou XML
 lxml
+
+pyspark
+apache-airflow-providers-apache-spark
