@@ -18,8 +18,9 @@ def create_spark_session():
 
 def read_raw_csv(spark, raw_path):
     raw_path = "s3a://raw/equipe.csv"
-    df = spark.read.csv(raw_path, header=True, sep=";")
+    df = spark.read.csv(raw_path, header=True, sep=";", inferSchema=True)
     df.show(5)
+    df.printSchema()
     return df
 
 
@@ -71,7 +72,7 @@ if __name__ == "__main__":
         add_timestamp_and_write(df_clean, "s3a://refined/equipe_spark.csv")
 
     elif action == "write_postgres":
-        df = spark.read.csv("s3a://refined/equipe_spark.csv", header=True)
+        df = spark.read.csv("s3a://refined/equipe_spark.csv", header=True, inferSchema=True)
         write_to_postgres(df, "jdbc:postgresql://postgres-airflow:5432/airflow")
 
     else:

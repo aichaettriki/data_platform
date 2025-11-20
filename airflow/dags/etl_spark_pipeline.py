@@ -46,7 +46,7 @@ with DAG(
         application="/opt/spark/jobs/etl_equipes.py",
         name="write_postgres",
         conn_id="spark_default",
-        packages="org.postgresql:postgresql:42.7.3",
+        packages="org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.3",
         application_args=["write_postgres"]
     )
 
