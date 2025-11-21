@@ -1,3 +1,286 @@
+# # version: '3.8'
+
+# services:
+
+#   # ------------------------
+#   # PostgreSQL pour Airflow
+#   # ------------------------
+#   postgres-airflow:
+#     image: postgres:13
+#     environment:
+#       POSTGRES_USER: airflow
+#       POSTGRES_PASSWORD: airflow
+#       POSTGRES_DB: airflow
+#     ports:
+#       - "5435:5432"
+#     volumes:
+#       - ./pgdata:/var/lib/postgresql/data
+#     restart: always
+
+#   # ------------------------
+#   # PostgreSQL Exporter pour Prometheus
+#   # ------------------------
+#   postgres-exporter:
+#     image: prometheuscommunity/postgres-exporter:latest
+#     environment:
+#       # Connexion au PostgreSQL Airflow
+#       DATA_SOURCE_NAME: "postgresql://airflow:airflow@postgres-airflow:5432/airflow?sslmode=disable"
+#     ports:
+#       - "9187:9187"
+#     depends_on:
+#       - postgres-airflow
+#     restart: always
+
+
+#   # ------------------------
+#   # Airflow Initialization (Windows friendly)
+#   # ------------------------
+#   airflow-init:
+#     build: ./airflow
+#     depends_on:
+#       - postgres-airflow
+#     environment:
+#       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+#       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+#       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+#     volumes:
+#       - ./airflow/dags:/opt/airflow/dags
+#       - ./airflow/logs:/opt/airflow/logs
+#       - ./airflow/plugins:/opt/airflow/plugins
+#       - ./spark/jobs:/opt/spark/jobs  
+#     command: >
+#       bash -c "airflow db init &&
+#               airflow users create --username admin --password admin123 --firstname Admin --lastname Admin --email admin@example.org --role Admin || echo 'User already exists'"
+
+
+#   # ------------------------
+#   # Airflow Webserver
+#   # ------------------------
+#   airflow-webserver:
+#     build: ./airflow
+#     depends_on:
+#       - postgres-airflow
+#     environment:
+#       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+#       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+#       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+#       AIRFLOW__METRICS__PROMETHEUS_USE_EXPORTER: 'True'
+#       AIRFLOW__METRICS__METRICS_BACKEND: prometheus
+#       AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
+      
+
+#     ports:
+#       - "8085:8080"
+#     volumes:
+#       - ./airflow/dags:/opt/airflow/dags
+#       - ./airflow/logs:/opt/airflow/logs
+#       - ./minio/raw:/data/raw
+#       - ./minio/transformed:/data/transformed
+#       - ./data:/opt/airflow/data
+#       - ./spark/jobs:/opt/spark/jobs  
+
+#     command: airflow webserver
+#     restart: always
+
+#   # ------------------------
+#   # Airflow Scheduler
+#   # ------------------------
+#   airflow-scheduler:
+#     build: ./airflow
+#     depends_on:
+#       - postgres-airflow
+#     environment:
+#       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+#       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+#       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+#       AIRFLOW__METRICS__PROMETHEUS_USE_EXPORTER: 'True'
+#       AIRFLOW__METRICS__METRICS_BACKEND: prometheus
+#       AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
+#     volumes:
+#       - ./airflow/dags:/opt/airflow/dags
+#       - ./airflow/logs:/opt/airflow/logs
+#       - ./minio/raw:/data/raw
+#       - ./minio/transformed:/data/transformed
+#       - ./data:/opt/airflow/data
+#       - ./spark/jobs:/opt/spark/jobs  
+#     command: airflow scheduler
+
+#     restart: always
+
+#   # ------------------------
+#   # Airflow Triggerer
+#   # ------------------------
+#   airflow-triggerer:
+#     build: ./airflow
+#     depends_on:
+#       - postgres-airflow
+#     environment:
+#       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
+#       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+#       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+      
+#     volumes:
+#       - ./airflow/dags:/opt/airflow/dags
+#       - ./airflow/logs:/opt/airflow/logs
+#       - ./minio/raw:/data/raw
+#       - ./minio/transformed:/data/transformed
+#       - ./data:/opt/airflow/data
+#       - ./spark/jobs:/opt/spark/jobs  
+#     command: triggerer
+#     restart: always
+
+#   airflow-exporter:
+#       build: ./airflow/airflow-exporter
+#       environment:
+#         EXPORTER_PORT: 9112
+#         AIRFLOW_WEBSERVER: "http://airflow-webserver:8080/api/v1"
+#         AIRFLOW_USER: "admin"
+#         AIRFLOW_PASSWORD: "admin123"
+#       ports:
+#         - "9112:9112"
+#       depends_on:
+#         - airflow-webserver
+#       restart: always
+
+#   # ------------------------
+#   # MinIO pour stockage
+#   # ------------------------
+#   minio:
+#     image: minio/minio:latest
+#     environment:
+#       MINIO_ROOT_USER: minio
+#       MINIO_ROOT_PASSWORD: minio123
+#       MINIO_PROMETHEUS_AUTH_TYPE: public
+#       MINIO_BROWSER: "on"
+#       MINIO_API_REQUESTS_MAX: "16000"
+#       MINIO_FS_OSYNC: "false"
+#       MINIO_DISK_HEALTH_CHECK_INTERVAL: "2m"
+#       MINIO_DISK_HEALTH_THRESHOLD: "5m"
+#     ports:
+#       - "9000:9000"  # API
+#       - "9001:9001"  # Console
+#     command: server /data --console-address ":9001"
+#     volumes:
+#       - ./minio:/data   # raw + transformed
+#     restart: always
+                                                
+#   # ------------------------
+#   # Spark
+#   # ------------------------
+#   spark-master:
+#     build: ./spark
+#     container_name: spark-master
+#     user: root
+#     environment:
+#       - USER=root
+#       - SPARK_USER=root
+#       - HADOOP_USER_NAME=root
+#     ports:
+#       - "8080:8080"   # Spark UI
+#       - "7077:7077"   # Spark cluster port
+#     command: >
+#       /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+#       --host spark-master --port 7077
+#     volumes:
+#       - ./minio/raw:/data/raw
+#       - ./minio/transformed:/data/transformed
+#       - ./minio/refined:/data/refined
+#       - ./spark/jobs:/opt/spark/jobs
+#     restart: always
+#   spark-worker:
+#     build: ./spark
+#     container_name: spark-worker
+#     depends_on:
+#       - spark-master
+#     environment:
+#       - USER=root
+#       - SPARK_USER=root
+#       - HADOOP_USER_NAME=root
+#       - SPARK_MASTER_URL=spark://spark-master:7077
+#     ports:
+#       - "8081:8081"
+#     command: >
+#       /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+#       spark://spark-master:7077
+#     volumes:
+#       - ./minio/raw:/data/raw
+#       - ./minio/transformed:/data/transformed
+#       - ./minio/refined:/data/refined
+#       - ./spark/jobs:/opt/spark/jobs
+#     restart: always
+ 
+#   # ------------------------
+#   # Prometheus
+#   # ------------------------
+#   prometheus:
+#     image: prom/prometheus:v2.52.0
+#     ports:
+#       - "9090:9090"
+#     volumes:
+#       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+#     restart: always
+
+#   # ------------------------
+#   # Grafana
+#   # ------------------------
+#   grafana:
+#     image: grafana/grafana:10.0.3
+#     ports:
+#       - "3000:3000"
+#     volumes:
+#     - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+#     - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+#     depends_on:
+#       - prometheus
+#     environment:
+#       GF_SECURITY_ADMIN_USER: admin
+#       GF_SECURITY_ADMIN_PASSWORD: admin123
+#     restart: always
+
+#   # ------------------------
+#   # Metabase
+#   # ------------------------
+#   # metabase:
+#   #   build:
+#   #     context: ./metabase
+#   #   container_name: metabase
+#   #   restart: always
+#   #   ports:
+#   #     - "3001:3000"
+#   #   env_file:
+#   #     - ./metabase/env/metabase.env
+#   #   depends_on:
+#   #     - postgres-airflow
+
+
+#   metabase:
+#     image: metabase/metabase:latest
+#     container_name: metabase
+#     restart: always
+#     ports:
+#       - "3001:3000"
+#     env_file:
+#       - ./metabase/env/metabase.env
+#     depends_on:
+#       - postgres-airflow
+#     # ------------------------
+#   # pgAdmin for PostgreSQL
+#   # ------------------------
+#   pgadmin:
+#     image: dpage/pgadmin4:latest
+#     container_name: pgadmin
+#     environment:
+#       PGADMIN_DEFAULT_EMAIL: admin@admin.com
+#       PGADMIN_DEFAULT_PASSWORD: admin123
+#     ports:
+#       - "5050:80"   # Access pgAdmin at http://localhost:5050
+#     volumes:
+#       - ./pgadmin/servers.json:/pgadmin4/servers.json  # Auto-configured servers
+#     depends_on:
+#       - postgres-airflow
+#     restart: always
+
+
 version: '3.8'
 
 services:
@@ -8,13 +291,13 @@ services:
   postgres-airflow:
     image: postgres:13
     environment:
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
-      POSTGRES_DB: airflow
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5435:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - ${PGDATA_PATH}:/var/lib/postgresql/data
     restart: always
 
   # ------------------------
@@ -23,35 +306,32 @@ services:
   postgres-exporter:
     image: prometheuscommunity/postgres-exporter:latest
     environment:
-      # Connexion au PostgreSQL Airflow
-      DATA_SOURCE_NAME: "postgresql://airflow:airflow@postgres-airflow:5432/airflow?sslmode=disable"
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}?sslmode=disable"
     ports:
-      - "9187:9187"
+      - "${POSTGRES_EXPORTER_PORT}:9187"
     depends_on:
       - postgres-airflow
     restart: always
 
-
   # ------------------------
-  # Airflow Initialization (Windows friendly)
+  # Airflow Initialization
   # ------------------------
   airflow-init:
     build: ./airflow
     depends_on:
       - postgres-airflow
     environment:
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
+      AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
     volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - ./airflow/logs:/opt/airflow/logs
-      - ./airflow/plugins:/opt/airflow/plugins
-      - ./spark/jobs:/opt/spark/jobs  
+      - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
+      - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
+      - ${AIRFLOW_PLUGINS_PATH}:/opt/airflow/plugins
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     command: >
       bash -c "airflow db init &&
-              airflow users create --username admin --password admin123 --firstname Admin --lastname Admin --email admin@example.org --role Admin || echo 'User already exists'"
-
+               airflow users create --username ${AIRFLOW_ADMIN_USER} --password ${AIRFLOW_ADMIN_PASSWORD} --firstname Admin --lastname Admin --email admin@example.org --role Admin || echo 'User already exists'"
 
   # ------------------------
   # Airflow Webserver
@@ -61,22 +341,21 @@ services:
     depends_on:
       - postgres-airflow
     environment:
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
+      AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
       AIRFLOW__METRICS__PROMETHEUS_USE_EXPORTER: 'True'
       AIRFLOW__METRICS__METRICS_BACKEND: prometheus
       AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
     ports:
-      - "8085:8080"
+      - "${AIRFLOW_WEBSERVER_PORT}:8080"
     volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - ./airflow/logs:/opt/airflow/logs
-      - ./minio/raw:/data/raw
-      - ./minio/transformed:/data/transformed
+      - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
+      - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
+      - ${MINIO_RAW_PATH}:/data/raw
+      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
       - ./data:/opt/airflow/data
-      - ./spark/jobs:/opt/spark/jobs  
-
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     command: airflow webserver
     restart: always
 
@@ -88,21 +367,20 @@ services:
     depends_on:
       - postgres-airflow
     environment:
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
+      AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
       AIRFLOW__METRICS__PROMETHEUS_USE_EXPORTER: 'True'
       AIRFLOW__METRICS__METRICS_BACKEND: prometheus
       AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
     volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - ./airflow/logs:/opt/airflow/logs
-      - ./minio/raw:/data/raw
-      - ./minio/transformed:/data/transformed
+      - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
+      - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
+      - ${MINIO_RAW_PATH}:/data/raw
+      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
       - ./data:/opt/airflow/data
-      - ./spark/jobs:/opt/spark/jobs  
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     command: airflow scheduler
-
     restart: always
 
   # ------------------------
@@ -113,50 +391,58 @@ services:
     depends_on:
       - postgres-airflow
     environment:
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
-      
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
+      AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
     volumes:
-      - ./dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./minio/raw:/data/raw
-      - ./minio/transformed:/data/transformed
+      - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
+      - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
+      - ${MINIO_RAW_PATH}:/data/raw
+      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
       - ./data:/opt/airflow/data
-      - ./spark/jobs:/opt/spark/jobs  
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     command: triggerer
     restart: always
 
+  # ------------------------
+  # Airflow Exporter
+  # ------------------------
   airflow-exporter:
-      build: ./airflow/airflow-exporter
-      environment:
-        EXPORTER_PORT: 9112
-        AIRFLOW_WEBSERVER: "http://airflow-webserver:8080/api/v1"
-        AIRFLOW_USER: "admin"
-        AIRFLOW_PASSWORD: "admin123"
-      ports:
-        - "9112:9112"
-      depends_on:
-        - airflow-webserver
-      restart: always
+    build: ./airflow/airflow-exporter
+    environment:
+      EXPORTER_PORT: 9112
+      AIRFLOW_WEBSERVER: "http://airflow-webserver:8080/api/v1"
+      AIRFLOW_USER: "${AIRFLOW_ADMIN_USER}"
+      AIRFLOW_PASSWORD: "${AIRFLOW_ADMIN_PASSWORD}"
+    ports:
+      - "9112:9112"
+    depends_on:
+      - airflow-webserver
+    restart: always
 
   # ------------------------
-  # MinIO pour stockage
+  # MinIO
   # ------------------------
   minio:
     image: minio/minio:latest
     environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio123
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_PROMETHEUS_AUTH_TYPE: public
+      MINIO_BROWSER: "on"
+      MINIO_API_REQUESTS_MAX: "16000"
+      MINIO_FS_OSYNC: "false"
+      MINIO_DISK_HEALTH_CHECK_INTERVAL: "2m"
+      MINIO_DISK_HEALTH_THRESHOLD: "5m"
     ports:
-      - "9000:9000"  # API
-      - "9001:9001"  # Console
-    command: server /data --console-address ":9001"
+      - "${MINIO_API_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+    command: server /minio-data --console-address ":${MINIO_CONSOLE_PORT}"
     volumes:
-      - ./minio:/data   # raw + transformed
+      - ./minio:/minio-data
     restart: always
-                                                
+
+
   # ------------------------
   # Spark
   # ------------------------
@@ -165,52 +451,53 @@ services:
     container_name: spark-master
     user: root
     environment:
-      - USER=root
-      - SPARK_USER=root
-      - HADOOP_USER_NAME=root
+      USER: root
+      SPARK_USER: root
+      HADOOP_USER_NAME: root
     ports:
-      - "8080:8080"   # Spark UI
-      - "7077:7077"   # Spark cluster port
+      - "${SPARK_MASTER_UI_PORT}:8080"
+      - "${SPARK_MASTER_PORT}:7077"
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
       --host spark-master --port 7077
     volumes:
-      - ./minio/raw:/data/raw
-      - ./minio/transformed:/data/transformed
-      - ./minio/refined:/data/refined
-      - ./spark/jobs:/opt/spark/jobs
+      - ${MINIO_RAW_PATH}:/data/raw
+      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
+      - ${MINIO_REFINED_PATH}:/data/refined
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     restart: always
+
   spark-worker:
     build: ./spark
     container_name: spark-worker
     depends_on:
       - spark-master
     environment:
-      - USER=root
-      - SPARK_USER=root
-      - HADOOP_USER_NAME=root
-      - SPARK_MASTER_URL=spark://spark-master:7077
+      USER: root
+      SPARK_USER: root
+      HADOOP_USER_NAME: root
+      SPARK_MASTER_URL: spark://spark-master:7077
     ports:
-      - "8081:8081"
+      - "${SPARK_WORKER_UI_PORT}:8081"
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
       spark://spark-master:7077
     volumes:
-      - ./minio/raw:/data/raw
-      - ./minio/transformed:/data/transformed
-      - ./minio/refined:/data/refined
-      - ./spark/jobs:/opt/spark/jobs
+      - ${MINIO_RAW_PATH}:/data/raw
+      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
+      - ${MINIO_REFINED_PATH}:/data/refined
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     restart: always
- 
+
   # ------------------------
   # Prometheus
   # ------------------------
   prometheus:
     image: prom/prometheus:v2.52.0
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT}:9090"
     volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ${PROMETHEUS_CONFIG_PATH}:/etc/prometheus/prometheus.yml
     restart: always
 
   # ------------------------
@@ -219,28 +506,44 @@ services:
   grafana:
     image: grafana/grafana:10.0.3
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT}:3000"
     volumes:
-    - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
-    - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ${GRAFANA_PROVISIONING_PATH}:/etc/grafana/provisioning
+      - ${GRAFANA_DASHBOARDS_PATH}:/var/lib/grafana/dashboards
     depends_on:
       - prometheus
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     restart: always
 
   # ------------------------
   # Metabase
   # ------------------------
   metabase:
-    build:
-      context: ./metabase
+    image: metabase/metabase:latest
     container_name: metabase
     restart: always
     ports:
-      - "3001:3000"
+      - "${METABASE_PORT}:3000"
     env_file:
-      - ./metabase/env/metabase.env
+      - ${METABASE_ENV_FILE}
     depends_on:
       - postgres-airflow
+
+  # ------------------------
+  # pgAdmin
+  # ------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "${PGADMIN_PORT}:80"
+    volumes:
+      - ${PGADMIN_SERVERS_PATH}:/pgadmin4/servers.json
+    depends_on:
+      - postgres-airflow
+    restart: always

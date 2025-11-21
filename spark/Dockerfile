@@ -18,3 +18,33 @@ ADD https://jdbc.postgresql.org/download/postgresql-42.7.3.jar /opt/spark/jars/
 # USER 1001
 WORKDIR /opt/spark
 
+
+
+# FROM apache/spark:3.5.1
+
+# USER root
+
+# # Install python and ps (fixes "ps: command not found")
+# RUN apt-get update && apt-get install -y python3 python3-pip procps
+
+# # Fix permissions
+# RUN mkdir -p /opt/spark/work && chown -R 1001:1001 /opt/spark
+
+# COPY requirements.txt /tmp/requirements.txt
+# RUN pip3 install --no-cache-dir -r /tmp/requirements.txt
+
+# COPY jobs/ /opt/spark/jobs/
+# COPY notebooks/ /opt/spark/notebooks/
+
+# # -------------------------------
+# # Add Hadoop + AWS S3 JARS
+# # (avoid downloading at runtime)
+# # -------------------------------
+# ADD https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar /opt/spark/jars/
+# ADD https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar /opt/spark/jars/
+# ADD https://repo1.maven.org/maven2/org/wildfly/openssl/wildfly-openssl/1.0.7.Final/wildfly-openssl-1.0.7.Final.jar /opt/spark/jars/
+
+# # PostgreSQL driver
+# ADD https://jdbc.postgresql.org/download/postgresql-42.7.3.jar /opt/spark/jars/
+
+# WORKDIR /opt/spark
