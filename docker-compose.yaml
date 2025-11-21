@@ -15,6 +15,7 @@ services:
       - "5435:5432"
     volumes:
       - ./pgdata:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d   # <-- to initialize metabase intern bd
     restart: always
 
   # ------------------------
@@ -66,7 +67,8 @@ services:
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
       AIRFLOW__METRICS__PROMETHEUS_USE_EXPORTER: 'True'
       AIRFLOW__METRICS__METRICS_BACKEND: prometheus
-      AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
+      AIRFLOW__WEBSERVER__SESSION_BACKEND: securecookie
+      # AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
     ports:
       - "8085:8080"
     volumes:
@@ -93,7 +95,8 @@ services:
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
       AIRFLOW__METRICS__PROMETHEUS_USE_EXPORTER: 'True'
       AIRFLOW__METRICS__METRICS_BACKEND: prometheus
-      AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
+      AIRFLOW__WEBSERVER__SESSION_BACKEND: securecookie
+      # AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - ./airflow/logs:/opt/airflow/logs
@@ -116,7 +119,8 @@ services:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
       AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
       AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
-      
+      AIRFLOW__WEBSERVER__SESSION_BACKEND: securecookie
+
     volumes:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
@@ -127,6 +131,9 @@ services:
     command: triggerer
     restart: always
 
+  # ------------------------
+  # Airflow Exporter
+  # ------------------------
   airflow-exporter:
       build: ./airflow/airflow-exporter
       environment:
@@ -244,3 +251,23 @@ services:
       - ./metabase/env/metabase.env
     depends_on:
       - postgres-airflow
+  # ------------------------
+  # pgAdmin pour PostgreSQL
+  # ------------------------
+  pgadmin:
+    image: dpage/pgadmin4:7
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - ./pgadmin/servers.json:/pgadmin4/servers.json
+      - ./pgadmin/pgpass:/pgpass
+    depends_on:
+      - postgres-airflow
+    restart: always
+
+
