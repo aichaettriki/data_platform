@@ -14,7 +14,7 @@ with DAG(
         task_id="read_raw_csv",
         application="/opt/spark/jobs/etl_equipes.py",
         name="read_raw_csv",
-        conn_id="spark_default",
+        conn_id="spark_standalone",
         packages="org.apache.hadoop:hadoop-aws:3.3.4",
         application_args=["read_raw_csv"]
     )
@@ -24,7 +24,7 @@ with DAG(
         task_id="clean_and_transformed",
         application="/opt/spark/jobs/etl_equipes.py",
         name="clean_and_transformed",
-        conn_id="spark_default",
+        conn_id="spark_standalone",
         packages="org.apache.hadoop:hadoop-aws:3.3.4",
         application_args=["clean_and_transformed"]
     )
@@ -35,7 +35,7 @@ with DAG(
         task_id="add_timestamp_refined",
         application="/opt/spark/jobs/etl_equipes.py",
         name="add_timestamp_refined",
-        conn_id="spark_default",
+        conn_id="spark_standalone",
         packages="org.apache.hadoop:hadoop-aws:3.3.4",
         application_args=["add_timestamp_refined"]
     )
@@ -45,7 +45,7 @@ with DAG(
         task_id="write_postgres",
         application="/opt/spark/jobs/etl_equipes.py",
         name="write_postgres",
-        conn_id="spark_default",
+        conn_id="spark_standalone",
         packages="org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.7.3",
         application_args=["write_postgres"]
     )
