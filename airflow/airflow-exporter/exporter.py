@@ -3,11 +3,30 @@ from prometheus_client import (
     Gauge, Summary, generate_latest, CONTENT_TYPE_LATEST
 )
 import requests
-
+import os
 app = Flask(__name__)
+
 
 AIRFLOW_WEBSERVER = "http://airflow-webserver:8080/api/v1"
 AIRFLOW_AUTH = ("admin", "admin123")
+
+
+# Pour les logs scheduler
+LOGS_PATH = "/app/airflow/logs/scheduler"  # adapter selon ton volume Docker
+
+# Nombre de lignes dans le log par DAG et date
+dag_log_lines_gauge = Gauge(
+    "airflow_scheduler_log_lines",
+    "Nombre de lignes dans le log du scheduler par DAG et date",
+    ["date", "dag_id"]
+)
+
+# Nombre d'erreurs dans le log par DAG et date
+dag_log_errors_gauge = Gauge(
+    "airflow_scheduler_log_errors",
+    "Nombre d'erreurs dans le log du scheduler par DAG et date",
+    ["date", "dag_id"]
+)
 
 dag_run_status_gauge = Gauge(
     'airflow_dag_run_status',
@@ -26,6 +45,35 @@ task_status_gauge = Gauge(
     'Number of tasks per DAG run and state',
     ['dag_id', 'task_id', 'state']
 )
+
+def parse_scheduler_logs():
+    dag_log_lines_gauge.clear()
+    dag_log_errors_gauge.clear()
+
+    if not os.path.exists(LOGS_PATH):
+        print(f"Le dossier des logs n'existe pas: {LOGS_PATH}")
+        return
+
+    for date_folder in os.listdir(LOGS_PATH):
+        date_path = os.path.join(LOGS_PATH, date_folder)
+        if not os.path.isdir(date_path):
+            continue
+
+        for log_file in os.listdir(date_path):
+            if not log_file.endswith(".log"):
+                continue
+
+            dag_id = log_file.replace(".log", "")
+            file_path = os.path.join(date_path, log_file)
+
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                    dag_log_lines_gauge.labels(date=date_folder, dag_id=dag_id).set(len(lines))
+                    errors = sum(1 for line in lines if "ERROR" in line or "CRITICAL" in line)
+                    dag_log_errors_gauge.labels(date=date_folder, dag_id=dag_id).set(errors)
+            except Exception as e:
+                print(f"Erreur lecture log {file_path}: {e}")
 
 
 @app.route("/airflow_metrics")
@@ -75,7 +123,7 @@ def get_metrics():
             # Mettre à jour le gauge DAG run
             for state, count in counts.items():
                 dag_run_status_gauge.labels(dag_id=dag_id, state=state).set(count)
-
+        parse_scheduler_logs()
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
     except requests.RequestException as e:

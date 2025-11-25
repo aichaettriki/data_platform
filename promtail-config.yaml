@@ -15,8 +15,11 @@ scrape_configs:
           - localhost
         labels:
           job: airflow
-          __path__: /var/log/airflow/**/*.log
+          __path__: /var/log/airflow/scheduler/*/*.log
     pipeline_stages:
       - regex:
-          expression: '.*/(?P<dag_id>[^/]+)\.py\.log$'
- 
+          expression: ".*/scheduler/(?P<logdate>[^/]+)/(?P<dagfile>.*)$"
+          source: filename
+      - labels:
+          logdate: logdate
+          dagfile: dagfile  

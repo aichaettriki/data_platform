@@ -145,6 +145,8 @@ services:
         AIRFLOW_PASSWORD: "${AIRFLOW_ADMIN_PASSWORD}"
       ports:
         - "9112:9112"
+      volumes:
+        -./airflow/logs/scheduler:/app/airflow/logs/scheduler:ro
       depends_on:
         - airflow-webserver
       restart: always

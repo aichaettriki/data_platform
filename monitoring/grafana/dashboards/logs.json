@@ -3,7 +3,10 @@
     "list": [
       {
         "builtIn": 1,
-        "datasource": "Loki",
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
         "enable": true,
         "hide": true,
         "iconColor": "rgba(0, 211, 255, 1)",
@@ -12,51 +15,88 @@
       }
     ]
   },
-  "id": null,
-  "uid": "airflow-logs-dashboard",
-  "title": "Airflow DAG Logs",
-  "tags": ["airflow", "logs", "loki"],
-  "timezone": "browser",
-  "schemaVersion": 36,
-  "version": 1,
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "datasource": {
+        "type": "loki",
+        "uid": "P8E80F9AEF21F6940"
+      },
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "dedupStrategy": "none",
+        "enableLogDetails": true,
+        "prettifyLogMessage": false,
+        "showCommonLabels": false,
+        "showLabels": true,
+        "showTime": true,
+        "sortOrder": "Descending",
+        "wrapLogMessage": true
+      },
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "{job=\"airflow\", logdate=\"${logdate}\", dagfile=\"${dagfile}\"}",
+          "queryType": "range",
+          "refId": "A"
+        }
+      ],
+      "title": "Airflow DAG Logs – ${logdate} – ${dagfile}",
+      "type": "logs"
+    }
+  ],
   "refresh": "10s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["airflow", "logs"],
   "templating": {
     "list": [
       {
-        "name": "dag",
+        "name": "logdate",
+        "label": "Date",
         "type": "query",
-        "label": "Select DAG",
-        "query": "label_values({job=\"airflow\"}, dag_id)",
-        "multi": true,
+        "datasource": {
+          "type": "loki",
+          "uid": "P8E80F9AEF21F6940"
+        },
+        "query": "label_values({job=\"airflow\"}, logdate)",
         "includeAll": false,
-        "allValue": ".*",
-        "current": {
-          "text": "All",
-          "value": ".*"
-        }
+        "multi": false,
+        "refresh": 1
+      },
+      {
+        "name": "dagfile",
+        "label": "DAG / Fichier",
+        "type": "query",
+        "datasource": {
+          "type": "loki",
+          "uid": "P8E80F9AEF21F6940"
+        },
+        "query": "label_values({job=\"airflow\", logdate=\"${logdate}\"}, dagfile)",
+        "includeAll": false,
+        "multi": false,
+        "refresh": 2
       }
     ]
   },
-  "panels": [
-    {
-      "type": "logs",
-      "title": "Airflow DAG Logs",
-      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 18 },
-      "id": 1,
-      "datasource": "Loki",
-      "targets": [
-    {
-        "expr": "{job=\"airflow\", dag_id=\"$dag\"}",
-        "refId": "A",
-        "hide": false
-    }
-    ],
-      "options": {
-        "showLabels": true,
-        "showTime": true,
-        "wrapLogMessage": false,
-        "enableLogDetails": true
-      }
-    }
-  ]
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timezone": "",
+  "title": "Airflow DAG Logs – Dynamic Date & DAG",
+  "uid": "airflow-logs-dynamic",
+  "version": 1,
+  "weekStart": ""
 }
