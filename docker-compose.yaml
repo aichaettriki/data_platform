@@ -167,6 +167,21 @@ services:
     volumes:
       - ./minio:/data   # raw + transformed
     restart: always
+  minio-create-buckets:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+        sleep 5;
+        mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+        mc mb -p myminio/raw;
+        mc mb -p myminio/transformed;
+        mc mb -p myminio/refined;
+        mc mb -p myminio/sandbox;
+        mc ls myminio;
+      "
+    restart: "no"  
                                                 
   # ------------------------
   # Spark

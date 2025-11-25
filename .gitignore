@@ -26,6 +26,9 @@ docker-compose.override.yml
 # System
 .DS_Store
 Thumbs.db
-.dump
+*.dump
+# loki
 loki_data/
+
+# Test_Env_pg
 test_env/postgres
