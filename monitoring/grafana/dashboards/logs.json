@@ -1,0 +1,62 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "Loki",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "id": null,
+  "uid": "airflow-logs-dashboard",
+  "title": "Airflow DAG Logs",
+  "tags": ["airflow", "logs", "loki"],
+  "timezone": "browser",
+  "schemaVersion": 36,
+  "version": 1,
+  "refresh": "10s",
+  "templating": {
+    "list": [
+      {
+        "name": "dag",
+        "type": "query",
+        "label": "Select DAG",
+        "query": "label_values({job=\"airflow\"}, dag_id)",
+        "multi": true,
+        "includeAll": false,
+        "allValue": ".*",
+        "current": {
+          "text": "All",
+          "value": ".*"
+        }
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "logs",
+      "title": "Airflow DAG Logs",
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 18 },
+      "id": 1,
+      "datasource": "Loki",
+      "targets": [
+    {
+        "expr": "{job=\"airflow\", dag_id=\"$dag\"}",
+        "refId": "A",
+        "hide": false
+    }
+    ],
+      "options": {
+        "showLabels": true,
+        "showTime": true,
+        "wrapLogMessage": false,
+        "enableLogDetails": true
+      }
+    }
+  ]
+}

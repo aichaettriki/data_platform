@@ -17,7 +17,7 @@ def create_spark_session():
 
 
 def read_raw_csv(spark, raw_path):
-    raw_path = "s3a://raw/equipe.csv"
+    raw_path = "s3a://raw/equipe1.csv"
     df = spark.read.csv(raw_path, header=True, sep=";", inferSchema=True)
     df.show(5)
     df.printSchema()

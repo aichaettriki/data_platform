@@ -1,35 +1,19 @@
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from minio import Minio
-import pandas as pd
 import os
-from io import BytesIO
-from sqlalchemy import create_engine
-
-
+ 
 # ---------- CONFIG ----------
 MINIO_ENDPOINT = "minio:9000"
 MINIO_ACCESS_KEY = "minio"
 MINIO_SECRET_KEY = "minio123"
-
+ 
 BUCKET_RAW = "raw"
-BUCKET_TRANSFORMED = "transformed"
-BUCKET_REFINED = "refined"
-
 LOCAL_FILE_PATH = "/opt/airflow/data/equipe.csv"
-RAW_OBJECT = "equipe.csv"
-TRANSFORMED_OBJECT = "equipe_transformed.csv"
-REFINED_OBJECT = "equipe_refined.csv"
-
-POSTGRES_USER = "airflow"
-POSTGRES_PWD = "airflow"
-POSTGRES_HOST = "postgres-airflow"
-POSTGRES_DB = "airflow"
-
-TABLE_NAME = "equipe"
-
-# ---------- CLIENT MINIO ----------
+RAW_OBJECT = "equipe1.csv"
+ 
 def get_minio_client():
     return Minio(
         MINIO_ENDPOINT,
@@ -37,165 +21,31 @@ def get_minio_client():
         secret_key=MINIO_SECRET_KEY,
         secure=False,
     )
-
-
-
-# ---------- TASK 1 : Upload to RAW ----------
+ 
 def upload_to_raw():
     client = get_minio_client()
-
     if not client.bucket_exists(BUCKET_RAW):
         client.make_bucket(BUCKET_RAW)
-
-    client.fput_object(
-        BUCKET_RAW, RAW_OBJECT, LOCAL_FILE_PATH
-    )
-
+    client.fput_object(BUCKET_RAW, RAW_OBJECT, LOCAL_FILE_PATH)
     print("📌 Upload RAW terminé.")
-
-
-
-# ---------- TASK 2 : data cleaning : TRANSFORMED ----------
-def clean_and_transform():
-    client = get_minio_client()
-
-    response = client.get_object(BUCKET_RAW, RAW_OBJECT)
-
-    df = pd.read_csv(BytesIO(response.read()), sep=";")  
-
-    print("\n====== Colonnes lues depuis RAW ======")
-    print(df.columns.tolist())
-
-    df = df.drop_duplicates()
-
-    output = df.to_csv(index=False, sep=";").encode("utf-8") 
-
-    if not client.bucket_exists(BUCKET_TRANSFORMED):
-        client.make_bucket(BUCKET_TRANSFORMED)
-
-    client.put_object(
-        bucket_name=BUCKET_TRANSFORMED,
-        object_name=TRANSFORMED_OBJECT,
-        data=BytesIO(output),
-        length=len(output),
-        content_type="text/csv",
-    )
-
-    print("----------------> TRANSFORMED OK.")
-
-
-# ---------- TASK 3 : enrichissement : REFINED ----------
-def refine_data():
-    client = get_minio_client()
-
-    print("lecture du fichier transforme depuis MinIO...")
-
-    response = client.get_object(BUCKET_TRANSFORMED, TRANSFORMED_OBJECT)
-    df = pd.read_csv(BytesIO(response.read()), sep=";")
-
-
-    print("\n====== Colonnes AVANT normalisation ======")
-    print(df.columns.tolist())
-
-    # normalisation des noms de colonnes
-    df.columns = df.columns.str.lower().str.strip()
-
-    print("\n====== Colonnes APRES normalisation ======")
-    print(df.columns.tolist())
-
-    print("\n====== Aperçu du DataFrame ======")
-    print(df.head())
-
-    # verif existence colonnes
-    required = ["nom", "prenom"]
-    missing = [c for c in required if c not in df.columns]
-
-    if missing:
-        print(f"\n❌ ERREUR : Colonnes manquantes : {missing}")
-        raise KeyError(f"Colonnes manquantes : {missing}")
-
-    # ajout fullname
-    df["fullname"] = df["nom"] + " " + df["prenom"]
-
-    # ajout Timestamp
-    df["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    print("\n====== Colonnes finales ======")
-    print(df.columns.tolist())
-
-    # ipload to refined
-    print(" upload du fichier enrichi to refined...")
-
-    output = df.to_csv(index=False, sep=";").encode("utf-8")  # ← garder séparateur
-    
-    if not client.bucket_exists(BUCKET_REFINED):
-        client.make_bucket(BUCKET_REFINED)
-    
-    client.put_object(
-        bucket_name=BUCKET_REFINED,
-        object_name=REFINED_OBJECT,
-        data=BytesIO(output),
-        length=len(output),
-        content_type="text/csv",
-    )
-
-    print("-------------->>>> REFINED terminé.")
-
-# ---------- TASK 4 : load to postgres ----------
-def load_into_postgres():
-    client = get_minio_client()
-
-    # récupérer fichier refined depuis MinIO
-    response = client.get_object(BUCKET_REFINED, REFINED_OBJECT)
-    df = pd.read_csv(BytesIO(response.read()), sep=";")
-
-    print("\n====== Chargement dans PostgreSQL ======")
-    print(df.head())
-
-    # construire l’URL SQLAlchemy
-    engine = create_engine(
-        f"postgresql://{POSTGRES_USER}:{POSTGRES_PWD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
-    )
-
-    # créer la table si elle n'existe pas (pandas gère)
-    df.to_sql(
-        TABLE_NAME,
-        engine,
-        if_exists="replace",   
-        index=False
-    )
-
-    print("✅ Données chargées dans PostgreSQL → table 'equipe'.")
-
-
-# ---------- DAG ----------
+ 
 with DAG(
     dag_id="etl_csv_pipeline",
     start_date=datetime(2024, 1, 1),
     schedule_interval=None,
     catchup=False,
-    tags=["minio", "etl", "csv"],
 ) as dag:
-
+ 
     task_upload_raw = PythonOperator(
         task_id="upload_to_raw",
         python_callable=upload_to_raw,
     )
-
-    task_transform = PythonOperator(
-        task_id="clean_transform",
-        python_callable=clean_and_transform,
+ 
+    task_trigger_spark = TriggerDagRunOperator(
+        task_id="trigger_spark_pipeline",
+        trigger_dag_id="etl_csv_spark_pipeline_v2",
     )
-
-    task_refine = PythonOperator(
-        task_id="refine_file",
-        python_callable=refine_data,
-    )
-
-    task_load_postgres = PythonOperator(
-    task_id="load_to_postgres",
-    python_callable=load_into_postgres,
-    )
-
-
-    task_upload_raw >> task_transform >> task_refine >> task_load_postgres
+ 
+    task_upload_raw >> task_trigger_spark
+ 
+ 
