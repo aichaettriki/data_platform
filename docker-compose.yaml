@@ -146,7 +146,7 @@ services:
       ports:
         - "9112:9112"
       volumes:
-        -./airflow/logs/scheduler:/app/airflow/logs/scheduler:ro
+        - ./airflow/logs/scheduler:/app/airflow/logs/scheduler:ro
       depends_on:
         - airflow-webserver
       restart: always
@@ -167,6 +167,10 @@ services:
     volumes:
       - ./minio:/data   # raw + transformed
     restart: always
+
+  # ------------------------
+  # MinIO buckets
+  # ------------------------
   minio-create-buckets:
     image: minio/mc:latest
     depends_on:
@@ -298,9 +302,13 @@ services:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
-      - ./loki-data:/loki/wal                  # dossier WAL (doit exister)
+      - ./loki-data/index:/loki/index
+      - ./loki-data/chunks:/loki/chunks
+      - ./loki-data/wal:/loki/wal
       - ./loki-config.yaml:/etc/loki/local-config.yaml
+     
     restart: always
+ 
  
   # ------------------------
   # Promtail (agent qui envoie les logs à Loki)

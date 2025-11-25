@@ -32,7 +32,10 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+# Role definition
+echo exec -i "$TEST_POSTGRES_CONTAINER" psql -U "$TEST_DB_USER" -d "$TEST_DB_NAME" -c "CREATE ROLE airflow WITH LOGIN PASSWORD 'airflow' SUPERUSER;"
 
+docker exec -i "$TEST_POSTGRES_CONTAINER" psql -U "$TEST_DB_USER" -d "$TEST_DB_NAME" -c "CREATE ROLE airflow WITH LOGIN PASSWORD 'airflow' SUPERUSER;"
 
 # Restore database
 echo "🔄 Restoring database..."
