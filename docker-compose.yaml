@@ -14,7 +14,6 @@ services:
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
-      - ./backup:/backup
       - ${PGDATA_PATH}:/var/lib/postgresql/data
       - ./postgres-init:/docker-entrypoint-initdb.d   # <-- to initialize metabase intern bd
 
