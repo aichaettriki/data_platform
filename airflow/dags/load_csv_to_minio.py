@@ -55,117 +55,117 @@ def upload_to_raw():
 
 
 
-# ---------- TASK 2 : data cleaning : TRANSFORMED ----------
-def clean_and_transform():
-    client = get_minio_client()
+# # ---------- TASK 2 : data cleaning : TRANSFORMED ----------
+# def clean_and_transform():
+#     client = get_minio_client()
 
-    response = client.get_object(BUCKET_RAW, RAW_OBJECT)
+#     response = client.get_object(BUCKET_RAW, RAW_OBJECT)
 
-    df = pd.read_csv(BytesIO(response.read()), sep=";")  
+#     df = pd.read_csv(BytesIO(response.read()), sep=";")  
 
-    print("\n====== Colonnes lues depuis RAW ======")
-    print(df.columns.tolist())
+#     print("\n====== Colonnes lues depuis RAW ======")
+#     print(df.columns.tolist())
 
-    df = df.drop_duplicates()
+#     df = df.drop_duplicates()
 
-    output = df.to_csv(index=False, sep=";").encode("utf-8") 
+#     output = df.to_csv(index=False, sep=";").encode("utf-8") 
 
-    if not client.bucket_exists(BUCKET_TRANSFORMED):
-        client.make_bucket(BUCKET_TRANSFORMED)
+#     if not client.bucket_exists(BUCKET_TRANSFORMED):
+#         client.make_bucket(BUCKET_TRANSFORMED)
 
-    client.put_object(
-        bucket_name=BUCKET_TRANSFORMED,
-        object_name=TRANSFORMED_OBJECT,
-        data=BytesIO(output),
-        length=len(output),
-        content_type="text/csv",
-    )
+#     client.put_object(
+#         bucket_name=BUCKET_TRANSFORMED,
+#         object_name=TRANSFORMED_OBJECT,
+#         data=BytesIO(output),
+#         length=len(output),
+#         content_type="text/csv",
+#     )
 
-    print("----------------> TRANSFORMED OK.")
-
-
-# ---------- TASK 3 : enrichissement : REFINED ----------
-def refine_data():
-    client = get_minio_client()
-
-    print("lecture du fichier transforme depuis MinIO...")
-
-    response = client.get_object(BUCKET_TRANSFORMED, TRANSFORMED_OBJECT)
-    df = pd.read_csv(BytesIO(response.read()), sep=";")
+#     print("----------------> TRANSFORMED OK.")
 
 
-    print("\n====== Colonnes AVANT normalisation ======")
-    print(df.columns.tolist())
+# # ---------- TASK 3 : enrichissement : REFINED ----------
+# def refine_data():
+#     client = get_minio_client()
 
-    # normalisation des noms de colonnes
-    df.columns = df.columns.str.lower().str.strip()
+#     print("lecture du fichier transforme depuis MinIO...")
 
-    print("\n====== Colonnes APRES normalisation ======")
-    print(df.columns.tolist())
+#     response = client.get_object(BUCKET_TRANSFORMED, TRANSFORMED_OBJECT)
+#     df = pd.read_csv(BytesIO(response.read()), sep=";")
 
-    print("\n====== Aperçu du DataFrame ======")
-    print(df.head())
 
-    # verif existence colonnes
-    required = ["nom", "prenom"]
-    missing = [c for c in required if c not in df.columns]
+#     print("\n====== Colonnes AVANT normalisation ======")
+#     print(df.columns.tolist())
 
-    if missing:
-        print(f"\n❌ ERREUR : Colonnes manquantes : {missing}")
-        raise KeyError(f"Colonnes manquantes : {missing}")
+#     # normalisation des noms de colonnes
+#     df.columns = df.columns.str.lower().str.strip()
 
-    # ajout fullname
-    df["fullname"] = df["nom"] + " " + df["prenom"]
+#     print("\n====== Colonnes APRES normalisation ======")
+#     print(df.columns.tolist())
 
-    # ajout Timestamp
-    df["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#     print("\n====== Aperçu du DataFrame ======")
+#     print(df.head())
 
-    print("\n====== Colonnes finales ======")
-    print(df.columns.tolist())
+#     # verif existence colonnes
+#     required = ["nom", "prenom"]
+#     missing = [c for c in required if c not in df.columns]
 
-    # ipload to refined
-    print(" upload du fichier enrichi to refined...")
+#     if missing:
+#         print(f"\n❌ ERREUR : Colonnes manquantes : {missing}")
+#         raise KeyError(f"Colonnes manquantes : {missing}")
 
-    output = df.to_csv(index=False, sep=";").encode("utf-8")  # ← garder séparateur
+#     # ajout fullname
+#     df["fullname"] = df["nom"] + " " + df["prenom"]
+
+#     # ajout Timestamp
+#     df["timestamp"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+#     print("\n====== Colonnes finales ======")
+#     print(df.columns.tolist())
+
+#     # ipload to refined
+#     print(" upload du fichier enrichi to refined...")
+
+#     output = df.to_csv(index=False, sep=";").encode("utf-8")  # ← garder séparateur
     
-    if not client.bucket_exists(BUCKET_REFINED):
-        client.make_bucket(BUCKET_REFINED)
+#     if not client.bucket_exists(BUCKET_REFINED):
+#         client.make_bucket(BUCKET_REFINED)
     
-    client.put_object(
-        bucket_name=BUCKET_REFINED,
-        object_name=REFINED_OBJECT,
-        data=BytesIO(output),
-        length=len(output),
-        content_type="text/csv",
-    )
+#     client.put_object(
+#         bucket_name=BUCKET_REFINED,
+#         object_name=REFINED_OBJECT,
+#         data=BytesIO(output),
+#         length=len(output),
+#         content_type="text/csv",
+#     )
 
-    print("-------------->>>> REFINED terminé.")
+#     print("-------------->>>> REFINED terminé.")
 
-# ---------- TASK 4 : load to postgres ----------
-def load_into_postgres():
-    client = get_minio_client()
+# # ---------- TASK 4 : load to postgres ----------
+# def load_into_postgres():
+#     client = get_minio_client()
 
-    # récupérer fichier refined depuis MinIO
-    response = client.get_object(BUCKET_REFINED, REFINED_OBJECT)
-    df = pd.read_csv(BytesIO(response.read()), sep=";")
+#     # récupérer fichier refined depuis MinIO
+#     response = client.get_object(BUCKET_REFINED, REFINED_OBJECT)
+#     df = pd.read_csv(BytesIO(response.read()), sep=";")
 
-    print("\n====== Chargement dans PostgreSQL ======")
-    print(df.head())
+#     print("\n====== Chargement dans PostgreSQL ======")
+#     print(df.head())
 
-    # construire l’URL SQLAlchemy
-    engine = create_engine(
-        f"postgresql://{POSTGRES_USER}:{POSTGRES_PWD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
-    )
+#     # construire l’URL SQLAlchemy
+#     engine = create_engine(
+#         f"postgresql://{POSTGRES_USER}:{POSTGRES_PWD}@{POSTGRES_HOST}:5432/{POSTGRES_DB}"
+#     )
 
-    # créer la table si elle n'existe pas (pandas gère)
-    df.to_sql(
-        TABLE_NAME,
-        engine,
-        if_exists="replace",   
-        index=False
-    )
+#     # créer la table si elle n'existe pas (pandas gère)
+#     df.to_sql(
+#         TABLE_NAME,
+#         engine,
+#         if_exists="replace",   
+#         index=False
+#     )
 
-    print("✅ Données chargées dans PostgreSQL → table 'equipe'.")
+#     print("✅ Données chargées dans PostgreSQL → table 'equipe'.")
 
 
 # ---------- DAG ----------
@@ -182,20 +182,20 @@ with DAG(
         python_callable=upload_to_raw,
     )
 
-    task_transform = PythonOperator(
-        task_id="clean_transform",
-        python_callable=clean_and_transform,
-    )
+    # task_transform = PythonOperator(
+    #     task_id="clean_transform",
+    #     python_callable=clean_and_transform,
+    # )
 
-    task_refine = PythonOperator(
-        task_id="refine_file",
-        python_callable=refine_data,
-    )
+    # task_refine = PythonOperator(
+    #     task_id="refine_file",
+    #     python_callable=refine_data,
+    # )
 
-    task_load_postgres = PythonOperator(
-    task_id="load_to_postgres",
-    python_callable=load_into_postgres,
-    )
+    # task_load_postgres = PythonOperator(
+    # task_id="load_to_postgres",
+    # python_callable=load_into_postgres,
+    # )
 
 
-    task_upload_raw >> task_transform >> task_refine >> task_load_postgres
+    # task_upload_raw >> task_transform >> task_refine >> task_load_postgres

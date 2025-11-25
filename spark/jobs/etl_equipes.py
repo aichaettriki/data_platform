@@ -20,7 +20,7 @@ def create_spark_session():
 
 
 def read_raw_csv(spark, raw_path):
-    raw_path = "s3a://raw/equipe.csv"
+    raw_path = "s3a://raw/"
     df = spark.read.csv(raw_path, header=True, sep=";", inferSchema=True)
     df.show(5)
     df.printSchema()
@@ -29,7 +29,7 @@ def read_raw_csv(spark, raw_path):
 
 from pyspark.sql.functions import year, month, dayofmonth, current_timestamp
 
-def clean_and_write(df, transformed_root_path, dataset_name="equipe_spark"):
+def clean_and_write(df, transformed_root_path="s3a://transformed", dataset_name="equipe_spark"):
     now = current_timestamp()
 
     df_clean = df.dropDuplicates()
@@ -50,7 +50,7 @@ def clean_and_write(df, transformed_root_path, dataset_name="equipe_spark"):
 
     return df_clean
 
-def add_timestamp_and_write(df_clean, refined_root_path):
+def add_timestamp_and_write(df_clean, refined_root_path="s3a://refined", dataset_name="equipe_spark"):
     now = current_timestamp()
 
     df_refined = (
@@ -92,10 +92,10 @@ if __name__ == "__main__":
     spark = create_spark_session()
 
     if action == "read_raw_csv":
-        df = read_raw_csv(spark, "s3a://raw/equipe.csv")
+        df = read_raw_csv(spark, "s3a://raw/")
 
     elif action == "clean_and_transformed":
-        df = read_raw_csv(spark, "s3a://raw/equipe.csv")
+        df = read_raw_csv(spark, "s3a://raw/")
         clean_and_write(df, "s3a://transformed/equipe_spark")
 
     elif action == "add_timestamp_refined":
@@ -107,8 +107,6 @@ if __name__ == "__main__":
         today = datetime.today()
         df = spark.read.csv(f"s3a://refined/equipe_spark/{today.year}/{today.month}/{today.day}/", header=True, inferSchema=True)
         write_to_postgres(df, "jdbc:postgresql://postgres-airflow:5432/airflow")
-
-
         # df = spark.read.csv("s3a://refined/equipe", header=True, inferSchema=True)
         # write_to_postgres(df, "jdbc:postgresql://postgres-airflow:5432/airflow")
 
