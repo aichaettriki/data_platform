@@ -14,6 +14,10 @@ ENV PATH=$SPARK_HOME/bin:$PATH
 ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
 ENV PATH="$JAVA_HOME/bin:${PATH}"
 
+ENV AWS_ACCESS_KEY_ID=minio
+ENV AWS_SECRET_ACCESS_KEY=minio123
+
+
 COPY requirements.txt /requirements.txt
 USER airflow
 RUN pip install --no-cache-dir -r /requirements.txt

@@ -2,11 +2,17 @@ from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, concat_ws, current_timestamp
 
 def create_spark_session():
-    spark = (
-        SparkSession.builder
-        .appName("ETL Equipe via Spark + MinIO")
-        .getOrCreate()
-    )
+    # spark = (
+    #     SparkSession.builder
+    #     .appName("ETL Equipe via Spark + MinIO")
+    #     .getOrCreate()
+
+    spark = SparkSession.builder \
+    .appName("ETL with Atlas") \
+    .config("spark.sql.queryExecutionListeners", "org.apache.atlas.spark.atlas.SparkAtlasEventListener") \
+    .config("spark.hadoop.atlas.rest.address", "http://atlas:21000") \
+    .getOrCreate()
+    # )
 
     hadoopConf = spark._jsc.hadoopConfiguration()
     hadoopConf.set("fs.s3a.access.key", "minio")

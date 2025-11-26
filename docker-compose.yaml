@@ -547,3 +547,105 @@ services:
     depends_on:
       - postgres-airflow
     restart: always
+
+  amundsen-frontend:
+    image: amundsendev/amundsen-frontend:latest
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - METADATASERVICE_BASE=http://amundsen-metadata:5002
+      - SEARCHSERVICE_BASE=http://amundsen-search:5001
+    depends_on:
+      - amundsen-metadata
+      - amundsen-search
+    restart: always
+
+  amundsen-metadata:
+    image: amundsendev/amundsen-metadata:latest
+    ports:
+      - "5002:5002"
+    environment:
+      - SQLALCHEMY_DATABASE_URI=postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/amundsen
+    depends_on:
+      - postgres-airflow
+    restart: always
+
+  amundsen-search:
+    image: amundsendev/amundsen-search:latest
+    ports:
+      - "5001:5001"
+    environment:
+      - SEARCH_ENGINE=elasticsearch
+      - ELASTICSEARCH_HOST=elasticsearch
+      - ELASTICSEARCH_PORT=9200
+    depends_on:
+      - elasticsearch
+    restart: always
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.1
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+    restart: always
+
+  # atlas:
+  #   image: apache/atlas:2.2.0
+  #   environment:
+  #     - ATLAS_GRAPH_STORAGE_BACKEND=janusgraph
+  #     - ATLAS_REPOSITORY_DIR=/var/lib/atlas/repository
+  #     - ATLAS_LOG_DIR=/var/log/atlas
+  #     - JAVA_OPTS=-Xms512m -Xmx1024m
+  #     - ATLAS_DB_HOST=postgres-airflow
+  #     - ATLAS_DB_PORT=5432
+  #     - ATLAS_DB_USERNAME=${POSTGRES_USER}
+  #     - ATLAS_DB_PASSWORD=${POSTGRES_PASSWORD}
+  #     - ATLAS_DB_NAME=atlas
+  #   ports:
+  #     - "21000:21000"  # REST API
+  #     - "21443:21443"  # Optional web UI HTTPS
+  #   depends_on:
+  #     - postgres-airflow
+  #   volumes:
+  #     - ./atlas-data:/var/lib/atlas/repository
+  #     - ./atlas-logs:/var/log/atlas
+  #   restart: always
+
+  atlas:
+    image: sburn/apache-atlas:latest
+    ports:
+      - "21000:21000"  # REST API
+    environment:
+      - ATLAS_OPTS=-Xms512m -Xmx1024m
+    depends_on:
+      - hbase
+      - solr
+    volumes:
+      - ./atlas-data:/apache-atlas/data
+    restart: always
+
+  solr:
+    image: solr:8.11
+    command: solr-precreate vertex_index
+    ports:
+      - "8983:8983"
+    volumes:
+      - ./solr-data:/var/solr
+    restart: always
+
+  hbase:
+    image: harisekhon/hbase
+    ports:
+      - "16000:16000"
+      - "16010:16010"
+    volumes:
+      - ./hbase-data:/hbase-data
+    restart: always

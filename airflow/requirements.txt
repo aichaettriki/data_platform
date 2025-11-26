@@ -40,3 +40,7 @@ ujson
 # Prometheus
 prometheus-client
 prometheus-api-client
+
+apache-atlas
+
+amundsen-databuilder
