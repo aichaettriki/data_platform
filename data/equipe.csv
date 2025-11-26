@@ -1,10 +1,10 @@
-Nom;Prenom;number
-Guelmami;nour;10
-Zommit chatty;malek;2
-Ettriki;aicha;3
-Ben rekaya;Skander;4
-Zommit chatty;malek;2
-Ettriki;aicha;3
-Ben rekaya;Skander;4
-Guelmami;nour;1
-test;testing;23
+Nom;Prenom;number;Bu;age
+Guelmami;nour;10;IT;25
+Zommit chatty;malek;2;Data;25
+Ettriki;aicha;3;IT;22
+Ben rekaya;Skander;4;Data;27
+Zommit chatty;malek;2;25
+Ettriki;aicha;3;IT;22
+Ben rekaya;Skander;4;27
+Guelmami;nour;1;Commercial;25
+test;testing;23;RH;31

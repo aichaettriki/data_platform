@@ -22,8 +22,13 @@ def create_spark_session():
 def read_raw_csv(spark, raw_path):
     raw_path = "s3a://raw/"
     df = spark.read.csv(raw_path, header=True, sep=";", inferSchema=True)
-    df.show(5)
-    df.printSchema()
+    df.show()
+    print("-------->>>>>>>>>>>>>>> files :")
+    for f in df.inputFiles():
+        print(" -", f)
+
+        df.printSchema()
+        df.show()
     return df
 
 
@@ -106,7 +111,7 @@ if __name__ == "__main__":
     elif action == "write_postgres":
         today = datetime.today()
         df = spark.read.csv(f"s3a://refined/equipe_spark/{today.year}/{today.month}/{today.day}/", header=True, inferSchema=True)
-        write_to_postgres(df, "jdbc:postgresql://postgres-airflow:5432/airflow")
+        write_to_postgres(df, "jdbc:postgresql://postgres-airflow:5432/icteq_db")
         # df = spark.read.csv("s3a://refined/equipe", header=True, inferSchema=True)
         # write_to_postgres(df, "jdbc:postgresql://postgres-airflow:5432/airflow")
 
