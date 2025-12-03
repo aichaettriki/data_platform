@@ -29,6 +29,12 @@ Thumbs.db
 *.dump
 # loki
 loki_data/
-
+**/loki-data/
 # Test_Env_pg
 test_env/postgres
+
+# Loki data directories
+loki-data/
+loki/
+**/loki-data/
+**/loki/

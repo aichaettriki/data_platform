@@ -70,7 +70,7 @@ services:
       AIRFLOW__METRICS__PROMETHEUS_USE_EXPORTER: 'True'
       AIRFLOW__METRICS__METRICS_BACKEND: prometheus
       AIRFLOW__WEBSERVER__SESSION_BACKEND: securecookie
-      # AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
+      AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
     ports:
       - "${AIRFLOW_WEBSERVER_PORT}:8080"
     volumes:
@@ -98,7 +98,7 @@ services:
       AIRFLOW__METRICS__PROMETHEUS_USE_EXPORTER: 'True'
       AIRFLOW__METRICS__METRICS_BACKEND: prometheus
       AIRFLOW__WEBSERVER__SESSION_BACKEND: securecookie
-      # AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
+      AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
     volumes:
       - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
@@ -122,6 +122,7 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
       AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
       AIRFLOW__WEBSERVER__SESSION_BACKEND: securecookie
+      AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
 
     volumes:
       - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
@@ -143,12 +144,15 @@ services:
         AIRFLOW_WEBSERVER: "http://airflow-webserver:8080/api/v1"
         AIRFLOW_USER: "${AIRFLOW_ADMIN_USER}"
         AIRFLOW_PASSWORD: "${AIRFLOW_ADMIN_PASSWORD}"
+        AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
+        LOKI_URL: "http://loki:3100"
       ports:
         - "9112:9112"
       volumes:
-        -./airflow/logs/scheduler:/app/airflow/logs/scheduler:ro
+        - ./airflow/logs:/opt/airflow/logs:ro
       depends_on:
         - airflow-webserver
+        - loki
       restart: always
 
   # ------------------------
@@ -163,7 +167,7 @@ services:
     ports:
       - "${MINIO_API_PORT}:9000"
       - "${MINIO_CONSOLE_PORT}:9001"
-    command: server /minio-data --console-address ":${MINIO_CONSOLE_PORT}"
+    command: server /data --console-address ":${MINIO_CONSOLE_PORT}"
     volumes:
       - ./minio:/data   # raw + transformed
     restart: always
@@ -183,9 +187,6 @@ services:
       "
     restart: "no"  
                                                 
-  # ------------------------
-  # Spark
-  # ------------------------
   spark-master:
     build: ./spark
     container_name: spark-master
@@ -206,7 +207,10 @@ services:
       - ${MINIO_REFINED_PATH}:/data/refined
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     restart: always
-
+    
+  # ------------------------
+  # Spark Workers
+  # ------------------------
   spark-worker:
     build: ./spark
     container_name: spark-worker
@@ -229,16 +233,26 @@ services:
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     restart: always
  
+
   # ------------------------
   # Prometheus
   # ------------------------
   prometheus:
-    image: prom/prometheus:v2.52.0
-    ports:
-      - "${PROMETHEUS_PORT}:9090"
+    image: prom/prometheus:latest
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=90d'
+      - '--storage.tsdb.retention.size=50GB'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
     volumes:
-      - ${PROMETHEUS_CONFIG_PATH}:/etc/prometheus/prometheus.yml
-    restart: always
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+
 
   # ------------------------
   # Grafana
@@ -260,16 +274,56 @@ services:
   # ------------------------
   # Metabase
   # ------------------------
+    # 1. METABASE APP (Port 3021)
   metabase:
-    image: metabase/metabase:latest
-    container_name: metabase
-    restart: always
+    build:
+      context: ./metabase/build
+      dockerfile: Dockerfile
+    container_name: metabase_app
+    restart: unless-stopped
     ports:
-      - "${METABASE_PORT}:3000"
+      - "3001:3000"
     env_file:
-      - ${METABASE_ENV_FILE}
+      - ./metabase/env/metabase.env
     depends_on:
-      - postgres-airflow
+      metabase_db_internal:
+        condition: service_healthy
+    
+ 
+  # 2. INTERNAL METADATA DB
+  metabase_db_internal:
+    image: postgres:15
+    container_name: metabase_db_internal
+    environment:
+      POSTGRES_DB: metabase_internal
+      POSTGRES_USER: mb_internal_user
+      POSTGRES_PASSWORD: mb_internal_pass
+    volumes:
+      - mb_internal_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mb_internal_user -d metabase_internal"]
+      interval: 5s
+      retries: 5
+    
+ 
+  # 3. ZERO-TOUCH DEPLOYER (The Magic)
+  metabase_deployer:
+    image: python:3.9-slim
+    container_name: metabase_deployer
+    depends_on:
+      - metabase
+    volumes:
+      - ./metabase/scripts:/scripts
+      - ./metabase/saved_states:/saved_states # Mounts the JSONs
+    working_dir: /scripts
+    env_file:
+      - ./metabase/env/metabase.env
+    # Install libs -> Run Setup -> Run Import -> Exit
+    command: >
+      sh -c "pip install requests metabase-api && python deploy_solution.py"
+ 
+ 
+
 
   # ------------------------
   # pgAdmin
@@ -298,17 +352,29 @@ services:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
-      - ./loki-data:/loki/wal                  # dossier WAL (doit exister)
+      - ./loki-data/index:/loki/index
+      - ./loki-data/chunks:/loki/chunks
+      - ./loki-data/wal:/loki/wal
       - ./loki-config.yaml:/etc/loki/local-config.yaml
+      
     restart: always
  
   # ------------------------
   # Promtail (agent qui envoie les logs à Loki)
   # ------------------------
   promtail:
-    image: grafana/promtail:2.8.2
+    image: grafana/promtail:2.9.0
     volumes:
-      - ./airflow/logs:/var/log/airflow  # dossier où Airflow écrit ses logs
-      - ./promtail-config.yaml:/etc/promtail/config.yaml
+      - ./promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - ./airflow/logs:/opt/airflow/logs:ro
+      - promtail-positions:/tmp  # <-- Ajouter cette ligne
+    ports:
+      - "9080:9080"
     command: -config.file=/etc/promtail/config.yaml
     restart: always
+
+volumes:
+  mb_internal_data:
+  pg_dwh_data:
+  promtail-positions:
+  prometheus_data:

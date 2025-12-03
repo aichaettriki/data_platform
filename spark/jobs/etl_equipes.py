@@ -22,7 +22,7 @@ def create_spark_session():
 def read_raw_csv(spark, raw_path):
     raw_path = "s3a://raw/"
     df = spark.read.csv(raw_path, header=True, sep=";", inferSchema=True)
-    df.show(5)
+    df.show()
     df.printSchema()
     return df
 
@@ -33,6 +33,7 @@ def clean_and_write(df, transformed_root_path="s3a://transformed", dataset_name=
     now = current_timestamp()
 
     df_clean = df.dropDuplicates()
+    df_clean.show()
 
     # date extraction
     annee = df_clean.select(year(now)).first()[0]
@@ -47,6 +48,9 @@ def clean_and_write(df, transformed_root_path="s3a://transformed", dataset_name=
         .mode("overwrite") \
         .option("header", True) \
         .csv(output_path)
+    
+    df_clean.show()
+
 
     return df_clean
 

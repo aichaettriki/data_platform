@@ -1,11 +1,22 @@
 global:
-  scrape_interval: 15s
+  scrape_interval: 30s
+  scrape_timeout: 25s
+  evaluation_interval: 15s
 
 scrape_configs:
-  - job_name: 'airflow'
+  - job_name: 'airflow-global'
     metrics_path: /airflow_metrics
     static_configs:
       - targets: ['airflow-exporter:9112']
+    scrape_interval: 60s
+    scrape_timeout: 50s
+
+  - job_name: 'airflow-errors'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['airflow-exporter:9112']
+    scrape_interval: 30s
+    scrape_timeout: 25s
 
   - job_name: 'minio'
     metrics_path: /minio/v2/metrics/cluster
@@ -15,6 +26,7 @@ scrape_configs:
   - job_name: 'postgres'
     static_configs:
       - targets: ['postgres-exporter:9187']
-  
- 
+
+
+
 

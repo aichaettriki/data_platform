@@ -1,13 +1,13 @@
 server:
   http_listen_port: 9080
   grpc_listen_port: 0
- 
+
 positions:
   filename: /tmp/positions.yaml
- 
+
 clients:
   - url: http://loki:3100/loki/api/v1/push
- 
+
 scrape_configs:
   - job_name: airflow
     static_configs:
@@ -15,11 +15,12 @@ scrape_configs:
           - localhost
         labels:
           job: airflow
-          __path__: /var/log/airflow/scheduler/*/*.log
+          __path__: /opt/airflow/logs/**/*.log
+
     pipeline_stages:
+      # Extraire dag_id, run_id, task_id depuis les chemins DAG tasks
       - regex:
-          expression: ".*/scheduler/(?P<logdate>[^/]+)/(?P<dagfile>.*)$"
-          source: filename
-      - labels:
-          logdate: logdate
-          dagfile: dagfile  
+          expression: '.*dag_id=(?P<dag_id>[^/]+)/run_id=(?P<run_id>[^/]+)/task_id=(?P<task_id>[^/]+)/.*'
+      # Extraire scheduler date et dag_file depuis les logs scheduler
+      - regex:
+          expression: '.*/scheduler/(?P<scheduler_date>[^/]+)/(?P<dag_file>[^/]+)\.py\.log$'

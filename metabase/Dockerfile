@@ -1,12 +1,24 @@
 FROM metabase/metabase:latest
 
-
+# Switch to root to install utilities
 USER root
-RUN apk add --no-cache jq
 
-# Copy custom environment config
-COPY env/metabase.env /app/metabase.env
-COPY init/add-database.sh /app/add-database.sh
-RUN chmod +x /app/add-database.sh
+# Install curl, jq, and bash (Alpine uses apk)
+RUN apk add --no-cache curl jq bash
 
-CMD ["bash", "-c", "/app/add-database.sh & /app/run_metabase.sh"]
+# Create directory for scripts (if not exists) and set ownership
+WORKDIR /app
+
+# Copy scripts and set ownership to UID 2000 (Metabase User)
+# We use UID 2000 because the named user 'metabase' alias is sometimes missing
+COPY --chown=2000:2000 scripts/entrypoint.sh /app/custom_entrypoint.sh
+COPY --chown=2000:2000 scripts/setup_metabase.sh /app/setup_metabase.sh
+
+# Make them executable
+RUN chmod +x /app/custom_entrypoint.sh /app/setup_metabase.sh
+
+# Switch back to the Metabase user by UID
+USER 2000
+
+# Override the entrypoint
+ENTRYPOINT ["/app/custom_entrypoint.sh"]

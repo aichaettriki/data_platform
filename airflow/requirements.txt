@@ -40,3 +40,6 @@ ujson
 # Prometheus
 prometheus-client
 prometheus-api-client
+
+flask
+requests
