@@ -1,28 +1,76 @@
-version: "3.8"
+version: '3.8'
 
 services:
-  metabase:
-    image: metabase/metabase:latest
-    container_name: metabase_metabase
+  postgres-airflow:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
     ports:
-      - 3020:3000
-    environment:
-      MB_DB_TYPE: postgres
-      MB_DB_DBNAME: metabase
-      MB_DB_PORT: 5432
-      MB_DB_USER: metabase
-      MB_DB_PASS: metabase
-      MB_DB_HOST: db
-    depends_on:
-      - db
-
-  db:
-    image: postgres:13
-    container_name: metabase_pg_metabase
-    environment:
-      POSTGRES_DB: metabase
-      POSTGRES_USER: metabase
-      POSTGRES_PASSWORD: metabase
+      - "5440:5432"
     volumes:
-      - ./postgres:/var/lib/postgresql/data
-      - ./backup:/backup
+      - .pgdata:/var/lib/postgresql/data # <-- to initialize metabase intern bd
+    networks:
+        - bigdata-net
+    restart: always
+  # 1. METABASE APP (Port 3021)
+  metabase:
+    build: 
+      context: ./metabase/build
+      dockerfile: Dockerfile
+    container_name: metabase_app
+    restart: unless-stopped
+    ports:
+      - "3021:3000"
+    env_file:
+      - ./metabase/env/metabase.env
+    depends_on:
+      metabase_db_internal:
+        condition: service_healthy
+    networks:
+      - bigdata-net
+
+  # 2. INTERNAL METADATA DB
+  metabase_db_internal:
+    image: postgres:15
+    container_name: metabase_db_internal
+    environment:
+      POSTGRES_DB: metabase_internal
+      POSTGRES_USER: mb_internal_user
+      POSTGRES_PASSWORD: mb_internal_pass
+    volumes:
+      - mb_internal_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mb_internal_user -d metabase_internal"]
+      interval: 5s
+      retries: 5
+    networks:
+      - bigdata-net
+
+  # 3. ZERO-TOUCH DEPLOYER (The Magic)
+  metabase_deployer:
+    image: python:3.9-slim
+    container_name: metabase_deployer
+    depends_on:
+      - metabase
+    volumes:
+      - ./metabase/scripts:/scripts
+      - ./metabase/saved_states:/saved_states # Mounts the JSONs
+    working_dir: /scripts
+    env_file:
+      - ./metabase/env/metabase.env
+    networks:
+      - bigdata-net
+    # Install libs -> Run Setup -> Run Import -> Exit
+    command: >
+      sh -c "pip install requests metabase-api && python deploy_solution.py"
+
+
+volumes:
+  mb_internal_data:
+  pg_dwh_data:
+
+networks:
+  bigdata-net:
+    driver: bridge

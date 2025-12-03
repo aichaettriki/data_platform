@@ -167,6 +167,13 @@ services:
     volumes:
       - ./minio:/data   # raw + transformed
     restart: always
+    #labels:
+    #  - "traefik.enable=true"
+    #  # We add both rules to be safe
+    #  - "traefik.http.routers.minio.rule=Host(`minio.com`) || Host(`www.minio.com`)"
+    #  - "traefik.http.routers.minio.entrypoints=web"
+    #  # IMPORTANT: Use the internal container port (9001), not the host port
+    #  - "traefik.http.services.minio.loadbalancer.server.port=9001"
 
   # ------------------------
   # MinIO buckets
@@ -265,7 +272,7 @@ services:
   # Metabase
   # ------------------------
   metabase:
-    image: metabase/metabase:latest
+    build: ./metabase
     container_name: metabase
     restart: always
     ports:
@@ -274,6 +281,8 @@ services:
       - ${METABASE_ENV_FILE}
     depends_on:
       - postgres-airflow
+
+  
 
   # ------------------------
   # pgAdmin
@@ -320,3 +329,27 @@ services:
       - ./promtail-config.yaml:/etc/promtail/config.yaml
     command: -config.file=/etc/promtail/config.yaml
     restart: always
+
+    # ------------------------
+  # Traefik (The Router / Reverse Proxy)
+  # ------------------------
+  # ------------------------
+  # Traefik (The Router)
+  # ------------------------
+  #traefik:
+  #  image: traefik:v2.10
+  #  container_name: traefik
+  #  # Standard Linux commands (No npipe here)
+  #  command:
+  #    - "--api.insecure=true"
+  #    - "--providers.docker=true"
+  #    - "--providers.docker.exposedbydefault=false" 
+  #    - "--entrypoints.web.address=:80"
+  #  ports:
+  #    - "80:80"        # minio.com
+  #    - "8090:8080"    # Dashboard
+  #  volumes:
+  #    # THE GOLDEN FIX FOR WINDOWS:
+  #    # Map Windows Pipe (Left) -> Linux Socket (Right)
+  #    - //./pipe/docker_engine:/var/run/docker.sock
+  #  restart: always

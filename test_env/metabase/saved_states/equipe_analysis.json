@@ -1,0 +1,88 @@
+{
+    "type": "dashboard",
+    "name": "Equipe Analysis",
+    "description": null,
+    "cards": [
+        {
+            "is_text": false,
+            "name": "Total",
+            "dataset_query": {
+                "database": 2,
+                "type": "native",
+                "native": {
+                    "template-tags": {},
+                    "query": " select count(distinct fullname) from equipe"
+                }
+            },
+            "display": "scalar",
+            "visualization_settings": {},
+            "layout": {
+                "row": 0,
+                "col": 0,
+                "size_x": 7,
+                "size_y": 6
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Gender Rep",
+            "dataset_query": {
+                "database": 2,
+                "type": "native",
+                "native": {
+                    "template-tags": {},
+                    "query": " select count(*) nbr ,gender  \n from \n (select fullname , 'Homme' gender from equipe  where fullname like '%Ben rekaya Skander%'\n Union select fullname , 'Femme' gender from equipe  where fullname not like '%Ben rekaya Skander%' ) \n tab group by gender"
+                }
+            },
+            "display": "pie",
+            "visualization_settings": {
+                "table.pivot_column": "nbr",
+                "table.cell_column": "gender",
+                "pie.show_labels": true,
+                "pie.percent_visibility": "inside"
+            },
+            "layout": {
+                "row": 6,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 10
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Person_Nbr",
+            "dataset_query": {
+                "database": 2,
+                "type": "native",
+                "native": {
+                    "template-tags": {},
+                    "query": " select count(*) nbr , fullname from equipe group by fullname order by count(*) desc\n"
+                }
+            },
+            "display": "bar",
+            "visualization_settings": {
+                "table.pivot_column": "nbr",
+                "table.cell_column": "fullname",
+                "graph.x_axis.labels_enabled": false,
+                "graph.y_axis.labels_enabled": false,
+                "graph.show_values": true,
+                "graph.x_axis.scale": "ordinal",
+                "graph.dimensions": [
+                    "fullname"
+                ],
+                "graph.metrics": [
+                    "nbr"
+                ]
+            },
+            "layout": {
+                "row": 0,
+                "col": 7,
+                "size_x": 17,
+                "size_y": 6
+            },
+            "_source_table_name": null
+        }
+    ]
+}

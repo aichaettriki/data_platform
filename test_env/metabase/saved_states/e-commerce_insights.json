@@ -1,0 +1,2068 @@
+{
+    "type": "dashboard",
+    "name": "E-commerce Insights",
+    "description": "Overview of sample data and hypothetical sales",
+    "cards": [
+        {
+            "is_text": false,
+            "name": "Revenue by state",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "aggregation": [
+                        [
+                            "sum",
+                            [
+                                "field",
+                                "TOTAL",
+                                {
+                                    "base-type": "type/Float"
+                                }
+                            ]
+                        ]
+                    ],
+                    "breakout": [
+                        [
+                            "field",
+                            "STATE",
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ]
+                    ],
+                    "source-table": "card__1"
+                },
+                "type": "query"
+            },
+            "display": "map",
+            "visualization_settings": {
+                "map.colors": [
+                    "rgb(229, 229, 241)",
+                    "rgb(192, 192, 218)",
+                    "rgb(155, 155, 194)",
+                    "rgb(118, 119, 171)",
+                    "hsl(239, 29.5%, 39.3%)"
+                ],
+                "map.region": "us_states",
+                "map.type": "region"
+            },
+            "layout": {
+                "row": 10,
+                "col": 12,
+                "size_x": 12,
+                "size_y": 8
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Customer satisfaction per category",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "aggregation": [
+                        [
+                            "count"
+                        ]
+                    ],
+                    "breakout": [
+                        [
+                            "field",
+                            16,
+                            {
+                                "base-type": "type/Float",
+                                "source-field": 14
+                            }
+                        ],
+                        [
+                            "field",
+                            18,
+                            {
+                                "base-type": "type/Text",
+                                "source-field": 14
+                            }
+                        ]
+                    ],
+                    "filter": [
+                        "!=",
+                        [
+                            "field",
+                            17,
+                            {
+                                "base-type": "type/Text",
+                                "source-field": 14
+                            }
+                        ],
+                        "Incredible Aluminum Knife"
+                    ],
+                    "order-by": [
+                        [
+                            "desc",
+                            [
+                                "field",
+                                16,
+                                {
+                                    "base-type": "type/Float",
+                                    "source-field": 14,
+                                    "binning": {
+                                        "strategy": "default"
+                                    }
+                                }
+                            ]
+                        ]
+                    ],
+                    "source-table": 2
+                },
+                "type": "query"
+            },
+            "display": "bar",
+            "visualization_settings": {
+                "graph.y_axis.title_text": "",
+                "graph.show_values": true,
+                "graph.x_axis.title_text": "",
+                "graph.metrics": [
+                    "count"
+                ],
+                "graph.label_value_formatting": "compact",
+                "series_settings": {
+                    "Doohickey": {
+                        "color": "#7172AD"
+                    },
+                    "Gadget": {
+                        "color": "#999AC4"
+                    },
+                    "Gizmo": {
+                        "color": "#227FD2"
+                    },
+                    "Widget": {
+                        "color": "#C7EAEA"
+                    }
+                },
+                "graph.x_axis.scale": "histogram",
+                "graph.dimensions": [
+                    "RATING",
+                    "CATEGORY"
+                ],
+                "stackable.stack_type": "stacked"
+            },
+            "layout": {
+                "row": 26,
+                "col": 10,
+                "size_x": 14,
+                "size_y": 7
+            },
+            "_source_table_name": "PUBLIC.ORDERS"
+        },
+        {
+            "is_text": false,
+            "name": "Customer survey responses",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "filter": [
+                        "time-interval",
+                        [
+                            "field",
+                            27,
+                            {
+                                "base-type": "type/DateTime"
+                            }
+                        ],
+                        -12,
+                        "month"
+                    ],
+                    "order-by": [
+                        [
+                            "desc",
+                            [
+                                "field",
+                                27,
+                                {
+                                    "base-type": "type/DateTime"
+                                }
+                            ]
+                        ]
+                    ],
+                    "source-table": 5
+                },
+                "type": "query"
+            },
+            "display": "table",
+            "visualization_settings": {
+                "table.cell_column": "BODY",
+                "table.column_formatting": [
+                    {
+                        "color": "#F7C4C4",
+                        "columns": [
+                            "RATING"
+                        ],
+                        "highlight_row": true,
+                        "id": 2,
+                        "operator": "<",
+                        "type": "single",
+                        "value": 3
+                    },
+                    {
+                        "color": "#FBE499",
+                        "columns": [
+                            "RATING"
+                        ],
+                        "highlight_row": true,
+                        "id": 1,
+                        "operator": "=",
+                        "type": "single",
+                        "value": 3
+                    },
+                    {
+                        "max_value": 100,
+                        "color": "#A7D07C",
+                        "columns": [
+                            "RATING"
+                        ],
+                        "value": 3,
+                        "type": "single",
+                        "colors": [
+                            "#ED6E6E",
+                            "#FFFFFF",
+                            "#84BB4C"
+                        ],
+                        "highlight_row": true,
+                        "min_value": 0,
+                        "min_type": null,
+                        "id": 0,
+                        "operator": ">",
+                        "max_type": null
+                    }
+                ],
+                "table.columns": [
+                    {
+                        "enabled": true,
+                        "name": "ID"
+                    },
+                    {
+                        "enabled": true,
+                        "name": "DATE_RECEIVED"
+                    },
+                    {
+                        "enabled": false,
+                        "name": "ACCOUNT_ID"
+                    },
+                    {
+                        "enabled": true,
+                        "name": "EMAIL"
+                    },
+                    {
+                        "enabled": true,
+                        "name": "RATING"
+                    },
+                    {
+                        "enabled": false,
+                        "name": "RATING_MAPPED"
+                    },
+                    {
+                        "enabled": true,
+                        "name": "BODY"
+                    }
+                ],
+                "table.pivot_column": "RATING",
+                "column_settings": {
+                    "[\"name\",\"DATE_RECEIVED\"]": {
+                        "date_abbreviate": true,
+                        "date_style": "dddd, MMMM D, YYYY",
+                        "time_enabled": null
+                    }
+                }
+            },
+            "layout": {
+                "row": 33,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 10
+            },
+            "_source_table_name": "PUBLIC.FEEDBACK"
+        },
+        {
+            "is_text": false,
+            "name": "Checkout funnel",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "filter": [
+                        "not-empty",
+                        [
+                            "field",
+                            "BUTTON_LABEL",
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ]
+                    ],
+                    "source-query": {
+                        "breakout": [
+                            [
+                                "field",
+                                29,
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ]
+                        ],
+                        "aggregation": [
+                            [
+                                "count"
+                            ]
+                        ],
+                        "source-table": 7
+                    }
+                },
+                "type": "query"
+            },
+            "display": "funnel",
+            "visualization_settings": {
+                "funnel.order_dimension": "BUTTON_LABEL",
+                "funnel.rows": [
+                    {
+                        "enabled": true,
+                        "key": "Create Item",
+                        "name": "Create Item"
+                    },
+                    {
+                        "enabled": true,
+                        "key": "Invite",
+                        "name": "Invite"
+                    },
+                    {
+                        "enabled": true,
+                        "key": "Subscribe",
+                        "name": "Subscribe"
+                    },
+                    {
+                        "enabled": true,
+                        "key": "Signup",
+                        "name": "Signup"
+                    },
+                    {
+                        "enabled": true,
+                        "key": "Checkout",
+                        "name": "Checkout"
+                    }
+                ]
+            },
+            "layout": {
+                "row": 9,
+                "col": 0,
+                "size_x": 14,
+                "size_y": 7
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Product breakdown",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "filter": [
+                        ">=",
+                        [
+                            "field",
+                            "count",
+                            {
+                                "base-type": "type/Integer"
+                            }
+                        ],
+                        105
+                    ],
+                    "source-query": {
+                        "breakout": [
+                            [
+                                "field",
+                                17,
+                                {
+                                    "base-type": "type/Text",
+                                    "source-field": 14
+                                }
+                            ],
+                            [
+                                "field",
+                                18,
+                                {
+                                    "base-type": "type/Text",
+                                    "source-field": 14
+                                }
+                            ]
+                        ],
+                        "aggregation": [
+                            [
+                                "count"
+                            ]
+                        ],
+                        "source-table": 2
+                    }
+                },
+                "type": "query"
+            },
+            "display": "pie",
+            "visualization_settings": {
+                "graph.y_axis.title_text": "",
+                "graph.show_values": true,
+                "pie.slice_threshold": 11,
+                "pie.percent_visibility": "legend",
+                "pie.dimension": [
+                    "CATEGORY",
+                    "TITLE",
+                    "count"
+                ],
+                "graph.series_order_dimension": null,
+                "graph.x_axis.title_text": "",
+                "pie.sort_rows": false,
+                "pie.rows": [
+                    {
+                        "color": "#51528D",
+                        "defaultColor": false,
+                        "enabled": true,
+                        "hidden": false,
+                        "isOther": false,
+                        "key": "Doohickey",
+                        "name": "Doohickey",
+                        "originalName": "Doohickey"
+                    },
+                    {
+                        "color": "#8A5EB0",
+                        "defaultColor": false,
+                        "enabled": true,
+                        "hidden": false,
+                        "isOther": false,
+                        "key": "Gadget",
+                        "name": "Gadget",
+                        "originalName": "Gadget"
+                    },
+                    {
+                        "color": "#69C8C8",
+                        "defaultColor": false,
+                        "enabled": true,
+                        "hidden": false,
+                        "isOther": false,
+                        "key": "Gizmo",
+                        "name": "Gizmo",
+                        "originalName": "Gizmo"
+                    },
+                    {
+                        "color": "#227FD2",
+                        "defaultColor": false,
+                        "enabled": true,
+                        "hidden": false,
+                        "isOther": false,
+                        "key": "Widget",
+                        "name": "Widget",
+                        "originalName": "Widget"
+                    }
+                ],
+                "graph.metrics": [
+                    "count"
+                ],
+                "graph.series_order": null,
+                "pie.decimal_places": 2,
+                "series_settings": {
+                    "count": {
+                        "color": "#999AC4"
+                    }
+                },
+                "graph.dimensions": [
+                    "TITLE"
+                ],
+                "stackable.stack_type": null
+            },
+            "layout": {
+                "row": 2,
+                "col": 0,
+                "size_x": 12,
+                "size_y": 8
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Total order amount vs. discount given",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "aggregation": [
+                        [
+                            "sum",
+                            [
+                                "field",
+                                5,
+                                {
+                                    "base-type": "type/Float"
+                                }
+                            ]
+                        ],
+                        [
+                            "sum",
+                            [
+                                "field",
+                                3,
+                                {
+                                    "base-type": "type/Float"
+                                }
+                            ]
+                        ],
+                        [
+                            "count"
+                        ]
+                    ],
+                    "breakout": [
+                        [
+                            "field",
+                            13,
+                            {
+                                "base-type": "type/DateTime",
+                                "temporal-unit": "quarter"
+                            }
+                        ],
+                        [
+                            "field",
+                            2,
+                            {
+                                "base-type": "type/Integer",
+                                "binning": {
+                                    "strategy": "default"
+                                }
+                            }
+                        ],
+                        [
+                            "field",
+                            18,
+                            {
+                                "base-type": "type/Text",
+                                "source-field": 14
+                            }
+                        ]
+                    ],
+                    "source-table": 2
+                },
+                "type": "query"
+            },
+            "display": "scatter",
+            "visualization_settings": {
+                "graph.show_trendline": false,
+                "graph.y_axis.title_text": "Discount",
+                "scatter.bubble": "count",
+                "graph.series_order_dimension": null,
+                "graph.x_axis.title_text": "Total",
+                "graph.metrics": [
+                    "sum_2"
+                ],
+                "graph.tooltip_columns": [
+                    "[\"name\",\"count\"]"
+                ],
+                "graph.series_order": null,
+                "column_settings": {
+                    "[\"name\",\"sum_2\"]": {
+                        "decimals": 0
+                    }
+                },
+                "series_settings": {
+                    "Doohickey": {
+                        "color": "#7172AD"
+                    },
+                    "Gadget": {
+                        "color": "#999AC4"
+                    },
+                    "Gizmo": {
+                        "color": "#C7EAEA"
+                    },
+                    "Widget": {
+                        "color": "#227FD2"
+                    },
+                    "sum_2": {
+                        "color": "#7172AD"
+                    }
+                },
+                "graph.dimensions": [
+                    "sum",
+                    "CATEGORY"
+                ]
+            },
+            "layout": {
+                "row": 2,
+                "col": 12,
+                "size_x": 12,
+                "size_y": 8
+            },
+            "_source_table_name": "PUBLIC.ORDERS"
+        },
+        {
+            "is_text": false,
+            "name": "Subscription seats over time",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "filter": [
+                        "time-interval",
+                        [
+                            "field",
+                            "CREATED_AT",
+                            {
+                                "base-type": "type/DateTime",
+                                "inherited-temporal-unit": "year"
+                            }
+                        ],
+                        -3,
+                        "year",
+                        {
+                            "include-current": true
+                        }
+                    ],
+                    "source-query": {
+                        "breakout": [
+                            [
+                                "field",
+                                31,
+                                {
+                                    "base-type": "type/DateTime",
+                                    "temporal-unit": "year",
+                                    "original-temporal-unit": "month"
+                                }
+                            ]
+                        ],
+                        "aggregation": [
+                            [
+                                "sum",
+                                [
+                                    "field",
+                                    33,
+                                    {
+                                        "base-type": "type/Integer"
+                                    }
+                                ]
+                            ]
+                        ],
+                        "source-table": 6
+                    }
+                },
+                "type": "query"
+            },
+            "display": "waterfall",
+            "visualization_settings": {
+                "graph.dimensions": [
+                    "CREATED_AT"
+                ],
+                "graph.show_values": true,
+                "graph.x_axis.title_text": "",
+                "graph.y_axis.title_text": "",
+                "graph.metrics": [
+                    "sum"
+                ]
+            },
+            "layout": {
+                "row": 16,
+                "col": 0,
+                "size_x": 14,
+                "size_y": 7
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Orders according to sources per quarter",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "aggregation": [
+                        [
+                            "metric",
+                            9
+                        ]
+                    ],
+                    "breakout": [
+                        [
+                            "field",
+                            30,
+                            {
+                                "base-type": "type/Text",
+                                "source-field": 11
+                            }
+                        ],
+                        [
+                            "field",
+                            13,
+                            {
+                                "base-type": "type/DateTime",
+                                "temporal-unit": "quarter"
+                            }
+                        ]
+                    ],
+                    "filter": [
+                        "time-interval",
+                        [
+                            "field",
+                            13,
+                            {
+                                "base-type": "type/DateTime"
+                            }
+                        ],
+                        -2,
+                        "year",
+                        {
+                            "include-current": true
+                        }
+                    ],
+                    "source-table": 2
+                },
+                "type": "query"
+            },
+            "display": "pivot",
+            "visualization_settings": {
+                "pivot_table.column_split": {
+                    "columns": [
+                        "SOURCE"
+                    ],
+                    "rows": [
+                        "CREATED_AT"
+                    ],
+                    "values": [
+                        "sum"
+                    ]
+                },
+                "pivot_table.column_widths": {
+                    "leftHeaderWidths": [
+                        135
+                    ],
+                    "totalLeftHeaderWidths": 135,
+                    "valueHeaderWidths": {
+                        "0": 148,
+                        "1": 158,
+                        "2": 159,
+                        "3": 144,
+                        "4": 139,
+                        "5": 124
+                    }
+                },
+                "table.column_formatting": [
+                    {
+                        "max_value": 100,
+                        "color": "#509EE3",
+                        "columns": [
+                            "sum"
+                        ],
+                        "value": "",
+                        "type": "range",
+                        "colors": [
+                            "white",
+                            "#A7D07C"
+                        ],
+                        "highlight_row": false,
+                        "min_value": 0,
+                        "min_type": null,
+                        "id": 0,
+                        "operator": "=",
+                        "max_type": null
+                    }
+                ],
+                "column_settings": {
+                    "[\"name\",\"CREATED_AT\"]": {
+                        "column_title": "Date"
+                    }
+                }
+            },
+            "layout": {
+                "row": 26,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 8
+            },
+            "_source_table_name": "PUBLIC.ORDERS"
+        },
+        {
+            "is_text": false,
+            "name": "User flow diagram",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "expressions": {
+                        "Step": [
+                            "case",
+                            [
+                                [
+                                    [
+                                        "is-null",
+                                        [
+                                            "field",
+                                            "BUTTON_LABEL",
+                                            {
+                                                "base-type": "type/Text"
+                                            }
+                                        ]
+                                    ],
+                                    "Bounced"
+                                ]
+                            ],
+                            {
+                                "default": [
+                                    "field",
+                                    "BUTTON_LABEL",
+                                    {
+                                        "base-type": "type/Text"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "filter": [
+                        "!=",
+                        [
+                            "expression",
+                            "Step",
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        "Bounced"
+                    ],
+                    "source-query": {
+                        "breakout": [
+                            [
+                                "field",
+                                29,
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ],
+                            [
+                                "field",
+                                32,
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ]
+                        ],
+                        "aggregation": [
+                            [
+                                "count"
+                            ]
+                        ],
+                        "source-table": 7
+                    }
+                },
+                "type": "query"
+            },
+            "display": "sankey",
+            "visualization_settings": {
+                "sankey.edge_color": "source",
+                "sankey.node_align": "right",
+                "sankey.show_edge_labels": true,
+                "sankey.source": "EVENT",
+                "sankey.target": "Step"
+            },
+            "layout": {
+                "row": 2,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 7
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Revenue and orders over time",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "aggregation": [
+                        [
+                            "metric",
+                            9
+                        ],
+                        [
+                            "sum",
+                            [
+                                "field",
+                                2,
+                                {
+                                    "base-type": "type/Integer"
+                                }
+                            ]
+                        ],
+                        [
+                            "sum",
+                            [
+                                "field",
+                                3,
+                                {
+                                    "base-type": "type/Float"
+                                }
+                            ]
+                        ],
+                        [
+                            "count"
+                        ]
+                    ],
+                    "breakout": [
+                        [
+                            "field",
+                            13,
+                            {
+                                "base-type": "type/DateTime",
+                                "temporal-unit": "quarter"
+                            }
+                        ],
+                        [
+                            "field",
+                            18,
+                            {
+                                "base-type": "type/Text",
+                                "source-field": 14
+                            }
+                        ]
+                    ],
+                    "filter": [
+                        "time-interval",
+                        [
+                            "field",
+                            13,
+                            {
+                                "base-type": "type/DateTime"
+                            }
+                        ],
+                        -2,
+                        "year",
+                        {
+                            "include-current": true
+                        }
+                    ],
+                    "source-table": 2
+                },
+                "type": "query"
+            },
+            "display": "combo",
+            "visualization_settings": {
+                "graph.show_trendline": false,
+                "graph.y_axis.title_text": "",
+                "graph.show_values": true,
+                "graph.series_order_dimension": null,
+                "graph.x_axis.title_text": "",
+                "graph.label_value_frequency": "fit",
+                "graph.metrics": [
+                    "sum",
+                    "sum_2"
+                ],
+                "graph.tooltip_columns": [
+                    "[\"name\",\"count\"]",
+                    "[\"name\",\"sum_3\"]"
+                ],
+                "graph.label_value_formatting": "compact",
+                "graph.series_order": null,
+                "column_settings": {},
+                "series_settings": {
+                    "sum": {
+                        "color": "#88BF4D",
+                        "line.interpolate": "linear",
+                        "line.marker_enabled": false,
+                        "line.size": "L",
+                        "line.style": "solid",
+                        "title": "Revenue"
+                    },
+                    "sum_2": {
+                        "color": "#7172AD",
+                        "title": "Orders"
+                    }
+                },
+                "graph.dimensions": [
+                    "CREATED_AT"
+                ],
+                "stackable.stack_type": "stacked"
+            },
+            "layout": {
+                "row": 2,
+                "col": 0,
+                "size_x": 17,
+                "size_y": 8
+            },
+            "_source_table_name": "PUBLIC.ORDERS"
+        },
+        {
+            "is_text": false,
+            "name": "Revenue by product category",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "aggregation": [
+                        [
+                            "metric",
+                            9
+                        ],
+                        [
+                            "avg",
+                            [
+                                "field",
+                                5,
+                                {
+                                    "base-type": "type/Float"
+                                }
+                            ]
+                        ],
+                        [
+                            "max",
+                            [
+                                "field",
+                                5,
+                                {
+                                    "base-type": "type/Float"
+                                }
+                            ]
+                        ],
+                        [
+                            "sum",
+                            [
+                                "field",
+                                3,
+                                {
+                                    "base-type": "type/Float"
+                                }
+                            ]
+                        ]
+                    ],
+                    "breakout": [
+                        [
+                            "field",
+                            13,
+                            {
+                                "base-type": "type/DateTime",
+                                "temporal-unit": "month",
+                                "original-temporal-unit": "quarter"
+                            }
+                        ],
+                        [
+                            "field",
+                            18,
+                            {
+                                "base-type": "type/Text",
+                                "source-field": 14
+                            }
+                        ]
+                    ],
+                    "filter": [
+                        "time-interval",
+                        [
+                            "field",
+                            13,
+                            {
+                                "base-type": "type/DateTime"
+                            }
+                        ],
+                        -4,
+                        "month"
+                    ],
+                    "source-table": 2
+                },
+                "type": "query"
+            },
+            "display": "bar",
+            "visualization_settings": {
+                "graph.y_axis.title_text": "",
+                "graph.show_values": true,
+                "graph.x_axis.title_text": "",
+                "graph.metrics": [
+                    "sum",
+                    "avg",
+                    "max",
+                    "sum_2"
+                ],
+                "graph.tooltip_columns": [
+                    "[\"name\",\"sum_2\"]",
+                    "[\"name\",\"avg\"]",
+                    "[\"name\",\"max\"]"
+                ],
+                "graph.show_stack_values": "all",
+                "graph.label_value_formatting": "compact",
+                "series_settings": {
+                    "Doohickey": {
+                        "color": "#7172AD"
+                    },
+                    "Gadget": {
+                        "color": "#A989C5"
+                    },
+                    "Gizmo": {
+                        "color": "#C7EAEA"
+                    },
+                    "Widget": {
+                        "color": "#227FD2"
+                    }
+                },
+                "graph.dimensions": [
+                    "CREATED_AT",
+                    "CATEGORY"
+                ],
+                "stackable.stack_type": "stacked"
+            },
+            "layout": {
+                "row": 12,
+                "col": 12,
+                "size_x": 12,
+                "size_y": 7
+            },
+            "_source_table_name": "PUBLIC.ORDERS"
+        },
+        {
+            "is_text": false,
+            "name": "Revenue per quarter",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "aggregation": [
+                        [
+                            "metric",
+                            9
+                        ]
+                    ],
+                    "breakout": [
+                        [
+                            "field",
+                            13,
+                            {
+                                "base-type": "type/DateTime",
+                                "temporal-unit": "quarter"
+                            }
+                        ]
+                    ],
+                    "source-table": 2
+                },
+                "type": "query"
+            },
+            "display": "smartscalar",
+            "visualization_settings": {
+                "scalar.comparisons": [
+                    {
+                        "id": "a8d008d4-d8f1-cbc1-b0ad-f4ab30791b9e",
+                        "type": "previousPeriod"
+                    },
+                    {
+                        "id": "e7fa0d15-867c-2628-dbea-9f9a41e3ca38",
+                        "type": "periodsAgo",
+                        "value": 4
+                    }
+                ]
+            },
+            "layout": {
+                "row": 2,
+                "col": 17,
+                "size_x": 7,
+                "size_y": 4
+            },
+            "_source_table_name": "PUBLIC.ORDERS"
+        },
+        {
+            "is_text": false,
+            "name": "Number of subscriptions",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "filter": [
+                        "=",
+                        [
+                            "field",
+                            "BUTTON_LABEL",
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        "Subscribe"
+                    ],
+                    "source-query": {
+                        "breakout": [
+                            [
+                                "field",
+                                29,
+                                {
+                                    "base-type": "type/Text"
+                                }
+                            ],
+                            [
+                                "field",
+                                35,
+                                {
+                                    "base-type": "type/DateTime",
+                                    "temporal-unit": "month"
+                                }
+                            ]
+                        ],
+                        "aggregation": [
+                            [
+                                "count"
+                            ]
+                        ],
+                        "source-table": 7
+                    }
+                },
+                "type": "query"
+            },
+            "display": "area",
+            "visualization_settings": {
+                "graph.show_trendline": true,
+                "graph.y_axis.title_text": "",
+                "graph.show_values": true,
+                "graph.series_order_dimension": null,
+                "graph.x_axis.title_text": "",
+                "graph.metrics": [
+                    "count"
+                ],
+                "scalar.field": "count",
+                "graph.series_order": null,
+                "series_settings": {
+                    "Subscribe": {
+                        "color": "#7172AD",
+                        "line.interpolate": "linear",
+                        "title": "Subscriptions"
+                    },
+                    "count": {
+                        "color": "#7172AD"
+                    }
+                },
+                "graph.dimensions": [
+                    "TIMESTAMP"
+                ]
+            },
+            "layout": {
+                "row": 9,
+                "col": 14,
+                "size_x": 10,
+                "size_y": 7
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Revenue goal for this quarter",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "aggregation": [
+                        [
+                            "metric",
+                            9
+                        ]
+                    ],
+                    "filter": [
+                        "time-interval",
+                        [
+                            "field",
+                            13,
+                            {
+                                "base-type": "type/DateTime"
+                            }
+                        ],
+                        "current",
+                        "quarter"
+                    ],
+                    "source-table": 2
+                },
+                "type": "query"
+            },
+            "display": "progress",
+            "visualization_settings": {
+                "progress.goal": 250000,
+                "column_settings": {
+                    "[\"name\",\"sum\"]": {
+                        "decimals": 0
+                    }
+                }
+            },
+            "layout": {
+                "row": 6,
+                "col": 17,
+                "size_x": 7,
+                "size_y": 4
+            },
+            "_source_table_name": "PUBLIC.ORDERS"
+        },
+        {
+            "is_text": false,
+            "name": "Product category orders per age",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "aggregation": [
+                        [
+                            "count"
+                        ]
+                    ],
+                    "breakout": [
+                        [
+                            "field",
+                            "Age",
+                            {
+                                "base-type": "type/BigInteger"
+                            }
+                        ],
+                        [
+                            "field",
+                            18,
+                            {
+                                "base-type": "type/Text",
+                                "join-alias": "Products"
+                            }
+                        ]
+                    ],
+                    "joins": [
+                        {
+                            "alias": "Products",
+                            "condition": [
+                                "=",
+                                [
+                                    "field",
+                                    "PRODUCT_ID",
+                                    {
+                                        "base-type": "type/Integer"
+                                    }
+                                ],
+                                [
+                                    "field",
+                                    8,
+                                    {
+                                        "base-type": "type/BigInteger",
+                                        "join-alias": "Products"
+                                    }
+                                ]
+                            ],
+                            "source-table": 3,
+                            "strategy": "left-join"
+                        }
+                    ],
+                    "source-table": "card__1"
+                },
+                "type": "query"
+            },
+            "display": "bar",
+            "visualization_settings": {
+                "graph.dimensions": [
+                    "Age",
+                    "CATEGORY"
+                ],
+                "graph.show_values": true,
+                "graph.x_axis.scale": "linear",
+                "series_settings": {
+                    "Doohickey": {
+                        "color": "#7172AD"
+                    },
+                    "Gadget": {
+                        "color": "#999AC4"
+                    },
+                    "Gizmo": {
+                        "color": "#C7EAEA"
+                    },
+                    "Widget": {
+                        "color": "#227FD2"
+                    }
+                },
+                "stackable.stack_type": "normalized",
+                "graph.metrics": [
+                    "count"
+                ]
+            },
+            "layout": {
+                "row": 18,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 6
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Total orders by product category",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "aggregation": [
+                        [
+                            "metric",
+                            19
+                        ]
+                    ],
+                    "breakout": [
+                        [
+                            "field",
+                            18,
+                            {
+                                "base-type": "type/Text",
+                                "source-field": 14
+                            }
+                        ]
+                    ],
+                    "source-table": 2
+                },
+                "type": "query"
+            },
+            "display": "pie",
+            "visualization_settings": {
+                "pie.decimal_places": 0,
+                "pie.percent_visibility": "both",
+                "pie.rows": [
+                    {
+                        "color": "#7172AD",
+                        "defaultColor": false,
+                        "enabled": true,
+                        "hidden": false,
+                        "isOther": false,
+                        "key": "Doohickey",
+                        "name": "Doohickey",
+                        "originalName": "Doohickey"
+                    },
+                    {
+                        "color": "#A989C5",
+                        "defaultColor": false,
+                        "enabled": true,
+                        "hidden": false,
+                        "isOther": false,
+                        "key": "Gadget",
+                        "name": "Gadget",
+                        "originalName": "Gadget"
+                    },
+                    {
+                        "color": "#C7EAEA",
+                        "defaultColor": false,
+                        "enabled": true,
+                        "hidden": false,
+                        "isOther": false,
+                        "key": "Gizmo",
+                        "name": "Gizmo",
+                        "originalName": "Gizmo"
+                    },
+                    {
+                        "color": "#227FD2",
+                        "defaultColor": false,
+                        "enabled": true,
+                        "hidden": false,
+                        "isOther": false,
+                        "key": "Widget",
+                        "name": "Widget",
+                        "originalName": "Widget"
+                    }
+                ],
+                "pie.show_labels": false,
+                "pie.sort_rows": false
+            },
+            "layout": {
+                "row": 12,
+                "col": 0,
+                "size_x": 12,
+                "size_y": 7
+            },
+            "_source_table_name": "PUBLIC.ORDERS"
+        },
+        {
+            "is_text": false,
+            "name": "Best selling products",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "filter": [
+                        ">=",
+                        [
+                            "field",
+                            "count",
+                            {
+                                "base-type": "type/Integer"
+                            }
+                        ],
+                        110
+                    ],
+                    "source-query": {
+                        "order-by": [
+                            [
+                                "desc",
+                                [
+                                    "aggregation",
+                                    0
+                                ]
+                            ]
+                        ],
+                        "aggregation": [
+                            [
+                                "count"
+                            ]
+                        ],
+                        "breakout": [
+                            [
+                                "field",
+                                17,
+                                {
+                                    "base-type": "type/Text",
+                                    "source-field": 14
+                                }
+                            ],
+                            [
+                                "field",
+                                18,
+                                {
+                                    "base-type": "type/Text",
+                                    "source-field": 14
+                                }
+                            ]
+                        ],
+                        "filter": [
+                            "!=",
+                            [
+                                "field",
+                                17,
+                                {
+                                    "base-type": "type/Text",
+                                    "source-field": 14
+                                }
+                            ],
+                            "Incredible Aluminum Knife"
+                        ],
+                        "source-table": 2
+                    }
+                },
+                "type": "query"
+            },
+            "display": "row",
+            "visualization_settings": {
+                "graph.y_axis.title_text": "",
+                "graph.show_values": true,
+                "graph.series_order_dimension": null,
+                "graph.x_axis.title_text": "",
+                "graph.metrics": [
+                    "count"
+                ],
+                "graph.series_order": null,
+                "series_settings": {
+                    "count": {
+                        "color": "#999AC4"
+                    }
+                },
+                "graph.dimensions": [
+                    "TITLE"
+                ],
+                "stackable.stack_type": null
+            },
+            "layout": {
+                "row": 10,
+                "col": 0,
+                "size_x": 12,
+                "size_y": 8
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Average product rating",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "aggregation": [
+                        [
+                            "avg",
+                            [
+                                "field",
+                                16,
+                                {
+                                    "base-type": "type/Float"
+                                }
+                            ]
+                        ]
+                    ],
+                    "source-table": 3
+                },
+                "type": "query"
+            },
+            "display": "gauge",
+            "visualization_settings": {
+                "gauge.segments": [
+                    {
+                        "color": "#ED6E6E",
+                        "label": "",
+                        "max": 1,
+                        "min": 0
+                    },
+                    {
+                        "color": "#F2A86F",
+                        "label": "",
+                        "max": 2,
+                        "min": 1
+                    },
+                    {
+                        "color": "#F9D45C",
+                        "label": "",
+                        "max": 3,
+                        "min": 2
+                    },
+                    {
+                        "color": "#A7D07C",
+                        "label": "",
+                        "max": 4,
+                        "min": 3
+                    },
+                    {
+                        "color": "#689636",
+                        "label": "",
+                        "max": 5,
+                        "min": 4
+                    }
+                ]
+            },
+            "layout": {
+                "row": 26,
+                "col": 0,
+                "size_x": 10,
+                "size_y": 7
+            },
+            "_source_table_name": "PUBLIC.PRODUCTS"
+        },
+        {
+            "is_text": false,
+            "name": "Most recent subscription",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "fields": [
+                        [
+                            "field",
+                            24,
+                            {
+                                "base-type": "type/BigInteger"
+                            }
+                        ],
+                        [
+                            "field",
+                            37,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        [
+                            "field",
+                            36,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        [
+                            "field",
+                            43,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        [
+                            "field",
+                            41,
+                            {
+                                "base-type": "type/Text"
+                            }
+                        ],
+                        [
+                            "field",
+                            31,
+                            {
+                                "base-type": "type/DateTime"
+                            }
+                        ],
+                        [
+                            "field",
+                            40,
+                            {
+                                "base-type": "type/DateTime"
+                            }
+                        ],
+                        [
+                            "field",
+                            39,
+                            {
+                                "base-type": "type/DateTime"
+                            }
+                        ],
+                        [
+                            "field",
+                            38,
+                            {
+                                "base-type": "type/Boolean"
+                            }
+                        ],
+                        [
+                            "field",
+                            42,
+                            {
+                                "base-type": "type/Boolean"
+                            }
+                        ]
+                    ],
+                    "filter": [
+                        "time-interval",
+                        [
+                            "field",
+                            31,
+                            {
+                                "base-type": "type/DateTime"
+                            }
+                        ],
+                        -12,
+                        "month"
+                    ],
+                    "order-by": [
+                        [
+                            "desc",
+                            [
+                                "field",
+                                31,
+                                {
+                                    "base-type": "type/DateTime"
+                                }
+                            ]
+                        ]
+                    ],
+                    "source-table": 6
+                },
+                "type": "query"
+            },
+            "display": "object",
+            "visualization_settings": {
+                "table.columns": [
+                    {
+                        "enabled": true,
+                        "name": "ID"
+                    },
+                    {
+                        "enabled": true,
+                        "name": "FIRST_NAME"
+                    },
+                    {
+                        "enabled": true,
+                        "name": "LAST_NAME"
+                    },
+                    {
+                        "enabled": true,
+                        "name": "PLAN"
+                    },
+                    {
+                        "enabled": false,
+                        "name": "SOURCE"
+                    },
+                    {
+                        "enabled": true,
+                        "name": "CREATED_AT"
+                    },
+                    {
+                        "enabled": true,
+                        "name": "TRIAL_ENDS_AT"
+                    },
+                    {
+                        "enabled": true,
+                        "name": "CANCELED_AT"
+                    },
+                    {
+                        "enabled": false,
+                        "name": "TRIAL_CONVERTED"
+                    },
+                    {
+                        "enabled": false,
+                        "name": "ACTIVE_SUBSCRIPTION"
+                    }
+                ]
+            },
+            "layout": {
+                "row": 16,
+                "col": 14,
+                "size_x": 10,
+                "size_y": 6
+            },
+            "_source_table_name": "PUBLIC.ACCOUNTS"
+        },
+        {
+            "is_text": false,
+            "name": "Orders by product category",
+            "dataset_query": {
+                "database": 1,
+                "query": {
+                    "aggregation": [
+                        [
+                            "metric",
+                            19
+                        ]
+                    ],
+                    "breakout": [
+                        [
+                            "field",
+                            18,
+                            {
+                                "base-type": "type/Text",
+                                "source-field": 14
+                            }
+                        ],
+                        [
+                            "field",
+                            13,
+                            {
+                                "base-type": "type/DateTime",
+                                "temporal-unit": "quarter",
+                                "original-temporal-unit": "month"
+                            }
+                        ]
+                    ],
+                    "filter": [
+                        "time-interval",
+                        [
+                            "field",
+                            13,
+                            {
+                                "base-type": "type/DateTime"
+                            }
+                        ],
+                        -2,
+                        "year",
+                        {
+                            "include-current": true
+                        }
+                    ],
+                    "source-table": 2
+                },
+                "type": "query"
+            },
+            "display": "line",
+            "visualization_settings": {
+                "graph.show_goal": true,
+                "graph.show_trendline": false,
+                "graph.y_axis.title_text": "",
+                "graph.show_values": true,
+                "graph.x_axis.title_text": "",
+                "graph.goal_value": 500,
+                "graph.metrics": [
+                    "count"
+                ],
+                "graph.label_value_formatting": "compact",
+                "series_settings": {
+                    "Doohickey": {
+                        "color": "#7172AD",
+                        "display": "area",
+                        "line.interpolate": "cardinal",
+                        "line.size": "M",
+                        "line.style": "solid"
+                    },
+                    "Gadget": {
+                        "color": "#A989C5",
+                        "line.size": "M"
+                    },
+                    "Gizmo": {
+                        "color": "#C7EAEA",
+                        "line.size": "M",
+                        "line.style": "solid"
+                    },
+                    "Widget": {
+                        "color": "#227FD2",
+                        "line.size": "M"
+                    }
+                },
+                "graph.dimensions": [
+                    "CREATED_AT",
+                    "CATEGORY"
+                ]
+            },
+            "layout": {
+                "row": 19,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 7
+            },
+            "_source_table_name": "PUBLIC.ORDERS"
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 23,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 24,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 25,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 10
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 22,
+                "col": 14,
+                "size_x": 10,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 1,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 0,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 25,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 24,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 11,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 1,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 1,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 0,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 10,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        },
+        {
+            "is_text": false,
+            "name": "Untitled",
+            "dataset_query": null,
+            "display": null,
+            "visualization_settings": null,
+            "layout": {
+                "row": 0,
+                "col": 0,
+                "size_x": 24,
+                "size_y": 1
+            },
+            "_source_table_name": null
+        }
+    ]
+}
