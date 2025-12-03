@@ -352,6 +352,35 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "queued"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "upstream_failed"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "orange",
+                  "mode": "fixed"
+                }
+              }
+            ]
           }
         ]
       },
@@ -1054,7 +1083,7 @@
           "reducer": [
             "sum"
           ],
-          "show": true
+          "show": false
         },
         "showHeader": true,
         "sortBy": [
@@ -1074,9 +1103,9 @@
           "editorMode": "code",
           "expr": "airflow_task_status{state=~\"failed|upstream_failed\", job=\"airflow-global\", dag_id=~\".*${failed_dag_filter}.*\", task_id=~\".*${failed_task_filter}.*\"}",
           "format": "table",
-          "instant": true,
+          "instant": false,
           "legendFormat": "{{dag_id}} - {{task_id}}",
-          "range": false,
+          "range": true,
           "refId": "A"
         }
       ],
@@ -1191,7 +1220,7 @@
     ]
   },
   "time": {
-    "from": "now-90d",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {
@@ -1207,6 +1236,6 @@
   "timezone": "browser",
   "title": "Airflow Monitoring Dashboard",
   "uid": "a23a7e6f-3feb-45f4-902e-95dfbcec13da",
-  "version": 38,
+  "version": 2,
   "weekStart": ""
 }
