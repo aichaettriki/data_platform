@@ -1,0 +1,6 @@
+172.19.0.2 airflow.local
+172.19.0.2 grafana.local
+172.19.0.2 minio.local
+172.19.0.2 prometheus.local
+172.19.0.2 metabase.local
+172.19.0.2 pgadmin.local

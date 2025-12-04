@@ -2,11 +2,48 @@ version: '3.8'
 
 services:
 
+#  # ---------- Traefik ----------
+  traefik:
+    image: traefik:2.10
+    container_name: traefik
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8082:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik-public
+    restart: always
+
+
+#   # ---------- CoreDNS ----------
+  # coredns:
+  #   image: coredns/coredns:1.11.1
+  #   command: -conf /Corefile
+  #   ports:
+  #     - "1053:53/udp"
+  #     - "1053:53/tcp"
+  #   volumes:
+  #     - ./coredns/Corefile:/Corefile
+  #     - ./coredns/hosts:/hosts
+  #   restart: always
+  #   networks:
+  #     - traefik-public
+    
+
+
   # ------------------------
   # PostgreSQL pour Airflow
   # ------------------------
   postgres-airflow:
     image: postgres:13
+    networks:
+      - traefik-public
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -23,6 +60,8 @@ services:
   # PostgreSQL Exporter pour Prometheus
   # ------------------------
   postgres-exporter:
+    networks:
+      - traefik-public
     image: prometheuscommunity/postgres-exporter:latest
     environment:
       # Connexion au PostgreSQL Airflow
@@ -41,6 +80,8 @@ services:
     build: ./airflow
     depends_on:
       - postgres-airflow
+    networks:
+      - traefik-public
     environment:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
       AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
@@ -62,6 +103,8 @@ services:
   # ------------------------
   airflow-webserver:
     build: ./airflow
+    networks:
+      - traefik-public
     depends_on:
       - postgres-airflow
     environment:
@@ -82,9 +125,15 @@ services:
       - ${MINIO_TRANSFORMED_PATH}:/data/transformed
       - ./data:/opt/airflow/data
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
-
     command: airflow webserver
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.airflow.rule=Host(`airflow.itceq.tn`)"
+      - "traefik.http.routers.airflow.entrypoints=web"
+      - "traefik.http.services.airflow.loadbalancer.server.port=8080"
+
+    
 
   # ------------------------
   # Airflow Scheduler
@@ -93,6 +142,8 @@ services:
     build: ./airflow
     depends_on:
       - postgres-airflow
+    networks:
+      - traefik-public
     environment:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
       AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
@@ -120,6 +171,8 @@ services:
     build: ./airflow
     depends_on:
       - postgres-airflow
+    networks:
+      - traefik-public
     environment:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
       AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
@@ -155,6 +208,8 @@ services:
 
   airflow-worker:
     build: ./airflow
+    networks:
+      - traefik-public
     depends_on:
       - postgres-airflow
     environment:
@@ -176,6 +231,8 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_PROMETHEUS_AUTH_TYPE: public
+    networks:
+      - traefik-public
     ports:
       - "${MINIO_API_PORT}:9000"
       - "${MINIO_CONSOLE_PORT}:9001"
@@ -183,12 +240,19 @@ services:
     volumes:
       - ./minio:/data   # raw + transformed
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.rule=Host(`minio.itceq.tn`)"
+      - "traefik.http.routers.minio.entrypoints=web"
+      - "traefik.http.services.minio.loadbalancer.server.port=9000"
 
   # -------------------------------------------------------
   # MinIO - Create default buckets at startup
   # -------------------------------------------------------
   minio-create-buckets:
     image: minio/mc:latest
+    networks:
+      - traefik-public
     depends_on:
       - minio
     entrypoint: >
@@ -202,12 +266,15 @@ services:
         mc ls myminio;
       "
     restart: "no"
+
                                        
   # ------------------------
   # Spark
   # ------------------------
   spark-master:
     build: ./spark
+    networks:
+      - traefik-public
     container_name: spark-master
     user: root
     environment:
@@ -226,9 +293,17 @@ services:
       - ${MINIO_REFINED_PATH}:/data/refined
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.spark.rule=Host(`spark.itceq.tn`)"
+      - "traefik.http.routers.spark.entrypoints=web"
+      - "traefik.http.services.spark.loadbalancer.server.port=8080"
+
 
   spark-worker:
     build: ./spark
+    networks:
+      - traefik-public
     container_name: spark-worker
     depends_on:
       - spark-master
@@ -254,17 +329,25 @@ services:
   # ------------------------
   prometheus:
     image: prom/prometheus:v2.52.0
+    networks:
+      - traefik-public
     ports:
       - "${PROMETHEUS_PORT}:9090"
     volumes:
       - ${PROMETHEUS_CONFIG_PATH}:/etc/prometheus/prometheus.yml
     restart: always
-
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.itceq.tn`)"
+      - "traefik.http.routers.prometheus.entrypoints=web"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
   # ------------------------
   # Grafana
   # ------------------------
   grafana:
     image: grafana/grafana:10.0.3
+    networks:
+      - traefik-public
     ports:
       - "${GRAFANA_PORT}:3000"
     volumes:
@@ -276,13 +359,19 @@ services:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     restart: always
-
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.itceq.tn`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
   # ------------------------
   # Metabase
   # ------------------------
   metabase:
-    image: metabase/metabase:latest
+    build: ./metabase
     container_name: metabase
+    networks:
+      - traefik-public
     restart: always
     ports:
       - "${METABASE_PORT}:3000"
@@ -290,12 +379,18 @@ services:
       - ${METABASE_ENV_FILE}
     depends_on:
       - postgres-airflow
-
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.metabase.rule=Host(`metabase.itceq.tn`)"
+      - "traefik.http.routers.metabase.entrypoints=web"
+      - "traefik.http.services.metabase.loadbalancer.server.port=3000"
   # ------------------------
   # pgAdmin
   # ------------------------
   pgadmin:
     image: dpage/pgadmin4:latest
+    networks:
+      - traefik-public
     container_name: pgadmin
     environment:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
@@ -307,5 +402,13 @@ services:
     depends_on:
       - postgres-airflow
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.itceq.tn`)"
+      - "traefik.http.routers.pgadmin.entrypoints=web"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
 
 
+networks:
+  traefik-public:
+    driver: bridge

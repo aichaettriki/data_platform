@@ -9,6 +9,9 @@ data-platform/
 │   ├─ dags/
 │   ├─ plugins/
 │   └─ Dockerfile
+├─ coredns/
+│   ├─ Corefile
+│   └─ hosts
 ├─ spark/
 │   ├─ jobs/
 │   ├─ notebooks/
@@ -25,6 +28,8 @@ data-platform/
 │      └─ Dockerfile
 ├─ logs/
 ├─ docker-compose.yml
+├─ start.ps1
+├─ update-hosts.ps1 
 └─ README.md
 ```
 # Metabase Module
