@@ -4,6 +4,8 @@ server:
 
 positions:
   filename: /tmp/positions.yaml
+  # Forcer la relecture depuis le début
+  sync_period: 10s
 
 clients:
   - url: http://loki:3100/loki/api/v1/push
@@ -27,6 +29,10 @@ scrape_configs:
           dag_id:
           run_id:
           task_id:
+      # Extraire la timestamp du log pour avoir la date correcte
+      - timestamp:
+          source: time
+          format: RFC3339
 
   # Job 2: Logs du scheduler
   - job_name: airflow-scheduler
@@ -45,3 +51,6 @@ scrape_configs:
       - labels:
           scheduler_date:
           dag_file:
+      - timestamp:
+          source: time
+          format: RFC3339

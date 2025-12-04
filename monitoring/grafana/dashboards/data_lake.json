@@ -171,7 +171,7 @@
           },
           "editorMode": "code",
           "expr": "minio_cluster_nodes_online_total",
-          "legendFormat": "minio_cluster_nodes_online_total:",
+          "legendFormat": "minio cluster nodes online",
           "range": true,
           "refId": "A"
         }
@@ -237,10 +237,10 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "minio_cluster_nodes_offline_total",
-          "instant": false,
-          "legendFormat": "minio_cluster_nodes_offline_total: ",
-          "range": true,
+          "expr": "rate(minio_cluster_nodes_offline_total[$__rate_interval])",
+          "instant": true,
+          "legendFormat": "minio cluster nodes offline",
+          "range": false,
           "refId": "A"
         }
       ],
@@ -372,84 +372,6 @@
       "type": "stat"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "Summary of storage drives status showing total, online, and offline drives across the cluster.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 18,
-        "y": 1
-      },
-      "id": 103,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "minio_cluster_drive_online_total",
-          "legendFormat": "Online",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "minio_cluster_drive_offline_total",
-          "legendFormat": "Offline",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "minio_cluster_drive_total",
-          "legendFormat": "Total",
-          "refId": "C"
-        }
-      ],
-      "title": "Drives Status",
-      "type": "stat"
-    },
-    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
@@ -554,8 +476,8 @@
         ]
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 7,
+        "w": 10,
         "x": 0,
         "y": 6
       },
@@ -664,9 +586,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 12,
+        "h": 7,
+        "w": 5,
+        "x": 10,
         "y": 6
       },
       "id": 201,
@@ -725,9 +647,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 3,
         "w": 6,
-        "x": 18,
+        "x": 15,
         "y": 6
       },
       "id": 19,
@@ -755,7 +677,7 @@
           "editorMode": "code",
           "expr": "minio_cluster_usage_total_bytes",
           "instant": false,
-          "legendFormat": "minio_cluster_usage_total_bytes",
+          "legendFormat": "minio cluster usage",
           "range": true,
           "refId": "A"
         }
@@ -791,8 +713,8 @@
       "gridPos": {
         "h": 4,
         "w": 6,
-        "x": 18,
-        "y": 10
+        "x": 15,
+        "y": 9
       },
       "id": 202,
       "options": {
@@ -819,7 +741,7 @@
           "editorMode": "code",
           "expr": "minio_cluster_capacity_usable_free_bytes",
           "instant": false,
-          "legendFormat": "minio_cluster_capacity_usable_free_bytes",
+          "legendFormat": "minio cluster capacity",
           "range": true,
           "refId": "A"
         }
@@ -833,7 +755,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 13
       },
       "id": 300,
       "panels": [],
@@ -878,7 +800,7 @@
         "h": 6,
         "w": 6,
         "x": 0,
-        "y": 15
+        "y": 14
       },
       "id": 14,
       "options": {
@@ -969,7 +891,7 @@
         "h": 6,
         "w": 9,
         "x": 6,
-        "y": 15
+        "y": 14
       },
       "id": 8,
       "options": {
@@ -995,9 +917,12 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
+          "exemplar": false,
           "expr": "minio_node_process_resident_memory_bytes",
           "format": "time_series",
           "hide": false,
+          "instant": false,
+          "interval": "",
           "legendFormat": "Memory Used",
           "range": true,
           "refId": "B"
@@ -1012,7 +937,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 20
       },
       "id": 400,
       "panels": [],
@@ -1094,7 +1019,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 22
+        "y": 21
       },
       "id": 7,
       "options": {
@@ -1202,7 +1127,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 22
+        "y": 21
       },
       "id": 17,
       "options": {
@@ -1246,7 +1171,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 29
+        "y": 28
       },
       "id": 600,
       "panels": [],
@@ -1269,8 +1194,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "yellow",
@@ -1289,7 +1213,7 @@
         "h": 6,
         "w": 8,
         "x": 0,
-        "y": 30
+        "y": 29
       },
       "id": 601,
       "options": {
@@ -1394,8 +1318,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1407,7 +1330,7 @@
         "h": 6,
         "w": 8,
         "x": 8,
-        "y": 30
+        "y": 29
       },
       "id": 602,
       "options": {
@@ -1473,8 +1396,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               },
               {
                 "color": "red",
@@ -1489,7 +1411,7 @@
         "h": 6,
         "w": 8,
         "x": 16,
-        "y": 30
+        "y": 29
       },
       "id": 603,
       "options": {
@@ -1538,135 +1460,6 @@
       ],
       "title": "ILM Missed Tasks (1h)",
       "type": "stat"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 36
-      },
-      "id": 700,
-      "panels": [],
-      "title": "📮 Audit & Notifications",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "Rate of audit log messages generated per minute, tracking both successful and failed message deliveries.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 20,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "ops"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Failed"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 37
-      },
-      "id": 701,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "sum"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "rate(minio_audit_total_messages[1m])",
-          "legendFormat": "Total",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "rate(minio_audit_failed_messages[1m])",
-          "legendFormat": "Failed",
-          "refId": "B"
-        }
-      ],
-      "title": "Audit Messages",
-      "type": "timeseries"
     }
   ],
   "refresh": "5s",
@@ -1681,13 +1474,13 @@
     "list": []
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Data Lake Health",
   "uid": "minio_data_lake_dashboard",
-  "version": 1,
+  "version": 5,
   "weekStart": ""
 }

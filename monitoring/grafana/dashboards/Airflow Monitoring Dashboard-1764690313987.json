@@ -1156,11 +1156,11 @@
           "refId": "A"
         }
       ],
-      "title": "Error Logs (Filtered)",
+      "title": "Error Logs (Filtered: DAG=${failed_dag_filter}, Task=${failed_task_filter})",
       "type": "logs"
     }
   ],
-  "refresh": "",
+  "refresh": false,
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
@@ -1239,8 +1239,8 @@
     ]
   },
   "time": {
-    "from": "now-7d",
-    "to": "now"
+    "from": "2025-11-27T10:53:07.627Z",
+    "to": "2025-12-04T10:53:07.628Z"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -1255,6 +1255,6 @@
   "timezone": "browser",
   "title": "Airflow Monitoring Dashboard",
   "uid": "a23a7e6f-3feb-45f4-902e-95dfbcec13da",
-  "version": 12,
+  "version": 14,
   "weekStart": ""
 }
