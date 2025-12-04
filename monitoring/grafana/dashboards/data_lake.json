@@ -39,6 +39,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Real-time health status of the MinIO cluster. Green indicates all nodes are operational, red indicates cluster issues.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -114,7 +115,6 @@
         }
       ],
       "title": "Cluster Health",
-      "description": "Real-time health status of the MinIO cluster. Green indicates all nodes are operational, red indicates cluster issues.",
       "type": "stat"
     },
     {
@@ -122,6 +122,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Total number of MinIO nodes currently online and serving requests in the cluster.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -176,7 +177,6 @@
         }
       ],
       "title": "Nodes Online",
-      "description": "Total number of MinIO nodes currently online and serving requests in the cluster.",
       "type": "stat"
     },
     {
@@ -184,6 +184,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Number of MinIO nodes currently offline. Values above 0 require immediate attention.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -244,7 +245,6 @@
         }
       ],
       "title": "Nodes Offline",
-      "description": "Number of MinIO nodes currently offline. Values above 0 require immediate attention.",
       "type": "stat"
     },
     {
@@ -252,6 +252,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Elapsed time since the MinIO process was last restarted, measured in seconds.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -308,11 +309,11 @@
         }
       ],
       "title": "Uptime",
-      "description": "Elapsed time since the MinIO process was last restarted, measured in seconds.",
       "type": "stat"
     },
     {
       "datasource": "Prometheus",
+      "description": "Total count of buckets, objects, and object versions stored in the cluster.",
       "fieldConfig": {
         "defaults": {
           "mappings": [],
@@ -368,7 +369,6 @@
         }
       ],
       "title": "Storage Items",
-      "description": "Total count of buckets, objects, and object versions stored in the cluster.",
       "type": "stat"
     },
     {
@@ -376,6 +376,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Summary of storage drives status showing total, online, and offline drives across the cluster.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -446,7 +447,6 @@
         }
       ],
       "title": "Drives Status",
-      "description": "Summary of storage drives status showing total, online, and offline drives across the cluster.",
       "type": "stat"
     },
     {
@@ -467,6 +467,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Breakdown of total storage capacity showing space used by objects, system overhead, and available free space.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -627,7 +628,6 @@
         }
       ],
       "title": "Storage Distribution",
-      "description": "Breakdown of total storage capacity showing space used by objects, system overhead, and available free space.",
       "type": "barchart"
     },
     {
@@ -635,6 +635,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Percentage of usable storage capacity currently in use. Thresholds: <70% green, 70-90% yellow, >90% red.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -696,7 +697,6 @@
         }
       ],
       "title": "Storage Usage %",
-      "description": "Percentage of usable storage capacity currently in use. Thresholds: <70% green, 70-90% yellow, >90% red.",
       "type": "gauge"
     },
     {
@@ -704,6 +704,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Total amount of data stored in the cluster, measured in bytes.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -760,7 +761,6 @@
         }
       ],
       "title": "Data Stored",
-      "description": "Total amount of data stored in the cluster, measured in bytes.",
       "type": "stat"
     },
     {
@@ -768,6 +768,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Amount of usable free storage space remaining in the cluster.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -824,7 +825,6 @@
         }
       ],
       "title": "Free Space Available",
-      "description": "Amount of usable free storage space remaining in the cluster.",
       "type": "stat"
     },
     {
@@ -845,6 +845,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Current CPU utilization percentage of the MinIO process. High values may indicate performance bottlenecks.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -907,7 +908,6 @@
         }
       ],
       "title": "CPU Usage",
-      "description": "Current CPU utilization percentage of the MinIO process. High values may indicate performance bottlenecks.",
       "type": "gauge"
     },
     {
@@ -915,6 +915,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Time series of resident memory usage by the MinIO process, showing current, mean, and peak values.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1003,7 +1004,6 @@
         }
       ],
       "title": "Memory Usage",
-      "description": "Time series of resident memory usage by the MinIO process, showing current, mean, and peak values.",
       "type": "timeseries"
     },
     {
@@ -1024,6 +1024,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Rate of incoming S3 traffic to the cluster, measured in bytes per second over 1-minute intervals.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1124,7 +1125,6 @@
         }
       ],
       "title": "Traffic Received",
-      "description": "Rate of incoming S3 traffic to the cluster, measured in bytes per second over 1-minute intervals.",
       "type": "timeseries"
     },
     {
@@ -1132,6 +1132,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Rate of outgoing S3 traffic from the cluster, measured in bytes per second over 1-minute intervals.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1237,7 +1238,6 @@
         }
       ],
       "title": "Traffic Sent",
-      "description": "Rate of outgoing S3 traffic from the cluster, measured in bytes per second over 1-minute intervals.",
       "type": "timeseries"
     },
     {
@@ -1247,259 +1247,6 @@
         "w": 24,
         "x": 0,
         "y": 29
-      },
-      "id": 500,
-      "panels": [],
-      "title": "📈 S3 API Requests",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 20,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "normal"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "reqps"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "4xx Errors"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "yellow",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "5xx Errors"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "red",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 30
-      },
-      "id": 503,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "sum"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "rate(minio_s3_requests_4xx_errors_total[1m])",
-          "legendFormat": "4xx Errors",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "rate(minio_s3_requests_5xx_errors_total[1m])",
-          "legendFormat": "5xx Errors",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "rate(minio_s3_requests_rejected_auth_total[1m])",
-          "legendFormat": "Auth Rejected",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "rate(minio_s3_requests_rejected_invalid_total[1m])",
-          "legendFormat": "Invalid Requests",
-          "refId": "D"
-        }
-      ],
-      "title": "Request Errors",
-      "description": "Rate of S3 API request errors including 4xx/5xx HTTP errors, authentication failures, and invalid requests.",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 20,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "reqps"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 30
-      },
-      "id": 502,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "mean"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "rate(minio_s3_requests_total[1m])",
-          "legendFormat": "Total Requests",
-          "refId": "A"
-        }
-      ],
-      "title": "Request Rate",
-      "description": "Total rate of S3 API requests processed by the cluster per second.",
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 36
       },
       "id": 600,
       "panels": [],
@@ -1511,6 +1258,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Current state of Information Lifecycle Management tasks including pending expirations, transitions, active tasks, and worker count.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1541,7 +1289,7 @@
         "h": 6,
         "w": 8,
         "x": 0,
-        "y": 37
+        "y": 30
       },
       "id": 601,
       "options": {
@@ -1598,7 +1346,6 @@
         }
       ],
       "title": "ILM Task Queue",
-      "description": "Current state of Information Lifecycle Management tasks including pending expirations, transitions, active tasks, and worker count.",
       "type": "stat"
     },
     {
@@ -1606,6 +1353,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Rate of scanner operations showing versions, objects, and directories being processed over 5-minute intervals.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1659,7 +1407,7 @@
         "h": 6,
         "w": 8,
         "x": 8,
-        "y": 37
+        "y": 30
       },
       "id": 602,
       "options": {
@@ -1707,7 +1455,6 @@
         }
       ],
       "title": "Scanner Activity",
-      "description": "Rate of scanner operations showing versions, objects, and directories being processed over 5-minute intervals.",
       "type": "timeseries"
     },
     {
@@ -1715,6 +1462,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Count of ILM tasks missed in the last hour including expiries, transitions, and free version operations. Non-zero values indicate system lag.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1741,7 +1489,7 @@
         "h": 6,
         "w": 8,
         "x": 16,
-        "y": 37
+        "y": 30
       },
       "id": 603,
       "options": {
@@ -1789,7 +1537,6 @@
         }
       ],
       "title": "ILM Missed Tasks (1h)",
-      "description": "Count of ILM tasks missed in the last hour including expiries, transitions, and free version operations. Non-zero values indicate system lag.",
       "type": "stat"
     },
     {
@@ -1798,7 +1545,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 43
+        "y": 36
       },
       "id": 700,
       "panels": [],
@@ -1810,6 +1557,7 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "description": "Rate of audit log messages generated per minute, tracking both successful and failed message deliveries.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -1879,7 +1627,7 @@
         "h": 6,
         "w": 12,
         "x": 0,
-        "y": 44
+        "y": 37
       },
       "id": 701,
       "options": {
@@ -1918,7 +1666,6 @@
         }
       ],
       "title": "Audit Messages",
-      "description": "Rate of audit log messages generated per minute, tracking both successful and failed message deliveries.",
       "type": "timeseries"
     }
   ],
@@ -1934,13 +1681,13 @@
     "list": []
   },
   "time": {
-    "from": "now-7d",
+    "from": "now-30d",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Data Lake Health",
   "uid": "minio_data_lake_dashboard",
-  "version": 4,
+  "version": 1,
   "weekStart": ""
 }

@@ -146,6 +146,7 @@ services:
         AIRFLOW_PASSWORD: "${AIRFLOW_ADMIN_PASSWORD}"
         AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
         LOKI_URL: "http://loki:3100"
+        METRICS_TIME_WINDOW_DAYS: "30"  # Période de filtrage des métriques (peut être modifiée)
       ports:
         - "9112:9112"
       volumes:
@@ -243,8 +244,8 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=90d'
-      - '--storage.tsdb.retention.size=50GB'
+      - '--storage.tsdb.retention.time=365d'  # 1 an de rétention (au lieu de 90j)
+      - '--storage.tsdb.retention.size=100GB'  # 100GB max (au lieu de 50GB)
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
     volumes:
@@ -367,7 +368,7 @@ services:
     volumes:
       - ./promtail-config.yaml:/etc/promtail/config.yaml:ro
       - ./airflow/logs:/opt/airflow/logs:ro
-      - promtail-positions:/tmp  # <-- Ajouter cette ligne
+      # Pas de volume persistant pour positions - force la relecture à chaque restart
     ports:
       - "9080:9080"
     command: -config.file=/etc/promtail/config.yaml
@@ -376,5 +377,4 @@ services:
 volumes:
   mb_internal_data:
   pg_dwh_data:
-  promtail-positions:
   prometheus_data:

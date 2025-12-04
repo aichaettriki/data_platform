@@ -5,14 +5,27 @@ import os
 from collections import defaultdict
 from datetime import datetime, timedelta
 from dateutil import parser
+import logging
+import sys
 
 app = Flask(__name__)
 
+# Logging configuration
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout,
+    force=True
+)
+logger = logging.getLogger(__name__)
+
+# Configuration
 AIRFLOW_WEBSERVER = os.getenv("AIRFLOW_WEBSERVER", "http://airflow-webserver:8080/api/v1")
 AIRFLOW_USER = os.getenv("AIRFLOW_USER", "admin")
 AIRFLOW_PASSWORD = os.getenv("AIRFLOW_PASSWORD", "admin123")
 LOKI_URL = os.getenv("LOKI_URL", "http://loki:3100")
 LOGS_PATH = os.getenv("LOGS_PATH", "/opt/airflow/logs")
+METRICS_TIME_WINDOW_DAYS = int(os.getenv("METRICS_TIME_WINDOW_DAYS", "30"))  # Filtre les métriques sur X jours
 
 # ---------------- Metrics ---------------- #
 dag_log_lines_gauge = Gauge(
@@ -56,22 +69,44 @@ total_dags_gauge = Gauge(
     "Nombre total de DAGs"
 )
 
-task_error_count_gauge = Gauge(
-    "airflow_task_error_count",
-    "Nombre d'erreurs détectées dans les logs d'une task échouée",
-    ["dag_id", "task_id", "execution_date"]
+task_duration_gauge = Gauge(
+    "airflow_task_duration_seconds",
+    "Durée d'exécution d'une task en secondes",
+    ["dag_id", "task_id", "state"]
 )
 
-task_last_error_message_gauge = Gauge(
-    "airflow_task_last_error_message",
-    "Dernier message d'erreur extrait du log d'une task échouée (longueur)",
-    ["dag_id", "task_id", "execution_date"]
+task_retry_count_gauge = Gauge(
+    "airflow_task_retry_count",
+    "Nombre de retries par task",
+    ["dag_id", "task_id"]
 )
 
-task_failed_duration_gauge = Gauge(
-    "airflow_task_failed_duration_seconds",
-    "Durée en secondes du task échoué (d'après le log Airflow)",
-    ["dag_id", "task_id", "execution_date"]
+scheduler_heartbeat_gauge = Gauge(
+    "airflow_scheduler_heartbeat",
+    "État du scheduler (1=actif, 0=inactif)"
+)
+
+pool_slots_open_gauge = Gauge(
+    "airflow_pool_open_slots",
+    "Nombre de slots disponibles dans un pool",
+    ["pool_name"]
+)
+
+pool_slots_used_gauge = Gauge(
+    "airflow_pool_used_slots",
+    "Nombre de slots utilisés dans un pool",
+    ["pool_name"]
+)
+
+pool_slots_queued_gauge = Gauge(
+    "airflow_pool_queued_slots",
+    "Nombre de slots en attente dans un pool",
+    ["pool_name"]
+)
+
+dagbag_import_errors_gauge = Gauge(
+    "airflow_dagbag_import_errors",
+    "Nombre total d'erreurs d'import dans les DAG files"
 )
 
 airflow_error_count = Gauge(
@@ -98,152 +133,93 @@ airflow_import_error_count = Gauge(
     ["dag_file"]
 )
 
-# Scheduler Health
-scheduler_heartbeat_gauge = Gauge(
-    "airflow_scheduler_heartbeat",
-    "État du scheduler (1=actif, 0=inactif)"
+airflow_error_details = Gauge(
+    "airflow_error_details",
+    "Detailed error information with message snippets",
+    ["dag_id", "task_id", "run_id", "error_type"]
 )
 
-# Task Duration
-task_duration_gauge = Gauge(
-    "airflow_task_duration_seconds",
-    "Durée d'exécution d'une task en secondes",
-    ["dag_id", "task_id", "state"]
+airflow_traceback_count = Gauge(
+    "airflow_traceback_count",
+    "Number of traceback lines in error logs",
+    ["dag_id", "task_id", "run_id"]
 )
-
-# Pool metrics
-pool_slots_open_gauge = Gauge(
-    "airflow_pool_open_slots",
-    "Nombre de slots disponibles dans un pool",
-    ["pool_name"]
-)
-
-pool_slots_used_gauge = Gauge(
-    "airflow_pool_used_slots",
-    "Nombre de slots utilisés dans un pool",
-    ["pool_name"]
-)
-
-pool_slots_queued_gauge = Gauge(
-    "airflow_pool_queued_slots",
-    "Nombre de slots en attente dans un pool",
-    ["pool_name"]
-)
-
-# Database connections
-db_connections_gauge = Gauge(
-    "airflow_database_connections",
-    "Nombre de connexions actives à la base de données"
-)
-
-# DAG import errors
-dagbag_import_errors_gauge = Gauge(
-    "airflow_dagbag_import_errors",
-    "Nombre total d'erreurs d'import dans les DAG files"
-)
-
-# Executor metrics
-executor_queued_tasks_gauge = Gauge(
-    "airflow_executor_queued_tasks",
-    "Nombre de tasks en queue dans l'executor"
-)
-
-executor_running_tasks_gauge = Gauge(
-    "airflow_executor_running_tasks",
-    "Nombre de tasks en cours d'exécution"
-)
-
-# Task retries
-task_retry_count_gauge = Gauge(
-    "airflow_task_retry_count",
-    "Nombre de retries par task",
-    ["dag_id", "task_id"]
-)
-
-# SLA misses
-sla_misses_gauge = Gauge(
-    "airflow_sla_misses",
-    "Nombre de violations de SLA",
-    ["dag_id", "task_id"]
-)
-
-# DAG processing
-dag_processing_last_duration_gauge = Gauge(
-    "airflow_dag_processing_last_duration_seconds",
-    "Durée du dernier parsing de DAG en secondes",
-    ["dag_id"]
-)
-
-# Zombie tasks
-zombie_tasks_killed_gauge = Gauge(
-    "airflow_zombies_killed",
-    "Nombre de zombie tasks détectées et tuées"
-)
-
-
-# Cache pour garder l'historique des DAG runs
-dag_run_history = defaultdict(lambda: {"success": 0, "failed": 0, "running": 0})
-
-# Métriques persistantes
-dag_runs_total = Gauge('airflow_dag_runs_total', 'Total DAG runs by state', ['dag_id', 'state'])
-dag_duration_seconds = Gauge('airflow_dag_duration_seconds', 'DAG run duration', ['dag_id'])
-task_failures_total = Gauge('airflow_task_failures_total', 'Total task failures', ['dag_id', 'task_id'])
 
 # ---------------- Functions ---------------- #
 
 def parse_scheduler_logs():
+    """Parse scheduler logs to extract metrics"""
     dag_log_lines_gauge.clear()
     dag_log_errors_gauge.clear()
 
     if not os.path.exists(LOGS_PATH):
-        print(f"Le dossier des logs n'existe pas: {LOGS_PATH}")
+        logger.error(f"Logs directory does not exist: {LOGS_PATH}")
         return
 
-    for date_folder in os.listdir(LOGS_PATH):
-        date_path = os.path.join(LOGS_PATH, date_folder)
-        if not os.path.isdir(date_path):
-            continue
-
-        for log_file in os.listdir(date_path):
-            if not log_file.endswith(".log"):
-                continue
-
-            dag_id = log_file.replace(".log", "")
-            file_path = os.path.join(date_path, log_file)
-
+    try:
+        date_folders = [f for f in os.listdir(LOGS_PATH) if os.path.isdir(os.path.join(LOGS_PATH, f))]
+        
+        for date_folder in date_folders:
+            date_path = os.path.join(LOGS_PATH, date_folder)
+            
             try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    lines = f.readlines()
-                    dag_log_lines_gauge.labels(date=date_folder, dag_id=dag_id).set(len(lines))
-                    errors = sum(1 for line in lines if "ERROR" in line or "CRITICAL" in line)
-                    dag_log_errors_gauge.labels(date=date_folder, dag_id=dag_id).set(errors)
+                log_files = [f for f in os.listdir(date_path) if f.endswith(".log")]
+                
+                for log_file in log_files:
+                    dag_id = log_file.replace(".log", "")
+                    file_path = os.path.join(date_path, log_file)
+
+                    try:
+                        with open(file_path, "r", encoding="utf-8") as f:
+                            lines = f.readlines()
+                            errors = sum(1 for line in lines if "ERROR" in line or "CRITICAL" in line)
+                            
+                            dag_log_lines_gauge.labels(date=date_folder, dag_id=dag_id).set(len(lines))
+                            dag_log_errors_gauge.labels(date=date_folder, dag_id=dag_id).set(errors)
+                    except Exception as e:
+                        logger.error(f"Error reading {file_path}: {e}")
             except Exception as e:
-                print(f"Erreur lecture log {file_path}: {e}")
+                logger.error(f"Error listing {date_path}: {e}")
+    except Exception as e:
+        logger.error(f"Error listing {LOGS_PATH}: {e}")
 
 
 def query_loki_errors(hours=24, level="ERROR"):
-    """Query Loki for error logs in the last N hours"""
+    """Query Loki for error logs"""
     now = datetime.utcnow()
-    start = int((now - timedelta(hours=hours)).timestamp() * 1e9)
-    end = int(now.timestamp() * 1e9)
+    start_dt = now - timedelta(hours=hours)
+    
+    start = int(start_dt.timestamp() * 1_000_000_000)
+    end = int(now.timestamp() * 1_000_000_000)
+    
+    if not (1_000_000_000_000_000_000 < end < 2_000_000_000_000_000_000):
+        logger.error(f"Invalid end timestamp: {end}")
+        return []
+    
+    if not (1_000_000_000_000_000_000 < start < end):
+        logger.error(f"Invalid start timestamp: {start}")
+        return []
     
     query = f'{{job="airflow"}} |= "{level}"'
     
     try:
-        response = requests.get(
-            f"{LOKI_URL}/loki/api/v1/query_range",
-            params={
-                "query": query,
-                "start": start,
-                "end": end,
-                "limit": 5000
-            },
-            timeout=10
-        )
+        url = f"{LOKI_URL}/loki/api/v1/query_range"
+        params = {
+            "query": query,
+            "start": start,
+            "end": end,
+            "limit": 5000
+        }
+        
+        response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
-        return response.json().get("data", {}).get("result", [])
+        data = response.json()
+        results = data.get("data", {}).get("result", [])
+        
+        logger.info(f"Loki query returned {len(results)} streams for {level}")
+        return results
     except Exception as e:
-        print(f"Error querying Loki: {e}")
+        logger.error(f"Error querying Loki: {e}")
         return []
 
 
@@ -253,8 +229,8 @@ def extract_error_metrics():
     critical_counts = defaultdict(int)
     timeout_counts = defaultdict(int)
     import_error_counts = defaultdict(int)
+    error_details = defaultdict(lambda: {"tracebacks": 0, "error_types": set()})
     
-    # Get ERROR logs (90 days to match retention)
     error_results = query_loki_errors(hours=2160, level="ERROR")
     
     for result in error_results:
@@ -266,19 +242,27 @@ def extract_error_metrics():
         
         values = result.get("values", [])
         for timestamp, log_line in values:
-            # Count task errors
             if dag_id != "unknown" and task_id != "unknown":
                 error_counts[(dag_id, task_id, run_id)] += 1
+                
+                key = (dag_id, task_id, run_id)
+                if "traceback" in log_line.lower():
+                    error_details[key]["tracebacks"] += 1
+                
+                error_types = [
+                    "AirflowException", "Py4JJavaError", "AWSS3IOException",
+                    "XMinioStorageFull", "ImportError"
+                ]
+                for error_type in error_types:
+                    if error_type in log_line:
+                        error_details[key]["error_types"].add(error_type)
             
-            # Count timeout errors
             if "timed out" in log_line.lower() or "timeout" in log_line.lower():
                 timeout_counts[dag_id] += 1
             
-            # Count import errors
             if "Failed to import" in log_line and dag_file:
                 import_error_counts[dag_file] += 1
     
-    # Get CRITICAL logs (90 days to match retention)
     critical_results = query_loki_errors(hours=2160, level="CRITICAL")
     
     for result in critical_results:
@@ -292,11 +276,13 @@ def extract_error_metrics():
             if dag_id != "unknown" and task_id != "unknown":
                 critical_counts[(dag_id, task_id, run_id)] += 1
     
-    return error_counts, critical_counts, timeout_counts, import_error_counts
+    logger.info(f"Extracted {len(error_counts)} error counts, {len(critical_counts)} critical counts")
+    
+    return error_counts, critical_counts, timeout_counts, import_error_counts, error_details
 
 
 def get_scheduler_health():
-    """Vérifier l'état du scheduler"""
+    """Check scheduler health"""
     try:
         health_resp = requests.get(
             f"{AIRFLOW_WEBSERVER}/health",
@@ -306,17 +292,16 @@ def get_scheduler_health():
         health_resp.raise_for_status()
         health_data = health_resp.json()
         
-        # Le scheduler est OK si le status est "healthy"
         scheduler_status = health_data.get("scheduler", {}).get("status")
         scheduler_heartbeat_gauge.set(1 if scheduler_status == "healthy" else 0)
         
     except Exception as e:
-        print(f"Erreur récupération santé scheduler: {e}")
+        logger.error(f"Error fetching scheduler health: {e}")
         scheduler_heartbeat_gauge.set(0)
 
 
 def get_pool_metrics():
-    """Récupérer les métriques des pools"""
+    """Fetch pool metrics"""
     try:
         pools_resp = requests.get(
             f"{AIRFLOW_WEBSERVER}/pools",
@@ -337,11 +322,11 @@ def get_pool_metrics():
             pool_slots_queued_gauge.labels(pool_name=pool_name).set(pool.get("queued_slots", 0))
             
     except Exception as e:
-        print(f"Erreur récupération pools: {e}")
+        logger.error(f"Error fetching pools: {e}")
 
 
 def get_import_errors():
-    """Récupérer les erreurs d'import de DAG"""
+    """Fetch DAG import errors"""
     try:
         import_errors_resp = requests.get(
             f"{AIRFLOW_WEBSERVER}/importErrors",
@@ -353,7 +338,7 @@ def get_import_errors():
         dagbag_import_errors_gauge.set(len(errors))
         
     except Exception as e:
-        print(f"Erreur récupération import errors: {e}")
+        logger.error(f"Error fetching import errors: {e}")
         dagbag_import_errors_gauge.set(0)
 
 
@@ -396,7 +381,7 @@ def collect_dag_metrics():
                 dag_runs_total.labels(dag_id=dag_id, state=state).set(count)
                 
     except Exception as e:
-        print(f"Error collecting DAG metrics: {e}")
+        logger.error(f"Error collecting DAG metrics: {e}")
 
 
 # ---------------- Routes ---------------- #
@@ -404,13 +389,18 @@ def collect_dag_metrics():
 @app.route("/airflow_metrics")
 def airflow_metrics():
     """Endpoint pour les métriques globales Airflow (API Airflow)"""
+    print("\n" + "="*60)
+    print("🎯 ENDPOINT: /airflow_metrics appelé")
+    print("="*60)
+    logger.info("=== Appel /airflow_metrics ===")
+    
     try:
-        # Récupérer les DAGs (limiter à 100)
+        # Récupérer TOUS les DAGs (limite augmentée)
         dags_resp = requests.get(
             f"{AIRFLOW_WEBSERVER}/dags",
             auth=(AIRFLOW_USER, AIRFLOW_PASSWORD),
-            params={"limit": 100},
-            timeout=5
+            params={"limit": 500},
+            timeout=10
         )
         dags_resp.raise_for_status()
         dags = dags_resp.json().get("dags", [])
@@ -423,19 +413,30 @@ def airflow_metrics():
         task_duration_gauge.clear()
         task_retry_count_gauge.clear()
 
+        # Calculer la date limite pour le filtrage (X jours en arrière) en UTC
+        from datetime import timezone
+        cutoff_date = datetime.now(timezone.utc) - timedelta(days=METRICS_TIME_WINDOW_DAYS)
+        cutoff_date_str = cutoff_date.strftime("%Y-%m-%dT%H:%M:%SZ")
+        logger.info(f"📅 Filtrage des métriques à partir de: {cutoff_date_str}")
+        
         for dag in dags:
             dag_id = dag["dag_id"]
             durations = []
 
-            # Récupérer seulement les 10 derniers runs
+            # Récupérer l'historique des runs avec filtrage par date via API
             runs_resp = requests.get(
                 f"{AIRFLOW_WEBSERVER}/dags/{dag_id}/dagRuns",
                 auth=(AIRFLOW_USER, AIRFLOW_PASSWORD),
-                params={"limit": 10},
-                timeout=5
+                params={
+                    "limit": 1000,
+                    "execution_date_gte": cutoff_date_str
+                },
+                timeout=10
             )
             runs_resp.raise_for_status()
             runs = runs_resp.json().get("dag_runs", [])
+            
+            logger.info(f"DAG {dag_id}: {len(runs)} runs dans les {METRICS_TIME_WINDOW_DAYS} derniers jours")
 
             # Compteurs par état
             run_counts = defaultdict(int)
@@ -456,15 +457,15 @@ def airflow_metrics():
                         durations.append(duration)
                         dag_run_duration_summary.labels(dag_id=dag_id).observe(duration)
                     except Exception as e:
-                        print(f"Erreur parsing dates DAG {dag_id}: {e}")
+                        logger.error(f"Erreur parsing dates DAG {dag_id}: {e}")
 
                 # Récupérer les tasks
                 try:
                     tasks_resp = requests.get(
                         f"{AIRFLOW_WEBSERVER}/dags/{dag_id}/dagRuns/{run['dag_run_id']}/taskInstances",
                         auth=(AIRFLOW_USER, AIRFLOW_PASSWORD),
-                        params={"limit": 100},  # Augmenté de 50 à 100
-                        timeout=3
+                        params={"limit": 500},  # Augmenté pour avoir tout l'historique
+                        timeout=5
                     )
                     tasks_resp.raise_for_status()
                     tasks = tasks_resp.json().get("task_instances", [])
@@ -489,7 +490,7 @@ def airflow_metrics():
                                     state=task_state
                                 ).set(task_duration)
                             except Exception as e:
-                                print(f"Erreur parsing dates task {dag_id}/{task_id}: {e}")
+                                logger.error(f"Erreur parsing dates task {dag_id}/{task_id}: {e}")
                         
                         # Nombre de retries
                         try_number = task.get("try_number", 0)
@@ -500,7 +501,7 @@ def airflow_metrics():
                             ).set(try_number - 1)
                         
                 except Exception as e:
-                    print(f"Erreur récupération tasks pour {dag_id}/{run['dag_run_id']}: {e}")
+                    logger.error(f"Erreur récupération tasks pour {dag_id}/{run['dag_run_id']}: {e}")
                     continue
 
             # Mettre à jour gauges DAG run - TOUS LES ÉTATS
@@ -530,41 +531,58 @@ def airflow_metrics():
         # Logs scheduler
         parse_scheduler_logs()
 
+        logger.info("Airflow metrics generated successfully")
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
     except Exception as e:
-        print(f"Error in /airflow_metrics: {e}")
+        logger.error(f"Error in /airflow_metrics: {e}", exc_info=True)
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
 @app.route("/metrics")
 def metrics():
-    """Endpoint principal pour Prometheus (erreurs depuis Loki)"""
+    """Main endpoint for Prometheus (Loki errors)"""
     try:
-        error_counts, critical_counts, timeout_counts, import_error_counts = extract_error_metrics()
+        error_counts, critical_counts, timeout_counts, import_error_counts, error_details = extract_error_metrics()
         
-        # Clear and set error metrics
         airflow_error_count.clear()
         for (dag_id, task_id, run_id), count in error_counts.items():
             airflow_error_count.labels(dag_id=dag_id, task_id=task_id, run_id=run_id).set(count)
         
-        # Clear and set critical metrics
         airflow_critical_count.clear()
         for (dag_id, task_id, run_id), count in critical_counts.items():
             airflow_critical_count.labels(dag_id=dag_id, task_id=task_id, run_id=run_id).set(count)
         
-        # Clear and set timeout metrics
         airflow_timeout_count.clear()
         for dag_id, count in timeout_counts.items():
             airflow_timeout_count.labels(dag_id=dag_id).set(count)
         
-        # Clear and set import error metrics
         airflow_import_error_count.clear()
         for dag_file, count in import_error_counts.items():
             airflow_import_error_count.labels(dag_file=dag_file).set(count)
         
+        airflow_error_details.clear()
+        airflow_traceback_count.clear()
+        for (dag_id, task_id, run_id), details in error_details.items():
+            traceback_count = details.get("tracebacks", 0)
+            airflow_traceback_count.labels(
+                dag_id=dag_id, 
+                task_id=task_id, 
+                run_id=run_id
+            ).set(traceback_count)
+            
+            error_types = details.get("error_types", set())
+            for error_type in error_types:
+                airflow_error_details.labels(
+                    dag_id=dag_id,
+                    task_id=task_id,
+                    run_id=run_id,
+                    error_type=error_type
+                ).set(1)
+        
+        logger.info("Metrics generated successfully")
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
     except Exception as e:
-        print(f"Error in /metrics: {e}")
+        logger.error(f"Error in /metrics: {e}", exc_info=True)
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
@@ -575,4 +593,5 @@ def health():
 
 # ---------------- Main ---------------- #
 if __name__ == "__main__":
+    logger.info("Starting Airflow Exporter on 0.0.0.0:9112")
     app.run(host="0.0.0.0", port=int(os.getenv("EXPORTER_PORT", 9112)))

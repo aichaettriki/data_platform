@@ -40,6 +40,7 @@
       "fieldConfig": {
         "defaults": {
           "mappings": [],
+          "noValue": "1",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -153,7 +154,7 @@
           "refId": "A"
         }
       ],
-      "title": "Nbr of Successful DAGs",
+      "title": "Count of DAGs That Ran Successfully",
       "type": "stat"
     },
     {
@@ -218,7 +219,7 @@
           "refId": "A"
         }
       ],
-      "title": "Nbr of Failed DAGs",
+      "title": "Count of DAGs That Failed",
       "type": "stat"
     },
     {
@@ -283,7 +284,7 @@
           "refId": "A"
         }
       ],
-      "title": "Nbr of Upstream Failed Tasks",
+      "title": "Total Failed Upstream Tasks",
       "type": "stat"
     },
     {
@@ -525,14 +526,14 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
           "custom": {
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
-            "fillOpacity": 80,
+            "fillOpacity": 82,
             "gradientMode": "none",
             "hideFrom": {
               "legend": false,
@@ -541,7 +542,8 @@
             },
             "lineWidth": 1,
             "scaleDistribution": {
-              "type": "linear"
+              "log": 2,
+              "type": "log"
             },
             "thresholdsStyle": {
               "mode": "off"
@@ -554,10 +556,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 300
               },
               {
                 "color": "red",
@@ -583,8 +581,8 @@
         "groupWidth": 0.7,
         "legend": {
           "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
+          "displayMode": "table",
+          "placement": "right",
           "showLegend": true
         },
         "orientation": "horizontal",
@@ -592,7 +590,7 @@
         "stacking": "none",
         "tooltip": {
           "mode": "single",
-          "sort": "none"
+          "sort": "asc"
         },
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 0
@@ -652,7 +650,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "orientation": "auto",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -717,7 +715,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "orientation": "auto",
+        "orientation": "horizontal",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -983,50 +981,16 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Value"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Count"
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              },
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "green",
-                      "value": null
-                    },
-                    {
-                      "color": "yellow",
-                      "value": 1
-                    },
-                    {
-                      "color": "red",
-                      "value": 5
-                    }
-                  ]
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
               "options": "Time"
             },
             "properties": [
               {
                 "id": "custom.hidden",
                 "value": false
+              },
+              {
+                "id": "custom.width",
+                "value": 197
               }
             ]
           },
@@ -1065,12 +1029,60 @@
                 "value": true
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "DAG ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 244
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "State"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 126
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Task ID"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 202
+              }
+            ]
           }
         ]
       },
       "gridPos": {
-        "h": 10,
-        "w": 15,
+        "h": 9,
+        "w": 9,
         "x": 0,
         "y": 15
       },
@@ -1086,12 +1098,7 @@
           "show": false
         },
         "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Count"
-          }
-        ]
+        "sortBy": []
       },
       "pluginVersion": "10.0.3",
       "targets": [
@@ -1119,9 +1126,9 @@
       },
       "description": "Error logs filtered by selected DAG and Task from Airflow logs",
       "gridPos": {
-        "h": 10,
-        "w": 9,
-        "x": 15,
+        "h": 9,
+        "w": 15,
+        "x": 9,
         "y": 15
       },
       "id": 9,
@@ -1143,7 +1150,8 @@
             "uid": "P8E80F9AEF21F6940"
           },
           "editorMode": "code",
-          "expr": "{job=\"airflow\"} |~ \"ERROR|FAILED|Exception\" |~ \"${failed_dag_filter:pipe}\" |~ \"${failed_task_filter:pipe}\"",
+          "expr": "{job=\"airflow\", dag_id=~\".*${failed_dag_filter}.*\", task_id=~\".*${failed_task_filter}.*\"} |~ \"(?i)ERROR\"",
+          "maxLines": 1000,
           "queryType": "range",
           "refId": "A"
         }
@@ -1152,7 +1160,7 @@
       "type": "logs"
     }
   ],
-  "refresh": "30s",
+  "refresh": "",
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
@@ -1216,11 +1224,22 @@
         "skipUrlSync": false,
         "sort": 1,
         "type": "query"
+      },
+      {
+        "datasource": {
+          "type": "prometheus",
+          "uid": "PBFA97CFB590B2093"
+        },
+        "filters": [],
+        "hide": 0,
+        "name": "Filters",
+        "skipUrlSync": false,
+        "type": "adhoc"
       }
     ]
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-7d",
     "to": "now"
   },
   "timepicker": {
@@ -1236,6 +1255,6 @@
   "timezone": "browser",
   "title": "Airflow Monitoring Dashboard",
   "uid": "a23a7e6f-3feb-45f4-902e-95dfbcec13da",
-  "version": 2,
+  "version": 12,
   "weekStart": ""
 }
