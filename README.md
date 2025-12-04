@@ -49,6 +49,7 @@ Default database connection is configured to PostgreSQL using the environment fi
 - Docker et Docker Compose installés
 - Ports 8085, 8080, 9000, 9001, 9090, 3000 libres
 
+
 ## Installation et exécution
 
 1. Nettoyer les anciens conteneurs Docker si nécessaire.
