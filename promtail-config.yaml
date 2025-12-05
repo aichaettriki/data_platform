@@ -1,0 +1,56 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+  # Forcer la relecture depuis le début
+  sync_period: 10s
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Job 1: Logs des tasks DAG avec dag_id, run_id, task_id
+  - job_name: airflow-tasks
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: airflow
+          __path__: /opt/airflow/logs/dag_id=*/run_id=*/task_id=*/*.log
+
+    pipeline_stages:
+      # Extraire dag_id, run_id, task_id depuis le chemin du fichier
+      - regex:
+          source: filename
+          expression: '.*/dag_id=(?P<dag_id>[^/]+)/run_id=(?P<run_id>[^/]+)/task_id=(?P<task_id>[^/]+)/.*'
+      - labels:
+          dag_id:
+          run_id:
+          task_id:
+      # Extraire la timestamp du log pour avoir la date correcte
+      - timestamp:
+          source: time
+          format: RFC3339
+
+  # Job 2: Logs du scheduler
+  - job_name: airflow-scheduler
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: airflow
+          __path__: /opt/airflow/logs/scheduler/**/*.log
+
+    pipeline_stages:
+      # Extraire scheduler date et dag_file depuis les logs scheduler
+      - regex:
+          source: filename
+          expression: '.*/scheduler/(?P<scheduler_date>[^/]+)/(?P<dag_file>.+)\.py\.log$'
+      - labels:
+          scheduler_date:
+          dag_file:
+      - timestamp:
+          source: time
+          format: RFC3339

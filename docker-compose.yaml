@@ -2,20 +2,72 @@ version: '3.8'
 
 services:
 
+#  # ---------- Traefik ----------
+  traefik:
+    image: traefik:2.10
+    container_name: traefik
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+    ports:
+      - "80:80"
+      - "8082:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - traefik-public
+    restart: always
+
+
+  # ------------------------
+  # Redis (broker pour Celery)
+  # ------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    networks:
+      - traefik-public
+    ports:
+      - "6379:6379"
+    restart: always
+
   # ------------------------
   # PostgreSQL pour Airflow
   # ------------------------
   postgres-airflow:
     image: postgres:13
+    networks:
+      - traefik-public
     environment:
-      POSTGRES_USER: airflow
-      POSTGRES_PASSWORD: airflow
-      POSTGRES_DB: airflow
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
-      - "5435:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
-      - ./pgdata:/var/lib/postgresql/data
+      - ${PGDATA_PATH}:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d   # <-- to initialize metabase intern bd
+
     restart: always
+
+  # ------------------------
+  # PostgreSQL Exporter pour Prometheus
+  # ------------------------
+  postgres-exporter:
+    networks:
+      - traefik-public
+    image: prometheuscommunity/postgres-exporter:latest
+    environment:
+      # Connexion au PostgreSQL Airflow
+      DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}?sslmode=disable"
+    ports:
+      - "${POSTGRES_EXPORTER_PORT}:9187"
+    depends_on:
+      - postgres-airflow
+    restart: always
+
 
   # ------------------------
   # Airflow Initialization (Windows friendly)
@@ -24,16 +76,24 @@ services:
     build: ./airflow
     depends_on:
       - postgres-airflow
+    networks:
+      - traefik-public
     environment:
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
+      AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}
     volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
+      - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
+      - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
+      - ${AIRFLOW_PLUGINS_PATH}:/opt/airflow/plugins
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     command: >
       bash -c "airflow db init &&
-              airflow users create --username admin --password admin123 --firstname Admin --lastname Admin --email admin@example.org --role Admin || echo 'User already exists'"
+              airflow users create --username ${AIRFLOW_ADMIN_USER} --password ${AIRFLOW_ADMIN_PASSWORD} --firstname Admin --lastname Admin --email admin@example.org --role Admin || echo 'User already exists' &&
+              python /opt/airflow/init_connections.py"
 
 
   # ------------------------
@@ -41,21 +101,39 @@ services:
   # ------------------------
   airflow-webserver:
     build: ./airflow
+    networks:
+      - traefik-public
     depends_on:
       - postgres-airflow
+      - redis
     environment:
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
+      AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+      AIRFLOW__METRICS__PROMETHEUS_USE_EXPORTER: 'True'
+      AIRFLOW__METRICS__METRICS_BACKEND: prometheus
+      AIRFLOW__WEBSERVER__SESSION_BACKEND: securecookie
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}
+      AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
+      AIRFLOW__CORE__HIDE_SENSITIVE_VAR_CONN_FIELDS: 'False'
     ports:
-      - "8085:8080"
+      - "${AIRFLOW_WEBSERVER_PORT}:8080"
     volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./minio/raw:/data/raw
-      - ./minio/transformed:/data/transformed
+      - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
+      - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
+      - ${MINIO_RAW_PATH}:/data/raw
+      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
+      - ./data:/opt/airflow/data
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     command: airflow webserver
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.airflow.rule=Host(`airflow.itceq.tn`)"
+      - "traefik.http.routers.airflow.entrypoints=web"
+      - "traefik.http.services.airflow.loadbalancer.server.port=8080"
 
   # ------------------------
   # Airflow Scheduler
@@ -64,15 +142,28 @@ services:
     build: ./airflow
     depends_on:
       - postgres-airflow
+      - redis
+    networks:
+      - traefik-public
     environment:
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
+      AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+      AIRFLOW__METRICS__PROMETHEUS_USE_EXPORTER: 'True'
+      AIRFLOW__METRICS__METRICS_BACKEND: prometheus
+      AIRFLOW__WEBSERVER__SESSION_BACKEND: securecookie
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}
+      AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
+      AIRFLOW__CORE__HIDE_SENSITIVE_VAR_CONN_FIELDS: 'False'
     volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./minio/raw:/data/raw
-      - ./minio/transformed:/data/transformed
+      - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
+      - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
+      - ${MINIO_RAW_PATH}:/data/raw
+      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
+      - ./data:/opt/airflow/data
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs 
     command: airflow scheduler
 
     restart: always
@@ -84,16 +175,80 @@ services:
     build: ./airflow
     depends_on:
       - postgres-airflow
+      - redis
+    networks:
+      - traefik-public
     environment:
-      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres-airflow:5432/airflow
-      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
-      AIRFLOW__WEBSERVER__SECRET_KEY: mysecretkey123
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
+      AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+      AIRFLOW__WEBSERVER__SESSION_BACKEND: securecookie
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}
+      AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
+      AIRFLOW__CORE__HIDE_SENSITIVE_VAR_CONN_FIELDS: 'False'
     volumes:
-      - ./airflow/dags:/opt/airflow/dags
-      - ./logs:/opt/airflow/logs
-      - ./minio/raw:/data/raw
-      - ./minio/transformed:/data/transforme
+      - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
+      - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
+      - ${MINIO_RAW_PATH}:/data/raw
+      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
+      - ./data:/opt/airflow/data
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     command: triggerer
+    restart: always
+
+  # ------------------------
+  # Airflow Exporter
+  # ------------------------
+  airflow-exporter:
+      build: ./airflow/airflow-exporter
+      networks:
+        - traefik-public
+      environment:
+        EXPORTER_PORT: 9112
+        AIRFLOW_WEBSERVER: "http://airflow-webserver:8080/api/v1"
+        AIRFLOW_USER: "${AIRFLOW_ADMIN_USER}"
+        AIRFLOW_PASSWORD: "${AIRFLOW_ADMIN_PASSWORD}"
+        AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
+        LOKI_URL: "http://loki:3100"
+        METRICS_TIME_WINDOW_DAYS: "30"  # Période de filtrage des métriques (peut être modifiée)
+      ports:
+        - "9112:9112"
+      volumes:
+        - ./airflow/logs:/opt/airflow/logs:ro
+      depends_on:
+        - airflow-webserver
+        - loki
+      restart: always
+
+  # ------------------------
+  # Airflow Worker (Celery)
+  # ------------------------
+  airflow-worker:
+    build: ./airflow
+    networks:
+      - traefik-public
+    depends_on:
+      - postgres-airflow
+      - redis
+    environment:
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
+      AIRFLOW__CORE__EXECUTOR: CeleryExecutor
+      AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
+      AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}
+      AIRFLOW__CORE__LOAD_EXAMPLES: ${AIRFLOW_LOAD_EXAMPLES}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+      AIRFLOW__CORE__HIDE_SENSITIVE_VAR_CONN_FIELDS: 'False'
+    volumes:
+      - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
+      - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
+      - ${AIRFLOW_PLUGINS_PATH}:/opt/airflow/plugins
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
+      - ${MINIO_RAW_PATH}:/data/raw
+      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
+      - ./data:/opt/airflow/data
+    command: celery worker
     restart: always
 
   # ------------------------
@@ -101,59 +256,280 @@ services:
   # ------------------------
   minio:
     image: minio/minio:latest
+    networks:
+      - traefik-public
     environment:
-      MINIO_ROOT_USER: minio
-      MINIO_ROOT_PASSWORD: minio123
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_PROMETHEUS_AUTH_TYPE: public
     ports:
-      - "9000:9000"  # API
-      - "9001:9001"  # Console
-    command: server /data --console-address ":9001"
+      - "${MINIO_API_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+    command: server /data --console-address ":${MINIO_CONSOLE_PORT}"
     volumes:
       - ./minio:/data   # raw + transformed
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio.rule=Host(`minio.itceq.tn`)"
+      - "traefik.http.routers.minio.entrypoints=web"
+      - "traefik.http.services.minio.loadbalancer.server.port=9000"
 
-  # ------------------------
-  # Spark
-  # ------------------------
-  spark:
-    build: ./spark
+
+  minio-create-buckets:
+    image: minio/mc:latest
+    networks:
+      - traefik-public
     depends_on:
       - minio
+    entrypoint: >
+      /bin/sh -c "
+        sleep 5;
+        mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+        mc mb -p myminio/raw;
+        mc mb -p myminio/transformed;
+        mc mb -p myminio/refined;
+        mc mb -p myminio/sandbox;
+        mc ls myminio;
+      "
+    restart: "no"  
+                                                
+  spark-master:
+    build: ./spark
+    container_name: spark-master
+    networks:
+      - traefik-public
+    user: root
     environment:
-      SPARK_MASTER_HOST: spark
-      PYSPARK_PYTHON: python3
+      USER: root
+      SPARK_USER: root
+      HADOOP_USER_NAME: root
     ports:
-      - "7077:7077"    # Master port
-      - "8080:8080"    # Spark UI
+      - "${SPARK_MASTER_UI_PORT}:8080"
+      - "${SPARK_MASTER_PORT}:7077"
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+      --host spark-master --port 7077
     volumes:
-      - ./spark/jobs:/opt/spark/jobs
-      - ./minio/raw:/data/raw
-      - ./minio/transformed:/data/transformed
-    command: ["/bin/bash", "-c", "/opt/spark/bin/spark-class org.apache.spark.deploy.master.Master"]
+      - ${MINIO_RAW_PATH}:/data/raw
+      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
+      - ${MINIO_REFINED_PATH}:/data/refined
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.spark.rule=Host(`spark.itceq.tn`)"
+      - "traefik.http.routers.spark.entrypoints=web"
+      - "traefik.http.services.spark.loadbalancer.server.port=8080"
+    
+  # ------------------------
+  # Spark Workers
+  # ------------------------
+  spark-worker:
+    build: ./spark
+    container_name: spark-worker
+    networks:
+      - traefik-public
+    depends_on:
+      - spark-master
+    environment:
+      USER: root
+      SPARK_USER: root
+      HADOOP_USER_NAME: root
+      SPARK_MASTER_URL: spark://spark-master:7077
+    ports:
+      - "${SPARK_WORKER_UI_PORT}:8081"
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+      spark://spark-master:7077
+    volumes:
+      - ${MINIO_RAW_PATH}:/data/raw
+      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
+      - ${MINIO_REFINED_PATH}:/data/refined
+      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
+    restart: always
+ 
 
   # ------------------------
   # Prometheus
   # ------------------------
   prometheus:
-    image: prom/prometheus:v2.52.0
-    ports:
-      - "9090:9090"
+    image: prom/prometheus:latest
+    networks:
+      - traefik-public
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=365d'  # 1 an de rétention (au lieu de 90j)
+      - '--storage.tsdb.retention.size=100GB'  # 100GB max (au lieu de 50GB)
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-    restart: always
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.itceq.tn`)"
+      - "traefik.http.routers.prometheus.entrypoints=web"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+
 
   # ------------------------
   # Grafana
   # ------------------------
   grafana:
     image: grafana/grafana:10.0.3
+    networks:
+      - traefik-public
     ports:
-      - "3000:3000"
+      - "${GRAFANA_PORT}:3000"
     volumes:
-      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards
-      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+      - ${GRAFANA_PROVISIONING_PATH}:/etc/grafana/provisioning
+      - ${GRAFANA_DASHBOARDS_PATH}:/var/lib/grafana/dashboards
+    depends_on:
+      - prometheus
     environment:
-      GF_SECURITY_ADMIN_USER: admin
-      GF_SECURITY_ADMIN_PASSWORD: admin123
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
     restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.grafana.rule=Host(`grafana.itceq.tn`)"
+      - "traefik.http.routers.grafana.entrypoints=web"
+      - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+  # ------------------------
+  # Metabase
+  # ------------------------
+    # 1. METABASE APP (Port 3021)
+  metabase:
+    build:
+      context: ./metabase/build
+      dockerfile: Dockerfile
+    container_name: metabase_app
+    networks:
+      - traefik-public
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    env_file:
+      - ./metabase/env/metabase.env
+    depends_on:
+      metabase_db_internal:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.metabase.rule=Host(`metabase.itceq.tn`)"
+      - "traefik.http.routers.metabase.entrypoints=web"
+      - "traefik.http.services.metabase.loadbalancer.server.port=3000"
+    
+ 
+  # 2. INTERNAL METADATA DB
+  metabase_db_internal:
+    image: postgres:15
+    networks:
+      - traefik-public
+    container_name: metabase_db_internal
+    environment:
+      POSTGRES_DB: metabase_internal
+      POSTGRES_USER: mb_internal_user
+      POSTGRES_PASSWORD: mb_internal_pass
+    volumes:
+      - mb_internal_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mb_internal_user -d metabase_internal"]
+      interval: 5s
+      retries: 5
+    
+ 
+  # 3. ZERO-TOUCH DEPLOYER (The Magic)
+  metabase_deployer:
+    image: python:3.9-slim
+    networks:
+      - traefik-public
+    container_name: metabase_deployer
+    depends_on:
+      - metabase
+    volumes:
+      - ./metabase/scripts:/scripts
+      - ./metabase/saved_states:/saved_states # Mounts the JSONs
+    working_dir: /scripts
+    env_file:
+      - ./metabase/env/metabase.env
+    # Install libs -> Run Setup -> Run Import -> Exit
+    command: >
+      sh -c "pip install requests metabase-api && python deploy_solution.py"
+ 
+ 
+
+
+  # ------------------------
+  # pgAdmin
+  # ------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    networks:
+      - traefik-public
+    container_name: pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+    ports:
+      - "${PGADMIN_PORT}:80"
+    volumes:
+      - ${PGADMIN_SERVERS_PATH}:/pgadmin4/servers.json
+    depends_on:
+      - postgres-airflow
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pgadmin.rule=Host(`pgadmin.itceq.tn`)"
+      - "traefik.http.routers.pgadmin.entrypoints=web"
+      - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
+
+
+  # ------------------------
+  # Loki (pour logs Airflow)
+  # ------------------------
+  loki:
+    image: grafana/loki:2.8.2
+    networks:
+      - traefik-public
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./loki-data/index:/loki/index
+      - ./loki-data/chunks:/loki/chunks
+      - ./loki-data/wal:/loki/wal
+      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      
+    restart: always
+ 
+  # ------------------------
+  # Promtail (agent qui envoie les logs à Loki)
+  # ------------------------
+  promtail:
+    image: grafana/promtail:2.9.0
+    networks:
+      - traefik-public
+    volumes:
+      - ./promtail-config.yaml:/etc/promtail/config.yaml:ro
+      - ./airflow/logs:/opt/airflow/logs:ro
+      # Pas de volume persistant pour positions - force la relecture à chaque restart
+    ports:
+      - "9080:9080"
+    command: -config.file=/etc/promtail/config.yaml
+    restart: always
+
+volumes:
+  mb_internal_data:
+  pg_dwh_data:
+  prometheus_data:
+
+networks:
+  traefik-public:
+    driver: bridge

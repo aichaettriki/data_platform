@@ -1,9 +1,19 @@
-FROM apache/airflow:2.7.1-python3.11
+FROM apache/airflow:2.6.3
+USER root
 
-COPY requirements.txt /opt/airflow/requirements.txt
+RUN apt-get update && \
+    apt-get install -y openjdk-11-jdk wget && \
+    wget https://archive.apache.org/dist/spark/spark-3.5.1/spark-3.5.1-bin-hadoop3.tgz && \
+    tar xvf spark-3.5.1-bin-hadoop3.tgz -C /opt && \
+    ln -s /opt/spark-3.5.1-bin-hadoop3 /opt/spark && \
+    rm spark-3.5.1-bin-hadoop3.tgz && \
+    apt-get clean
 
-# Installer Airflow + dépendances en utilisant le fichier de contraintes
-RUN pip install --no-cache-dir -r /opt/airflow/requirements.txt \
-    --constraint "https://raw.githubusercontent.com/apache/airflow/constraints-2.7.1/constraints-3.11.txt"
-COPY dags/ /opt/airflow/dags/
-WORKDIR /opt/airflow    
+ENV SPARK_HOME=/opt/spark
+ENV PATH=$SPARK_HOME/bin:$PATH
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV PATH="$JAVA_HOME/bin:${PATH}"
+
+COPY requirements.txt /requirements.txt
+USER airflow
+RUN pip install --no-cache-dir -r /requirements.txt
