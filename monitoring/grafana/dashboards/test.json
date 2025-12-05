@@ -1,0 +1,637 @@
+{
+  "id": null,
+  "uid": null,
+  "title": "Datalake - Full Stack Monitoring (MinIO / Airflow / Spark / Postgres / Metabase / TF / Catalog)",
+    "tags": [
+      "datalake",
+      "minio",
+      "airflow",
+      "spark",
+      "postgres",
+      "metabase",
+      "tensorflow",
+      "prometheus"
+    ],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "type": "row",
+        "title": "MinIO (Storage)",
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 0
+        },
+        "collapsed": false,
+        "id": 1
+      },
+      {
+        "type": "graph",
+        "title": "MinIO - Disk Used (bytes) by node",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "minio_cluster_capacity_raw_total_bytes - minio_cluster_capacity_raw_free_bytes",
+            "legendFormat": "used_bytes",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 1
+        },
+        "id": 2
+      },
+      {
+        "type": "graph",
+        "title": "MinIO - Bucket Usage Size (bytes)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "minio_cluster_usage_total_bytes",
+            "legendFormat": "total_usage",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 1
+        },
+        "id": 3
+      },
+      {
+        "type": "graph",
+        "title": "MinIO - S3 Request Rate (req/s)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "rate(minio_audit_total_messages[5m])",
+            "legendFormat": "requests",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 9
+        },
+        "id": 4
+      },
+      {
+        "type": "stat",
+        "title": "MinIO - 5m Error Rate (5xx)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "minio_audit_failed_messages",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 3,
+          "w": 12,
+          "x": 12,
+          "y": 9
+        },
+        "id": 5
+      },
+      {
+        "type": "row",
+        "title": "Airflow (Orchestration & Ingestion)",
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 12
+        },
+        "collapsed": false,
+        "id": 6
+      },
+      {
+        "type": "graph",
+        "title": "Airflow - DAG Success Rate (1h)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "100 * (sum(airflow_dag_run_status{status=\"success\"}) / clamp_min(sum(airflow_dag_run_status), 1e-9))",
+            "legendFormat": "success_rate_percent",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 13
+        },
+        "id": 7
+      },
+      {
+        "type": "table",
+        "title": "Airflow - Recent DAG Failures (last 24h)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "sum(airflow_task_status{status=\"failed\"}) by (dag_id)",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 12,
+          "y": 13
+        },
+        "id": 8
+      },
+      {
+        "type": "graph",
+        "title": "Airflow - Task Queue Time (avg)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "avg(airflow_task_duration_seconds)",
+            "legendFormat": "avg_duration_s",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 12,
+          "x": 0,
+          "y": 19
+        },
+        "id": 9
+      },
+      {
+        "type": "stat",
+        "title": "Airflow - Running Tasks",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "sum(airflow_task_status{status=\"running\"})",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 12,
+          "x": 12,
+          "y": 19
+        },
+        "id": 10
+      },
+      {
+        "type": "row",
+        "title": "Spark (Transformations)",
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 24
+        },
+        "collapsed": false,
+        "id": 11
+      },
+      {
+        "type": "graph",
+        "title": "Spark - Jobs Duration (95th percentile)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(spark_job_duration_seconds_bucket[5m])) by (le))",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 25
+        },
+        "id": 12
+      },
+      {
+        "type": "graph",
+        "title": "Spark - Executor CPU & Memory",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "avg(spark_executor_cpu_seconds_total) by (instance)",
+            "legendFormat": "cpu_seconds_total",
+            "refId": "A"
+          },
+          {
+            "expr": "avg(spark_executor_memory_bytes) by (instance)",
+            "legendFormat": "memory_bytes",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 12,
+          "y": 25
+        },
+        "id": 13
+      },
+      {
+        "type": "graph",
+        "title": "Spark - Shuffle Read/Write (bytes/s)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "rate(spark_shuffle_read_bytes_total[5m])",
+            "legendFormat": "shuffle_read_bps",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(spark_shuffle_write_bytes_total[5m])",
+            "legendFormat": "shuffle_write_bps",
+            "refId": "B"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 12,
+          "x": 0,
+          "y": 31
+        },
+        "id": 14
+      },
+      {
+        "type": "stat",
+        "title": "Spark - Executors Active",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "sum(spark_executor_count)",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 12,
+          "x": 12,
+          "y": 31
+        },
+        "id": 15
+      },
+      {
+        "type": "row",
+        "title": "PostgreSQL (DWH)",
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 36
+        },
+        "collapsed": false,
+        "id": 16
+      },
+      {
+        "type": "graph",
+        "title": "Postgres - Active Connections",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "sum(pg_locks_count)",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 8,
+          "x": 0,
+          "y": 37
+        },
+        "id": 17
+      },
+      {
+        "type": "graph",
+        "title": "Postgres - Long Queries (>30s)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "pg_replication_lag_seconds",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 8,
+          "x": 8,
+          "y": 37
+        },
+        "id": 18
+      },
+      {
+        "type": "graph",
+        "title": "Postgres - Cache Hit Ratio",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "sum(pg_database_size_bytes) by (datname)",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 8,
+          "x": 16,
+          "y": 37
+        },
+        "id": 19
+      },
+      {
+        "type": "row",
+        "title": "Metabase (Analytics)",
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 42
+        },
+        "collapsed": false,
+        "id": 20
+      },
+      {
+        "type": "graph",
+        "title": "Metabase - API Req/s",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "rate(metabase_http_requests_total[5m])",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 12,
+          "x": 0,
+          "y": 43
+        },
+        "id": 21
+      },
+      {
+        "type": "stat",
+        "title": "Metabase - DB Query Latency (p95)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(metabase_query_duration_seconds_bucket[5m])) by (le))",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 12,
+          "x": 12,
+          "y": 43
+        },
+        "id": 22
+      },
+      {
+        "type": "row",
+        "title": "TensorFlow (ML)",
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 48
+        },
+        "collapsed": false,
+        "id": 23
+      },
+      {
+        "type": "graph",
+        "title": "TF - Training Loss (most recent job)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "tf_training_loss",
+            "legendFormat": "loss",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 49
+        },
+        "id": 24
+      },
+      {
+        "type": "graph",
+        "title": "TF - Validation Loss",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "tf_validation_loss",
+            "legendFormat": "val_loss",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 12,
+          "y": 49
+        },
+        "id": 25
+      },
+      {
+        "type": "row",
+        "title": "Data Catalog (Atlas / Amundsen)",
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 55
+        },
+        "collapsed": false,
+        "id": 26
+      },
+      {
+        "type": "graph",
+        "title": "Atlas - Metadata Update Latency (s)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "atlas_metadata_update_latency_seconds",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 12,
+          "x": 0,
+          "y": 56
+        },
+        "id": 27
+      },
+      {
+        "type": "graph",
+        "title": "Amundsen - Search Requests / min",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "rate(amundsen_search_requests_total[1m])",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 12,
+          "x": 12,
+          "y": 56
+        },
+        "id": 28
+      },
+      {
+        "type": "row",
+        "title": "Prometheus & Node Exporter (Infra)",
+        "gridPos": {
+          "h": 1,
+          "w": 24,
+          "x": 0,
+          "y": 61
+        },
+        "collapsed": false,
+        "id": 29
+      },
+      {
+        "type": "graph",
+        "title": "Node - CPU Usage (system avg)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "rate(node_cpu_seconds_total{mode!=\"idle\"}[5m])",
+            "legendFormat": "{{instance}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 12,
+          "x": 0,
+          "y": 62
+        },
+        "id": 30
+      },
+      {
+        "type": "graph",
+        "title": "Node - Memory Usage (used bytes)",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes",
+            "legendFormat": "used_bytes",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 5,
+          "w": 12,
+          "x": 12,
+          "y": 62
+        },
+        "id": 31
+      },
+      {
+        "type": "stat",
+        "title": "Prometheus - Targets Down",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "sum(up == 0)",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 3,
+          "w": 6,
+          "x": 18,
+          "y": 62
+        },
+        "id": 32
+      },
+      {
+        "type": "stat",
+        "title": "Prometheus - TSDB Head Series",
+        "datasource": "${DS_PROMETHEUS}",
+        "targets": [
+          {
+            "expr": "prometheus_tsdb_head_series",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 3,
+          "w": 6,
+          "x": 18,
+          "y": 65
+        },
+        "id": 33
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "type": "datasource",
+          "name": "DS_PROMETHEUS",
+          "label": "Prometheus datasource",
+          "query": "prometheus",
+          "current": {
+            "text": "Prometheus",
+            "value": "Prometheus"
+          },
+          "hide": 0
+        },
+        {
+          "type": "query",
+          "name": "bucket",
+          "label": "MinIO Bucket",
+          "datasource": "${DS_PROMETHEUS}",
+          "query": "label_values(minio_bucket_usage_size_bytes, bucket)",
+          "refresh": 2,
+          "includeAll": true,
+          "multi": true,
+          "current": {}
+        },
+        {
+          "type": "query",
+          "name": "instance",
+          "label": "Instance",
+          "datasource": "${DS_PROMETHEUS}",
+          "query": "label_values(node_cpu_seconds_total, instance)",
+          "refresh": 2,
+          "includeAll": true,
+          "multi": true,
+          "current": {}
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "Deployments",
+          "datasource": "${DS_PROMETHEUS}",
+          "iconColor": "rgb(255, 96, 96)",
+          "enable": true,
+          "expr": "changes(deployment_version[1h])"
+        }
+      ]
+    },
+    "links": []
+}

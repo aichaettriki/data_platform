@@ -23,7 +23,12 @@ def read_raw_csv(spark, raw_path):
     raw_path = "s3a://raw/"
     df = spark.read.csv(raw_path, header=True, sep=";", inferSchema=True)
     df.show()
-    df.printSchema()
+    print("-------->>>>>>>>>>>>>>> files :")
+    for f in df.inputFiles():
+        print(" -", f)
+
+        df.printSchema()
+        df.show()
     return df
 
 
@@ -33,7 +38,6 @@ def clean_and_write(df, transformed_root_path="s3a://transformed", dataset_name=
     now = current_timestamp()
 
     df_clean = df.dropDuplicates()
-    df_clean.show()
 
     # date extraction
     annee = df_clean.select(year(now)).first()[0]
@@ -48,9 +52,6 @@ def clean_and_write(df, transformed_root_path="s3a://transformed", dataset_name=
         .mode("overwrite") \
         .option("header", True) \
         .csv(output_path)
-    
-    df_clean.show()
-
 
     return df_clean
 
@@ -110,7 +111,7 @@ if __name__ == "__main__":
     elif action == "write_postgres":
         today = datetime.today()
         df = spark.read.csv(f"s3a://refined/equipe_spark/{today.year}/{today.month}/{today.day}/", header=True, inferSchema=True)
-        write_to_postgres(df, "jdbc:postgresql://postgres-airflow:5432/airflow")
+        write_to_postgres(df, "jdbc:postgresql://postgres-airflow:5432/icteq_db")
         # df = spark.read.csv("s3a://refined/equipe", header=True, inferSchema=True)
         # write_to_postgres(df, "jdbc:postgresql://postgres-airflow:5432/airflow")
 

@@ -10,9 +10,9 @@ MB_URL = "http://metabase:3000"
 ADMIN_EMAIL = os.getenv("MB_ADMIN_EMAIL", "admin@example.com")
 ADMIN_PASS = os.getenv("MB_ADMIN_PASS", "AdminPass123")
  
-DWH_NAME = os.getenv("DWH_NAME", "metabase_db")
-DWH_HOST = os.getenv("DWH_HOST", "postgres_dwh")
-DWH_DB   = os.getenv("DWH_DB", "airflow")
+DWH_NAME = os.getenv("DWH_NAME", "icteq_db")
+DWH_HOST = os.getenv("DWH_HOST", "postgres-airflow")
+DWH_DB   = os.getenv("DWH_DB", "icteq_db")
 DWH_USER = os.getenv("DWH_USER", "airflow")
 DWH_PASS = os.getenv("DWH_PASS", "airflow")
  
@@ -64,8 +64,11 @@ def add_dwh_connection(mb):
         "engine": "postgres", "name": DWH_NAME,
         "details": {"host": DWH_HOST, "port": 5432, "dbname": DWH_DB, "user": DWH_USER, "password": DWH_PASS, "ssl": False}
     })
+    
     if res.status_code != 200: log(f"   ❌ DB Connection Failed: {res.text}")
-    else: log("   ✅ Database added.")
+    else: log(f"   ✅ Database added : { res.text }") 
+
+        
  
 def get_or_create_collection(mb, name):
     cols = mb.get("/api/collection")

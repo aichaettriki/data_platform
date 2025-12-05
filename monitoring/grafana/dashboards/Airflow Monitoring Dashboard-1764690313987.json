@@ -875,6 +875,7 @@
             "inspect": false
           },
           "mappings": [],
+          "noValue": "There is no data because no DAG has failed",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -1160,7 +1161,7 @@
       "type": "logs"
     }
   ],
-  "refresh": false,
+  "refresh": "",
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
@@ -1239,8 +1240,8 @@
     ]
   },
   "time": {
-    "from": "2025-11-27T10:53:07.627Z",
-    "to": "2025-12-04T10:53:07.628Z"
+    "from": "now-7d",
+    "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -1255,6 +1256,6 @@
   "timezone": "browser",
   "title": "Airflow Monitoring Dashboard",
   "uid": "a23a7e6f-3feb-45f4-902e-95dfbcec13da",
-  "version": 14,
+  "version": 5,
   "weekStart": ""
 }
