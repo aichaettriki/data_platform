@@ -4,10 +4,10 @@ from pyspark.sql.functions import year, month, dayofmonth, current_timestamp
 from datetime import datetime
 
 
-def create_spark_session():
+def create_spark_session(app_name="ETL Equipe via Spark + MinIO"):
     spark = (
         SparkSession.builder
-        .appName("ETL Equipe via Spark + MinIO")
+        .appName(app_name)
         .getOrCreate()
     )
 
@@ -94,7 +94,8 @@ import sys
 
 if __name__ == "__main__":
     action = sys.argv[1]  
-    spark = create_spark_session()
+    app_name = f"ETL Equipe - {action}"
+    spark = create_spark_session(app_name)
 
     if action == "read_raw_csv":
         df = read_raw_csv(spark, "s3a://raw/")

@@ -305,6 +305,7 @@ services:
       SPARK_USER: root
       HADOOP_USER_NAME: root
       SPARK_DAEMON_JAVA_OPTS: "-javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent.jar=8090:/opt/jmx_exporter/config.yaml"
+      SPARK_METRICS_CONF: "/opt/spark/conf/metrics.properties"
     ports:
       - "${SPARK_MASTER_UI_PORT}:8080"
       - "${SPARK_MASTER_PORT}:7077"
@@ -340,6 +341,7 @@ services:
       HADOOP_USER_NAME: root
       SPARK_MASTER_URL: spark://spark-master:7077
       SPARK_DAEMON_JAVA_OPTS: "-javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent.jar=8091:/opt/jmx_exporter/config.yaml"
+      SPARK_METRICS_CONF: "/opt/spark/conf/metrics.properties"
     ports:
       - "${SPARK_WORKER_UI_PORT}:8081"
       - "8091:8091"  # JMX Prometheus Exporter
@@ -351,6 +353,20 @@ services:
       - ${MINIO_TRANSFORMED_PATH}:/data/transformed
       - ${MINIO_REFINED_PATH}:/data/refined
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
+    restart: always
+
+  # ------------------------
+  # Spark REST API Exporter
+  # ------------------------
+  spark-exporter:
+    build: ./spark/spark-exporter
+    container_name: spark-exporter
+    networks:
+      - traefik-public
+    depends_on:
+      - spark-master
+    ports:
+      - "9091:9091"
     restart: always
  
 
