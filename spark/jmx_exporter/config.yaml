@@ -16,13 +16,13 @@ rules:
     name: spark_$2_$3
     labels:
       app: "$1"
-  - pattern: "java.lang<type=(.+), name=(.+)><(.+)>(\w+)"
+  - pattern: 'java.lang<type=(.+), name=(.+)><(.+)>([\w]+)'
     name: java_lang_$1_$3_$4
     labels:
       name: "$2"
-  - pattern: "java.lang<type=(.+), name=(.+)><>(\w+)"
+  - pattern: 'java.lang<type=(.+), name=(.+)><>([\w]+)'
     name: java_lang_$1_$3
     labels:
       name: "$2"
-  - pattern: "java.lang<type=(.*)><(.+)>(\w+)"
+  - pattern: 'java.lang<type=(.*)><(.+)>([\w]+)'
     name: java_lang_$1_$2_$3

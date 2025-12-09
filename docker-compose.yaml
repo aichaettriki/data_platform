@@ -304,9 +304,11 @@ services:
       USER: root
       SPARK_USER: root
       HADOOP_USER_NAME: root
+      SPARK_DAEMON_JAVA_OPTS: "-javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent.jar=8090:/opt/jmx_exporter/config.yaml"
     ports:
       - "${SPARK_MASTER_UI_PORT}:8080"
       - "${SPARK_MASTER_PORT}:7077"
+      - "8090:8090"  # JMX Prometheus Exporter
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
       --host spark-master --port 7077
@@ -337,8 +339,10 @@ services:
       SPARK_USER: root
       HADOOP_USER_NAME: root
       SPARK_MASTER_URL: spark://spark-master:7077
+      SPARK_DAEMON_JAVA_OPTS: "-javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent.jar=8091:/opt/jmx_exporter/config.yaml"
     ports:
       - "${SPARK_WORKER_UI_PORT}:8081"
+      - "8091:8091"  # JMX Prometheus Exporter
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
       spark://spark-master:7077
