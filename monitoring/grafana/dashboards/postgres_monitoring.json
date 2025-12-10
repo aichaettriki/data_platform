@@ -1870,13 +1870,13 @@
     "list": []
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "PostgreSQL Monitoring",
   "uid": "postgres-monitoring-v1",
-  "version": 10,
+  "version": 11,
   "weekStart": ""
 }

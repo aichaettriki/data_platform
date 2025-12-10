@@ -695,8 +695,8 @@
         ]
       },
       "gridPos": {
-        "h": 10,
-        "w": 24,
+        "h": 6,
+        "w": 23,
         "x": 0,
         "y": 14
       },
@@ -727,7 +727,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "spark_app_state",
+          "expr": "max without(state) (spark_app_state)",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -738,7 +738,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "spark_app_cores",
+          "expr": "max without(state) (spark_app_cores)",
           "format": "table",
           "instant": true,
           "refId": "B"
@@ -748,7 +748,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "spark_app_memory_mb",
+          "expr": "max without(state) (spark_app_memory_mb)",
           "format": "table",
           "instant": true,
           "refId": "C"
@@ -758,7 +758,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "spark_app_duration_ms / 1000",
+          "expr": "max without(state) (spark_app_duration_ms) / 1000",
           "format": "table",
           "instant": true,
           "refId": "D"
@@ -768,13 +768,13 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "spark_app_start_time * 1000",
+          "expr": "max without(state) (spark_app_start_time) * 1000",
           "format": "table",
           "instant": true,
           "refId": "E"
         }
       ],
-      "title": "📋 Toutes les Applications (Running + Completed)",
+      "title": "📋 Toutes les Applications ",
       "transformations": [
         {
           "id": "merge",
@@ -876,25 +876,49 @@
               }
             ]
           },
-          "unit": "decmbytes"
+          "unit": "decbytes"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "__systemRef": "hideSeriesFrom",
+            "matcher": {
+              "id": "byNames",
+              "options": {
+                "mode": "exclude",
+                "names": [
+                  "ETL Equipe - add_timestamp_refined"
+                ],
+                "prefix": "All except:",
+                "readOnly": true
+              }
+            },
+            "properties": [
+              {
+                "id": "custom.hideFrom",
+                "value": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": true
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 7,
+        "w": 23,
         "x": 0,
-        "y": 24
+        "y": 20
       },
       "id": 13,
       "options": {
         "legend": {
           "calcs": [
-            "last",
-            "max"
+            "last"
           ],
           "displayMode": "table",
-          "placement": "bottom",
+          "placement": "right",
           "showLegend": true
         },
         "tooltip": {
@@ -909,103 +933,14 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "builder",
           "expr": "spark_app_memory_mb{state=\"FINISHED\"}",
-          "legendFormat": "{{app_name}} (Terminée)",
+          "legendFormat": "{{app_name}}",
+          "range": true,
           "refId": "B"
         }
       ],
       "title": "💾 Mémoire utilisée par application",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 24
-      },
-      "id": 14,
-      "options": {
-        "legend": {
-          "calcs": [
-            "last",
-            "max"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "8.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "spark_app_cores{state=\"FINISHED\"}",
-          "legendFormat": "{{app_name}} (Terminée)",
-          "refId": "B"
-        }
-      ],
-      "title": "⚡ Cores CPU utilisés par application",
       "type": "timeseries"
     },
     {
@@ -1014,7 +949,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 27
       },
       "id": 102,
       "panels": [],
@@ -1079,7 +1014,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 33
+        "y": 28
       },
       "id": 11,
       "options": {
@@ -1103,8 +1038,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "spark_worker_memory_mb",
-          "legendFormat": "{{worker_host}} - Mémoire totale",
+          "editorMode": "builder",
+          "expr": "spark_worker_memory_mb{worker_host=\"172.18.0.20\"}",
+          "legendFormat": "Mémoire totale",
+          "range": true,
           "refId": "A"
         },
         {
@@ -1112,8 +1049,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "spark_worker_memory_used_mb",
-          "legendFormat": "{{worker_host}} - Mémoire utilisée",
+          "editorMode": "builder",
+          "expr": "spark_worker_memory_used_mb{worker_host=\"172.18.0.20\"}",
+          "legendFormat": "Mémoire utilisée",
+          "range": true,
           "refId": "B"
         }
       ],
@@ -1178,7 +1117,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 33
+        "y": 28
       },
       "id": 15,
       "options": {
@@ -1202,8 +1141,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "spark_worker_cores",
-          "legendFormat": "{{worker_host}} - Cores totaux",
+          "editorMode": "builder",
+          "expr": "spark_worker_cores{worker_host=\"172.18.0.20\"}",
+          "legendFormat": "Cores totaux",
+          "range": true,
           "refId": "A"
         },
         {
@@ -1211,8 +1152,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "spark_worker_cores_used",
-          "legendFormat": "{{worker_host}} - Cores utilisés",
+          "editorMode": "builder",
+          "expr": "spark_worker_cores_used{worker_host=\"172.18.0.20\"}",
+          "legendFormat": "Cores utilisés",
+          "range": true,
           "refId": "B"
         }
       ],
@@ -1225,7 +1168,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 41
+        "y": 36
       },
       "id": 103,
       "panels": [],
@@ -1290,7 +1233,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 42
+        "y": 37
       },
       "id": 7,
       "options": {
@@ -1370,6 +1313,6 @@
   "timezone": "",
   "title": "Spark Cluster Monitoring",
   "uid": "spark-monitoring",
-  "version": 15,
+  "version": 34,
   "weekStart": ""
 }
