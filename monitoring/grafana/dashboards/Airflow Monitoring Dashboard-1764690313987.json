@@ -991,7 +991,7 @@
               },
               {
                 "id": "custom.width",
-                "value": 197
+                "value": 129
               }
             ]
           },
@@ -1083,7 +1083,7 @@
       },
       "gridPos": {
         "h": 9,
-        "w": 9,
+        "w": 11,
         "x": 0,
         "y": 15
       },
@@ -1123,13 +1123,13 @@
     {
       "datasource": {
         "type": "loki",
-        "uid": "P8E80F9AEF21F6940"
+        "uid": "loki-datasource"
       },
       "description": "Error logs filtered by selected DAG and Task from Airflow logs",
       "gridPos": {
         "h": 9,
-        "w": 15,
-        "x": 9,
+        "w": 13,
+        "x": 11,
         "y": 15
       },
       "id": 9,
@@ -1148,7 +1148,7 @@
         {
           "datasource": {
             "type": "loki",
-            "uid": "P8E80F9AEF21F6940"
+            "uid": "loki-datasource"
           },
           "editorMode": "code",
           "expr": "{job=\"airflow\", dag_id=~\".*${failed_dag_filter}.*\", task_id=~\".*${failed_task_filter}.*\"} |~ \"(?i)ERROR\"",
@@ -1240,8 +1240,8 @@
     ]
   },
   "time": {
-    "from": "now-7d",
-    "to": "now"
+    "from": "2025-12-03T10:17:41.335Z",
+    "to": "2025-12-10T10:17:41.335Z"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -1256,6 +1256,6 @@
   "timezone": "browser",
   "title": "Airflow Monitoring Dashboard",
   "uid": "a23a7e6f-3feb-45f4-902e-95dfbcec13da",
-  "version": 6,
+  "version": 2,
   "weekStart": ""
 }

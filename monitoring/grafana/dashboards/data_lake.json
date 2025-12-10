@@ -1175,102 +1175,8 @@
       },
       "id": 600,
       "panels": [],
-      "title": "🔄 ILM & Scanner Activity",
+      "title": "🔄 Scanner Activity",
       "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "Current state of Information Lifecycle Management tasks including pending expirations, transitions, active tasks, and worker count.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "yellow",
-                "value": 10
-              },
-              {
-                "color": "red",
-                "value": 100
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 0,
-        "y": 29
-      },
-      "id": 601,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "minio_node_ilm_expiry_pending_tasks",
-          "legendFormat": "Expiry Pending",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "minio_node_ilm_transition_pending_tasks",
-          "legendFormat": "Transition Pending",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "minio_node_ilm_transition_active_tasks",
-          "legendFormat": "Transition Active",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "minio_node_ilm_expiry_num_workers",
-          "legendFormat": "Expiry Workers",
-          "refId": "D"
-        }
-      ],
-      "title": "ILM Task Queue",
-      "type": "stat"
     },
     {
       "datasource": {
@@ -1318,7 +1224,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1329,7 +1236,7 @@
       "gridPos": {
         "h": 6,
         "w": 8,
-        "x": 8,
+        "x": 0,
         "y": 29
       },
       "id": 602,
@@ -1379,87 +1286,6 @@
       ],
       "title": "Scanner Activity",
       "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "Count of ILM tasks missed in the last hour including expiries, transitions, and free version operations. Non-zero values indicate system lag.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green"
-              },
-              {
-                "color": "red",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 16,
-        "y": 29
-      },
-      "id": 603,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "sum"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "increase(minio_node_ilm_expiry_missed_tasks[1h])",
-          "legendFormat": "Expiry Missed",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "increase(minio_node_ilm_transition_missed_immediate_tasks[1h])",
-          "legendFormat": "Transition Missed",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "increase(minio_node_ilm_expiry_missed_freeversions[1h])",
-          "legendFormat": "Free Versions Missed",
-          "refId": "C"
-        }
-      ],
-      "title": "ILM Missed Tasks (1h)",
-      "type": "stat"
     }
   ],
   "refresh": "5s",
@@ -1481,6 +1307,6 @@
   "timezone": "browser",
   "title": "Data Lake Health",
   "uid": "minio_data_lake_dashboard",
-  "version": 5,
+  "version": 1,
   "weekStart": ""
 }

@@ -387,7 +387,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "metrics_master_aliveWorkers_Value{job=\"spark-master-app\"}",
+          "expr": "spark_workers_alive",
           "legendFormat": "Alive Workers",
           "refId": "A"
         },
@@ -396,7 +396,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "metrics_master_apps_Value{job=\"spark-master-app\"}",
+          "expr": "spark_applications_running",
           "legendFormat": "Running Apps",
           "refId": "B"
         },
@@ -405,7 +405,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "metrics_master_waitingApps_Value{job=\"spark-master-app\"}",
+          "expr": "spark_applications_waiting",
           "legendFormat": "Waiting Apps",
           "refId": "C"
         }
@@ -496,8 +496,8 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "metrics_jvm_heap_usage_Value{job=\"spark-master-app\"} * 100",
-          "legendFormat": "Master Heap %",
+          "expr": "(spark_memory_used_mb / spark_memory_total_mb) * 100",
+          "legendFormat": "Memory Usage %",
           "refId": "A"
         },
         {
@@ -505,12 +505,12 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "metrics_jvm_heap_usage_Value{job=\"spark-worker-app\"} * 100",
-          "legendFormat": "Worker Heap %",
+          "expr": "(spark_cores_used / spark_cores_total) * 100",
+          "legendFormat": "CPU Usage %",
           "refId": "B"
         }
       ],
-      "title": "Utilisation Heap JVM (%)",
+      "title": "Resource Utilization (%)",
       "type": "timeseries"
     },
     {
@@ -1363,13 +1363,13 @@
     "list": []
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Spark Cluster Monitoring",
   "uid": "spark-monitoring",
-  "version": 3,
+  "version": 15,
   "weekStart": ""
 }
