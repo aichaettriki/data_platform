@@ -41,7 +41,7 @@ with DAG(
  
     task_trigger_spark = TriggerDagRunOperator(
         task_id="trigger_spark_pipeline",
-        trigger_dag_id="etl_csv_spark_pipeline_v2",
+        trigger_dag_id="etl_csv_spark_pipeline_v2",  # DAG à déclencher
         wait_for_completion=True,     # 👈 THIS IS THE KEY
         poke_interval=10,
     )
