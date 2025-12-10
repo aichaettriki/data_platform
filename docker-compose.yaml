@@ -464,6 +464,25 @@ services:
       interval: 5s
       retries: 5
     
+  # ------------------------
+  # Metabase Exporter
+  # ------------------------
+  metabase-exporter:
+    build: ./metabase/metabase-exporter
+    container_name: metabase-exporter
+    networks:
+      - traefik-public
+    environment:
+      METABASE_URL: "http://metabase:3000"
+      METABASE_USERNAME: "admin@example.com"
+      METABASE_PASSWORD: "AdminPass123"
+      EXPORTER_PORT: "9101"
+      SCRAPE_INTERVAL: "30"
+    ports:
+      - "9101:9101"
+    depends_on:
+      - metabase
+    restart: always
  
   # 3. ZERO-TOUCH DEPLOYER (The Magic)
   metabase_deployer:
