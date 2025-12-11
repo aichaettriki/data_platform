@@ -31,7 +31,7 @@
       },
       "id": 100,
       "panels": [],
-      "title": "📊 Vue d'ensemble du Cluster Spark - Métriques globales",
+      "title": "📊 Spark Cluster Overview - Global Metrics",
       "type": "row"
     },
     {
@@ -91,7 +91,7 @@
           "refId": "A"
         }
       ],
-      "title": "Workers Actifs",
+      "title": "Active Workers",
       "type": "stat"
     },
     {
@@ -148,7 +148,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "expr": "spark_cores_used",
-          "legendFormat": "Utilisés",
+          "legendFormat": "Used",
           "refId": "A"
         },
         {
@@ -161,7 +161,7 @@
           "refId": "B"
         }
       ],
-      "title": "Cores CPU (Utilisés / Total)",
+      "title": "CPU Cores (Used / Total)",
       "type": "stat"
     },
     {
@@ -218,7 +218,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "expr": "spark_memory_used_mb",
-          "legendFormat": "Utilisée",
+          "legendFormat": "Used",
           "refId": "A"
         },
         {
@@ -227,11 +227,11 @@
             "uid": "PBFA97CFB590B2093"
           },
           "expr": "spark_memory_total_mb",
-          "legendFormat": "Totale",
+          "legendFormat": "Total",
           "refId": "B"
         }
       ],
-      "title": "Mémoire (Utilisée / Totale)",
+      "title": "Memory (Used / Total)",
       "type": "stat"
     },
     {
@@ -288,7 +288,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "expr": "spark_applications_running",
-          "legendFormat": "En cours",
+          "legendFormat": "Running",
           "refId": "A"
         },
         {
@@ -297,11 +297,11 @@
             "uid": "PBFA97CFB590B2093"
           },
           "expr": "spark_applications_completed",
-          "legendFormat": "Terminées",
+          "legendFormat": "Completed",
           "refId": "B"
         }
       ],
-      "title": "Applications (En cours / Terminées)",
+      "title": "Applications (Running / Completed)",
       "type": "stat"
     },
     {
@@ -410,7 +410,7 @@
           "refId": "C"
         }
       ],
-      "title": "Activité Cluster dans le temps",
+      "title": "Cluster Activity Over Time",
       "type": "timeseries"
     },
     {
@@ -523,7 +523,7 @@
       },
       "id": 101,
       "panels": [],
-      "title": "🚀 Applications Spark - Tableau détaillé des ressources utilisées",
+      "title": "🚀 Spark Applications - Detailed Resource Usage Table",
       "type": "row"
     },
     {
@@ -546,22 +546,22 @@
                 "1": {
                   "color": "green",
                   "index": 0,
-                  "text": "EN COURS"
+                  "text": "RUNNING"
                 },
                 "2": {
                   "color": "blue",
                   "index": 1,
-                  "text": "TERMINÉE"
+                  "text": "COMPLETED"
                 },
                 "3": {
                   "color": "red",
                   "index": 2,
-                  "text": "ÉCHEC"
+                  "text": "FAILED"
                 },
                 "4": {
                   "color": "orange",
                   "index": 3,
-                  "text": "ARRÊTÉE"
+                  "text": "STOPPED"
                 }
               },
               "type": "value"
@@ -581,7 +581,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "État"
+              "options": "State"
             },
             "properties": [
               {
@@ -599,7 +599,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Durée (s)"
+              "options": "Duration (s)"
             },
             "properties": [
               {
@@ -611,7 +611,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Mémoire (MB)"
+              "options": "Memory (MB)"
             },
             "properties": [
               {
@@ -623,7 +623,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Nom Application"
+              "options": "Application Name"
             },
             "properties": [
               {
@@ -635,7 +635,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "ID Application"
+              "options": "Application ID"
             },
             "properties": [
               {
@@ -647,7 +647,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "ID Application"
+              "options": "Application ID"
             },
             "properties": [
               {
@@ -659,7 +659,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Statut"
+              "options": "Status"
             },
             "properties": [
               {
@@ -671,7 +671,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Nom Application"
+              "options": "Application Name"
             },
             "properties": [
               {
@@ -683,7 +683,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "Heure Début"
+              "options": "Start Time"
             },
             "properties": [
               {
@@ -715,7 +715,7 @@
         "sortBy": [
           {
             "desc": true,
-            "displayName": "Statut"
+            "displayName": "Status"
           }
         ]
       },
@@ -774,7 +774,7 @@
           "refId": "E"
         }
       ],
-      "title": "📋 Toutes les Applications ",
+      "title": "📋 All Applications",
       "transformations": [
         {
           "id": "merge",
@@ -800,14 +800,14 @@
               "state": 2
             },
             "renameByName": {
-              "Value #A": "État",
+              "Value #A": "State",
               "Value #B": "Cores",
-              "Value #C": "Mémoire (MB)",
-              "Value #D": "Durée (s)",
-              "Value #E": "Heure Début",
-              "app_id": "ID Application",
-              "app_name": "Nom Application",
-              "state": "Statut"
+              "Value #C": "Memory (MB)",
+              "Value #D": "Duration (s)",
+              "Value #E": "Start Time",
+              "app_id": "Application ID",
+              "app_name": "Application Name",
+              "state": "Status"
             }
           }
         },
@@ -817,7 +817,7 @@
             "conversions": [
               {
                 "destinationType": "time",
-                "targetField": "Heure Début"
+                "targetField": "Start Time"
               }
             ],
             "fields": {}
@@ -827,133 +827,16 @@
       "type": "table"
     },
     {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "decbytes"
-        },
-        "overrides": [
-          {
-            "__systemRef": "hideSeriesFrom",
-            "matcher": {
-              "id": "byNames",
-              "options": {
-                "mode": "exclude",
-                "names": [
-                  "ETL Equipe - add_timestamp_refined"
-                ],
-                "prefix": "All except:",
-                "readOnly": true
-              }
-            },
-            "properties": [
-              {
-                "id": "custom.hideFrom",
-                "value": {
-                  "legend": false,
-                  "tooltip": false,
-                  "viz": true
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 23,
-        "x": 0,
-        "y": 20
-      },
-      "id": 13,
-      "options": {
-        "legend": {
-          "calcs": [
-            "last"
-          ],
-          "displayMode": "table",
-          "placement": "right",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "8.0.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "builder",
-          "expr": "spark_app_memory_mb{state=\"FINISHED\"}",
-          "legendFormat": "{{app_name}}",
-          "range": true,
-          "refId": "B"
-        }
-      ],
-      "title": "💾 Mémoire utilisée par application",
-      "type": "timeseries"
-    },
-    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 27
+        "y": 20
       },
       "id": 102,
       "panels": [],
-      "title": "🖥️ Workers - Utilisation des ressources par worker",
+      "title": "🖥️ Workers - Resource Utilization per Worker",
       "type": "row"
     },
     {
@@ -964,44 +847,14 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "mode": "thresholds"
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "blue",
                 "value": null
               }
             ]
@@ -1011,53 +864,42 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 4,
+        "w": 6,
         "x": 0,
-        "y": 28
+        "y": 21
       },
       "id": 11,
       "options": {
-        "legend": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
           "calcs": [
-            "last"
+            "lastNotNull"
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "fields": "",
+          "values": false
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
+        "textMode": "value_and_name"
       },
-      "pluginVersion": "8.0.0",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "editorMode": "builder",
-          "expr": "spark_worker_memory_mb{worker_host=\"172.18.0.20\"}",
-          "legendFormat": "Mémoire totale",
+          "editorMode": "code",
+          "expr": "spark_worker_memory_mb",
+          "legendFormat": "Worker {{worker_host}}",
           "range": true,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "builder",
-          "expr": "spark_worker_memory_used_mb{worker_host=\"172.18.0.20\"}",
-          "legendFormat": "Mémoire utilisée",
-          "range": true,
-          "refId": "B"
         }
       ],
-      "title": "💾 Mémoire par Worker",
-      "type": "timeseries"
+      "title": "💾 Memory per Worker",
+      "type": "stat"
     },
     {
       "datasource": {
@@ -1067,37 +909,7 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "never",
-            "spanNulls": true,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
+            "mode": "thresholds"
           },
           "mappings": [],
           "thresholds": {
@@ -1114,53 +926,42 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 28
+        "h": 4,
+        "w": 5,
+        "x": 6,
+        "y": 21
       },
       "id": 15,
       "options": {
-        "legend": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "horizontal",
+        "reduceOptions": {
           "calcs": [
-            "last"
+            "lastNotNull"
           ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
+          "fields": "",
+          "values": false
         },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
+        "textMode": "value_and_name"
       },
-      "pluginVersion": "8.0.0",
+      "pluginVersion": "10.0.3",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "editorMode": "builder",
-          "expr": "spark_worker_cores{worker_host=\"172.18.0.20\"}",
-          "legendFormat": "Cores totaux",
+          "editorMode": "code",
+          "expr": "spark_worker_cores",
+          "legendFormat": "Worker {{worker_host}}",
           "range": true,
           "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "builder",
-          "expr": "spark_worker_cores_used{worker_host=\"172.18.0.20\"}",
-          "legendFormat": "Cores utilisés",
-          "range": true,
-          "refId": "B"
         }
       ],
-      "title": "⚡ Cores par Worker",
-      "type": "timeseries"
+      "title": "⚡ Cores per Worker",
+      "type": "stat"
     },
     {
       "collapsed": false,
@@ -1168,11 +969,11 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 36
+        "y": 25
       },
       "id": 103,
       "panels": [],
-      "title": "⚙️ Performance JVM - Gestion mémoire et Garbage Collection",
+      "title": "⚙️ JVM Performance - Memory Management and Garbage Collection",
       "type": "row"
     },
     {
@@ -1233,7 +1034,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 37
+        "y": 26
       },
       "id": 7,
       "options": {
@@ -1258,8 +1059,10 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "code",
           "expr": "metrics_jvm_heap_used_Value{job=\"spark-master-app\"}",
-          "legendFormat": "Master - Heap Utilisé",
+          "legendFormat": "Master - Heap Used",
+          "range": true,
           "refId": "A"
         },
         {
@@ -1270,24 +1073,6 @@
           "expr": "metrics_jvm_heap_max_Value{job=\"spark-master-app\"}",
           "legendFormat": "Master - Heap Max",
           "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "metrics_jvm_heap_used_Value{job=\"spark-worker-app\"}",
-          "legendFormat": "Worker - Heap Utilisé",
-          "refId": "C"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "metrics_jvm_heap_max_Value{job=\"spark-worker-app\"}",
-          "legendFormat": "Worker - Heap Max",
-          "refId": "D"
         }
       ],
       "title": "JVM Heap Memory (Bytes)",
@@ -1313,6 +1098,6 @@
   "timezone": "",
   "title": "Spark Cluster Monitoring",
   "uid": "spark-monitoring",
-  "version": 34,
+  "version": 44,
   "weekStart": ""
 }

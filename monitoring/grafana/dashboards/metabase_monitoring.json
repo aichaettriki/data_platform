@@ -31,7 +31,7 @@
       },
       "id": 100,
       "panels": [],
-      "title": "📊 Vue d'ensemble",
+      "title": "📊 Overview",
       "type": "row"
     },
     {
@@ -424,7 +424,7 @@
       },
       "id": 102,
       "panels": [],
-      "title": "🗄️ État des sources de données",
+      "title": "🗄️ Data Sources Status",
       "type": "row"
     },
     {

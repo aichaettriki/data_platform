@@ -55,7 +55,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 3,
         "x": 0,
         "y": 1
       },
@@ -120,8 +120,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 4,
+        "w": 6,
+        "x": 3,
         "y": 1
       },
       "id": 53,
@@ -185,8 +185,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 8,
+        "w": 5,
+        "x": 9,
         "y": 1
       },
       "id": 8,
@@ -251,7 +251,7 @@
       "gridPos": {
         "h": 4,
         "w": 5,
-        "x": 12,
+        "x": 14,
         "y": 1
       },
       "id": 56,
@@ -387,8 +387,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 7,
-        "x": 17,
+        "w": 5,
+        "x": 19,
         "y": 1
       },
       "id": 10,
@@ -1161,7 +1161,7 @@
       "type": "logs"
     }
   ],
-  "refresh": false,
+  "refresh": "",
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
@@ -1174,7 +1174,7 @@
     "list": [
       {
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "All",
           "value": "$__all"
         },
@@ -1201,7 +1201,7 @@
       },
       {
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "All",
           "value": "$__all"
         },
@@ -1256,6 +1256,6 @@
   "timezone": "browser",
   "title": "Airflow Monitoring Dashboard",
   "uid": "a23a7e6f-3feb-45f4-902e-95dfbcec13da",
-  "version": 2,
+  "version": 3,
   "weekStart": ""
 }
