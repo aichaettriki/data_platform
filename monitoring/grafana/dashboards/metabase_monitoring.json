@@ -31,7 +31,7 @@
       },
       "id": 100,
       "panels": [],
-      "title": "📊 Overview",
+      "title": " Overview",
       "type": "row"
     },
     {
@@ -80,8 +80,8 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 4,
-        "x": 0,
+        "w": 3,
+        "x": 1,
         "y": 1
       },
       "id": 1,
@@ -142,8 +142,8 @@
       },
       "gridPos": {
         "h": 5,
-        "w": 4,
-        "x": 4,
+        "w": 3,
+        "x": 5,
         "y": 1
       },
       "id": 8,
@@ -190,124 +190,6 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "orange",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 8,
-        "y": 1
-      },
-      "id": 5,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "metabase_question_count",
-          "refId": "A"
-        }
-      ],
-      "title": "Total Questions",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "yellow",
-                "value": null
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 4,
-        "x": 12,
-        "y": 1
-      },
-      "id": 6,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "metabase_dashboard_count",
-          "refId": "A"
-        }
-      ],
-      "title": "Total Dashboards",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
                 "color": "purple",
                 "value": null
               }
@@ -320,7 +202,7 @@
       "gridPos": {
         "h": 5,
         "w": 4,
-        "x": 16,
+        "x": 9,
         "y": 1
       },
       "id": 4,
@@ -367,7 +249,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "text",
+                "color": "yellow",
                 "value": null
               }
             ]
@@ -379,15 +261,15 @@
       "gridPos": {
         "h": 5,
         "w": 4,
-        "x": 20,
+        "x": 14,
         "y": 1
       },
-      "id": 7,
+      "id": 6,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
         "justifyMode": "auto",
-        "orientation": "horizontal",
+        "orientation": "auto",
         "reduceOptions": {
           "calcs": [
             "lastNotNull"
@@ -395,7 +277,7 @@
           "fields": "",
           "values": false
         },
-        "textMode": "value_and_name"
+        "textMode": "auto"
       },
       "pluginVersion": "10.0.3",
       "targets": [
@@ -404,14 +286,70 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "editorMode": "code",
-          "expr": "metabase_collection_count",
-          "legendFormat": "Collections",
-          "range": true,
+          "expr": "metabase_dashboard_count",
           "refId": "A"
         }
       ],
-      "title": "Total Collections",
+      "title": "Total Dashboards",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "orange",
+                "value": null
+              }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 19,
+        "y": 1
+      },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "expr": "metabase_question_count",
+          "refId": "A"
+        }
+      ],
+      "title": "Total Questions",
       "type": "stat"
     },
     {
@@ -424,7 +362,7 @@
       },
       "id": 102,
       "panels": [],
-      "title": "🗄️ Data Sources Status",
+      "title": " Data Sources Status",
       "type": "row"
     },
     {
@@ -531,7 +469,7 @@
       "gridPos": {
         "h": 6,
         "w": 8,
-        "x": 0,
+        "x": 1,
         "y": 7
       },
       "id": 12,
@@ -649,8 +587,8 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 16,
-        "x": 8,
+        "w": 13,
+        "x": 10,
         "y": 7
       },
       "id": 13,
@@ -687,6 +625,19 @@
       "type": "timeseries"
     },
     {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 103,
+      "panels": [],
+      "title": "Metabase Errors",
+      "type": "row"
+    },
+    {
       "datasource": {
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
@@ -719,10 +670,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 0,
-        "y": 13
+        "h": 5,
+        "w": 5,
+        "x": 2,
+        "y": 14
       },
       "id": 14,
       "options": {
@@ -789,10 +740,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 8,
-        "y": 13
+        "h": 5,
+        "w": 5,
+        "x": 9,
+        "y": 14
       },
       "id": 15,
       "options": {
@@ -845,6 +796,6 @@
   "timezone": "",
   "title": "Metabase Monitoring",
   "uid": "metabase-monitoring",
-  "version": 8,
+  "version": 1,
   "weekStart": ""
 }

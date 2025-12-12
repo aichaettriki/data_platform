@@ -80,8 +80,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 3,
-        "x": 0,
+        "w": 6,
+        "x": 1,
         "y": 1
       },
       "id": 16,
@@ -122,136 +122,6 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "Total number of MinIO nodes currently online and serving requests in the cluster.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 3,
-        "y": 1
-      },
-      "id": 101,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "minio_cluster_nodes_online_total",
-          "legendFormat": "minio cluster nodes online",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Nodes Online",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "Number of MinIO nodes currently offline. Values above 0 require immediate attention.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 6,
-        "y": 1
-      },
-      "id": 102,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "center",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "exemplar": false,
-          "expr": "rate(minio_cluster_nodes_offline_total[$__rate_interval])",
-          "instant": true,
-          "legendFormat": "minio cluster nodes offline",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Nodes Offline",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
       "description": "Elapsed time since the MinIO process was last restarted, measured in seconds.",
       "fieldConfig": {
         "defaults": {
@@ -274,8 +144,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 3,
-        "x": 9,
+        "w": 6,
+        "x": 8,
         "y": 1
       },
       "id": 15,
@@ -301,10 +171,11 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
+          "exemplar": false,
           "expr": "minio_node_process_uptime_seconds",
-          "instant": false,
+          "instant": true,
           "legendFormat": "uptime per seconds",
-          "range": true,
+          "range": false,
           "refId": "A"
         }
       ],
@@ -312,7 +183,10 @@
       "type": "stat"
     },
     {
-      "datasource": "Prometheus",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
       "description": "Total count of buckets, objects, and object versions stored in the cluster.",
       "fieldConfig": {
         "defaults": {
@@ -332,7 +206,7 @@
       "gridPos": {
         "h": 4,
         "w": 6,
-        "x": 12,
+        "x": 16,
         "y": 1
       },
       "id": 5,
@@ -353,16 +227,33 @@
       "pluginVersion": "10.0.3",
       "targets": [
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "exemplar": false,
           "expr": "minio_cluster_bucket_total",
+          "format": "time_series",
+          "instant": true,
           "legendFormat": "Buckets",
+          "range": false,
           "refId": "A"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
           "expr": "minio_cluster_usage_object_total",
           "legendFormat": "Objects",
           "refId": "B"
         },
         {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
           "expr": "minio_cluster_usage_version_total",
           "legendFormat": "Versions",
           "refId": "C"
@@ -476,8 +367,8 @@
         ]
       },
       "gridPos": {
-        "h": 7,
-        "w": 10,
+        "h": 6,
+        "w": 9,
         "x": 0,
         "y": 6
       },
@@ -586,7 +477,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 6,
         "w": 5,
         "x": 10,
         "y": 6
@@ -649,7 +540,7 @@
       "gridPos": {
         "h": 3,
         "w": 6,
-        "x": 15,
+        "x": 16,
         "y": 6
       },
       "id": 19,
@@ -675,10 +566,12 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
+          "exemplar": false,
           "expr": "minio_cluster_usage_total_bytes",
-          "instant": false,
+          "format": "heatmap",
+          "instant": true,
           "legendFormat": "minio cluster usage",
-          "range": true,
+          "range": false,
           "refId": "A"
         }
       ],
@@ -711,9 +604,9 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
+        "h": 3,
         "w": 6,
-        "x": 15,
+        "x": 16,
         "y": 9
       },
       "id": 202,
@@ -739,10 +632,11 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
+          "exemplar": false,
           "expr": "minio_cluster_capacity_usable_free_bytes",
-          "instant": false,
+          "instant": true,
           "legendFormat": "minio cluster capacity",
-          "range": true,
+          "range": false,
           "refId": "A"
         }
       ],
@@ -755,7 +649,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 12
       },
       "id": 300,
       "panels": [],
@@ -799,8 +693,8 @@
       "gridPos": {
         "h": 6,
         "w": 6,
-        "x": 0,
-        "y": 14
+        "x": 1,
+        "y": 13
       },
       "id": 14,
       "options": {
@@ -889,9 +783,9 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 9,
-        "x": 6,
-        "y": 14
+        "w": 14,
+        "x": 8,
+        "y": 13
       },
       "id": 8,
       "options": {
@@ -937,7 +831,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 19
       },
       "id": 400,
       "panels": [],
@@ -1019,7 +913,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 21
+        "y": 20
       },
       "id": 7,
       "options": {
@@ -1127,7 +1021,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 21
+        "y": 20
       },
       "id": 17,
       "options": {
@@ -1163,128 +1057,6 @@
         }
       ],
       "title": "Traffic Sent",
-      "type": "timeseries"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 28
-      },
-      "id": 600,
-      "panels": [],
-      "title": "🔄 Scanner Activity",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "Rate of scanner operations showing versions, objects, and directories being processed over 5-minute intervals.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 20,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 2,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 0,
-        "y": 29
-      },
-      "id": 602,
-      "options": {
-        "legend": {
-          "calcs": [
-            "lastNotNull",
-            "sum"
-          ],
-          "displayMode": "table",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "multi",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "rate(minio_node_ilm_versions_scanned[5m])",
-          "legendFormat": "Versions Scanned",
-          "refId": "A"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "rate(minio_node_scanner_objects_scanned[5m])",
-          "legendFormat": "Objects Scanned",
-          "refId": "B"
-        },
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "rate(minio_node_scanner_directories_scanned[5m])",
-          "legendFormat": "Directories Scanned",
-          "refId": "C"
-        }
-      ],
-      "title": "Scanner Activity",
       "type": "timeseries"
     }
   ],

@@ -19,19 +19,6 @@
   "liveNow": false,
   "panels": [
     {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "id": 20,
-      "panels": [],
-      "title": "📊 DAGs Overview",
-      "type": "row"
-    },
-    {
       "datasource": {
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
@@ -54,10 +41,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 3,
-        "x": 0,
-        "y": 1
+        "h": 6,
+        "w": 6,
+        "x": 1,
+        "y": 0
       },
       "id": 1,
       "options": {
@@ -97,86 +84,22 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "Total number of DAG runs that completed successfully",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "green",
-            "mode": "fixed"
+            "mode": "thresholds"
           },
           "mappings": [],
-          "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 3,
-        "y": 1
-      },
-      "id": 53,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "sum(airflow_dag_run_status{state=\"success\", job=\"airflow-global\"})",
-          "instant": true,
-          "legendFormat": "Success",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Count of DAGs That Ran Successfully",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "Total number of DAG runs that failed",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "red",
-            "mode": "fixed"
-          },
-          "mappings": [],
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
+              },
               {
                 "color": "red",
-                "value": null
+                "value": 80
               }
             ]
           }
@@ -184,12 +107,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 5,
+        "h": 6,
+        "w": 6,
         "x": 9,
-        "y": 1
+        "y": 0
       },
-      "id": 8,
+      "id": 59,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -212,14 +135,17 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum(airflow_dag_run_status{state=\"failed\", job=\"airflow-global\"})",
+          "exemplar": false,
+          "expr": " sum(airflow_dag_run_status{job=\"airflow-global\"})",
+          "format": "heatmap",
           "instant": true,
-          "legendFormat": "Failed",
+          "interval": "",
+          "legendFormat": "{{label_name}}",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Count of DAGs That Failed",
+      "title": "Total Run",
       "type": "stat"
     },
     {
@@ -227,20 +153,16 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "Total number of tasks that failed due to upstream task failures",
+      "description": "Total number of tasks defined across all DAGs",
       "fieldConfig": {
         "defaults": {
-          "color": {
-            "fixedColor": "orange",
-            "mode": "fixed"
-          },
           "mappings": [],
           "noValue": "0",
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "orange",
+                "color": "blue",
                 "value": null
               }
             ]
@@ -249,12 +171,12 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 4,
-        "w": 5,
-        "x": 14,
-        "y": 1
+        "h": 6,
+        "w": 6,
+        "x": 17,
+        "y": 0
       },
-      "id": 56,
+      "id": 54,
       "options": {
         "colorMode": "value",
         "graphMode": "area",
@@ -276,23 +198,36 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "editorMode": "code",
-          "expr": "sum(airflow_task_status{state=\"upstream_failed\", job=\"airflow-global\"})",
+          "editorMode": "builder",
+          "expr": "airflow_task_count_total{job=\"airflow-global\"}",
           "instant": true,
-          "legendFormat": "Failed",
+          "legendFormat": "__auto",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Total Failed Upstream Tasks",
+      "title": "Total Tasks",
       "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 6
+      },
+      "id": 20,
+      "panels": [],
+      "title": " DAGs Overview",
+      "type": "row"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "Distribution of DAG runs by their current state (failed, success, running, etc.)",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -305,14 +240,24 @@
               "viz": false
             }
           },
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "Failed run": {
+                  "color": "red",
+                  "index": 0
+                }
+              },
+              "type": "value"
+            }
+          ],
           "noValue": "0"
         },
         "overrides": [
           {
             "matcher": {
               "id": "byName",
-              "options": "failed"
+              "options": "Failed run "
             },
             "properties": [
               {
@@ -323,83 +268,25 @@
                 }
               }
             ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "success"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "green",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "running"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "blue",
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "queued"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "mode": "fixed"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "upstream_failed"
-            },
-            "properties": [
-              {
-                "id": "color",
-                "value": {
-                  "fixedColor": "orange",
-                  "mode": "fixed"
-                }
-              }
-            ]
           }
         ]
       },
       "gridPos": {
-        "h": 4,
-        "w": 5,
-        "x": 19,
-        "y": 1
+        "h": 8,
+        "w": 7,
+        "x": 0,
+        "y": 7
       },
       "id": 10,
       "options": {
+        "displayLabels": [
+          "value"
+        ],
         "legend": {
-          "displayMode": "table",
-          "placement": "right",
+          "displayMode": "list",
+          "placement": "bottom",
           "showLegend": true,
-          "values": [
-            "percent"
-          ]
+          "values": []
         },
         "pieType": "donut",
         "reduceOptions": {
@@ -410,7 +297,7 @@
           "values": false
         },
         "tooltip": {
-          "mode": "multi",
+          "mode": "single",
           "sort": "desc"
         }
       },
@@ -421,108 +308,36 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum by(state) (airflow_dag_run_status{job=\"airflow-global\"})",
+          "expr": "sum(airflow_dag_run_status{state=\"success\", job=\"airflow-global\"})",
           "instant": true,
-          "legendFormat": "{{state}}",
+          "legendFormat": "Successfull run ",
           "range": false,
           "refId": "A"
-        }
-      ],
-      "title": "DAG Status Distribution",
-      "type": "piechart"
-    },
-    {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 5
-      },
-      "id": 19,
-      "panels": [],
-      "title": "⏱️ Performance & DAG Duration",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "Average execution time across all DAG runs",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 300
-              },
-              {
-                "color": "red",
-                "value": 600
-              }
-            ]
-          },
-          "unit": "s"
         },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 4,
-        "x": 0,
-        "y": 6
-      },
-      "id": 3,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "auto"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "avg(airflow_dag_avg_duration_seconds{job=\"airflow-global\"})",
-          "instant": true,
-          "legendFormat": "Avg",
-          "range": false,
-          "refId": "A"
+          "exemplar": false,
+          "expr": "sum(airflow_dag_run_status{state=\"failed\", job=\"airflow-global\"})",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "Failed run ",
+          "range": true,
+          "refId": "B"
         }
       ],
-      "title": "Avg DAG Duration",
-      "type": "stat"
+      "title": "Run Status Distribution",
+      "type": "piechart"
     },
     {
       "datasource": {
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "Top 10 longest running DAGs by average execution time",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -568,10 +383,10 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
-        "w": 8,
-        "x": 4,
-        "y": 6
+        "h": 8,
+        "w": 10,
+        "x": 7,
+        "y": 7
       },
       "id": 21,
       "options": {
@@ -586,7 +401,7 @@
           "showLegend": true
         },
         "orientation": "horizontal",
-        "showValue": "auto",
+        "showValue": "always",
         "stacking": "none",
         "tooltip": {
           "mode": "single",
@@ -602,7 +417,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "topk(10, airflow_dag_avg_duration_seconds{job=\"airflow-global\"})",
+          "expr": "airflow_dag_avg_duration_seconds{job=\"airflow-global\"}",
           "instant": true,
           "interval": "",
           "legendFormat": "{{dag_id}}",
@@ -618,12 +433,31 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
-      "description": "List of all DAGs that completed successfully, grouped by DAG ID",
+      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
-            "fixedColor": "green",
-            "mode": "fixed"
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
           "noValue": "0",
@@ -633,32 +467,48 @@
               {
                 "color": "green",
                 "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 300
+              },
+              {
+                "color": "red",
+                "value": 600
               }
             ]
-          }
+          },
+          "unit": "short"
         },
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 12,
-        "y": 6
+        "h": 8,
+        "w": 7,
+        "x": 17,
+        "y": 7
       },
-      "id": 7,
+      "id": 3,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": true,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
         },
-        "textMode": "auto"
+        "orientation": "horizontal",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
       },
       "pluginVersion": "10.0.3",
       "targets": [
@@ -668,15 +518,29 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "airflow_dag_run_status{state=\"success\", job=\"airflow-global\"}",
+          "expr": "airflow_task_count_per_dag{job=\"airflow-global\"}",
+          "format": "time_series",
           "instant": true,
           "legendFormat": "{{dag_id}}",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "Successful DAGs",
-      "type": "stat"
+      "title": "Number of Tasks per DAG",
+      "type": "barchart"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "id": 60,
+      "panels": [],
+      "title": "Successful vs Failed DAG Runs",
+      "type": "row"
     },
     {
       "datasource": {
@@ -688,7 +552,27 @@
         "defaults": {
           "color": {
             "fixedColor": "red",
-            "mode": "fixed"
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [],
           "noValue": "0",
@@ -705,25 +589,32 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 6,
-        "w": 6,
-        "x": 18,
-        "y": 6
+        "h": 8,
+        "w": 7,
+        "x": 0,
+        "y": 16
       },
-      "id": 54,
+      "id": 58,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
         },
-        "textMode": "auto"
+        "orientation": "vertical",
+        "showValue": "auto",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
       },
       "pluginVersion": "10.0.3",
       "targets": [
@@ -740,8 +631,100 @@
           "refId": "A"
         }
       ],
-      "title": "Failed DAGs",
-      "type": "stat"
+      "title": "Failed Run",
+      "type": "barchart"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "List of all DAGs that completed successfully, grouped by DAG ID",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "green",
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 98,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 16
+      },
+      "id": 7,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.73,
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": true
+        },
+        "orientation": "vertical",
+        "showValue": "always",
+        "stacking": "none",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "10.0.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "airflow_dag_run_status{state=\"success\", job=\"airflow-global\"}",
+          "instant": true,
+          "legendFormat": "{{dag_id}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Successful Run",
+      "type": "barchart"
     },
     {
       "collapsed": false,
@@ -749,7 +732,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 24
       },
       "id": 17,
       "panels": [],
@@ -765,7 +748,7 @@
         "h": 2,
         "w": 10,
         "x": 0,
-        "y": 13
+        "y": 25
       },
       "id": 50,
       "options": {
@@ -797,9 +780,9 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
+        "w": 5,
         "x": 10,
-        "y": 13
+        "y": 25
       },
       "id": 51,
       "options": {
@@ -831,9 +814,9 @@
       },
       "gridPos": {
         "h": 2,
-        "w": 4,
-        "x": 14,
-        "y": 13
+        "w": 5,
+        "x": 15,
+        "y": 25
       },
       "id": 52,
       "options": {
@@ -1085,7 +1068,7 @@
         "h": 9,
         "w": 11,
         "x": 0,
-        "y": 15
+        "y": 27
       },
       "id": 4,
       "options": {
@@ -1130,7 +1113,7 @@
         "h": 9,
         "w": 13,
         "x": 11,
-        "y": 15
+        "y": 27
       },
       "id": 9,
       "options": {
@@ -1161,7 +1144,7 @@
       "type": "logs"
     }
   ],
-  "refresh": "",
+  "refresh": false,
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
@@ -1174,7 +1157,7 @@
     "list": [
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "All",
           "value": "$__all"
         },
@@ -1201,7 +1184,7 @@
       },
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "All",
           "value": "$__all"
         },
@@ -1240,8 +1223,8 @@
     ]
   },
   "time": {
-    "from": "2025-12-03T10:17:41.335Z",
-    "to": "2025-12-10T10:17:41.335Z"
+    "from": "now-2d",
+    "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
@@ -1256,6 +1239,6 @@
   "timezone": "browser",
   "title": "Airflow Monitoring Dashboard",
   "uid": "a23a7e6f-3feb-45f4-902e-95dfbcec13da",
-  "version": 3,
+  "version": 2,
   "weekStart": ""
 }

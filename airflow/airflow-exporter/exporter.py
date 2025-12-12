@@ -20,7 +20,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Configuration
-AIRFLOW_WEBSERVER = os.getenv("AIRFLOW_WEBSERVER", "http://airflow-webserver:8080/api/v1")
+AIRFLOW_WEBSERVER = os.getenv("AIRFLOW_WEBSERVER", "http://data_platform-airflow-webserver-1:8080/api/v1")
 AIRFLOW_USER = os.getenv("AIRFLOW_USER", "admin")
 AIRFLOW_PASSWORD = os.getenv("AIRFLOW_PASSWORD", "admin123")
 LOKI_URL = os.getenv("LOKI_URL", "http://loki:3100")
@@ -67,6 +67,12 @@ task_status_gauge = Gauge(
 total_dags_gauge = Gauge(
     "airflow_total_dags",
     "Nombre total de DAGs"
+)
+
+task_count_per_dag_gauge = Gauge(
+    "airflow_task_count_per_dag",
+    "Nombre de tâches par DAG",
+    ["dag_id"]
 )
 
 task_duration_gauge = Gauge(
@@ -119,6 +125,17 @@ airflow_critical_count = Gauge(
     "airflow_critical_count",
     "Number of CRITICAL logs by DAG/task",
     ["dag_id", "task_id", "run_id"]
+)
+
+# Nouvelle métrique pour le nombre de tâches définies
+airflow_task_count_gauge = Gauge(
+    "airflow_task_count",
+    "Nombre de tâches définies par DAG",
+    ["dag_id"]
+)
+airflow_task_count_total_gauge = Gauge(
+    "airflow_task_count_total",
+    "Nombre total de tâches définies dans Airflow"
 )
 
 airflow_timeout_count = Gauge(
@@ -384,6 +401,26 @@ def collect_dag_metrics():
         logger.error(f"Error collecting DAG metrics: {e}")
 
 
+def expose_task_count_metrics():
+    try:
+        from airflow.models import DagBag
+        dagbag = DagBag()
+        airflow_task_count_gauge.clear()
+        total = 0
+        logger.info(f"DagBag import_errors: {dagbag.import_errors}")
+        logger.info(f"Nombre de DAGs trouvés: {len(dagbag.dags)}")
+        for dag_id, dag_obj in dagbag.dags.items():
+            num_tasks = len(dag_obj.tasks)
+            airflow_task_count_gauge.labels(dag_id=dag_id).set(num_tasks)
+            logger.info(f"DAG {dag_id}: {num_tasks} tasks")
+            total += num_tasks
+        airflow_task_count_total_gauge.set(total)
+        logger.info(f"Exposé airflow_task_count_total={total}")
+    except Exception as e:
+        logger.error(f"Erreur lors de l'exposition des métriques de tâches: {e}")
+
+# Fonction pour exposer le nombre de tâches par DAG via l'API Airflow
+
 # ---------------- Routes ---------------- #
 
 @app.route("/airflow_metrics")
@@ -410,8 +447,24 @@ def airflow_metrics():
         dag_run_status_gauge.clear()
         dag_run_avg_duration_gauge.clear()
         task_status_gauge.clear()
+        task_count_per_dag_gauge.clear()
         task_duration_gauge.clear()
         task_retry_count_gauge.clear()
+
+        # Récupérer le nombre de tâches par DAG
+        for dag in dags:
+            try:
+                tasks_resp = requests.get(
+                    f"{AIRFLOW_WEBSERVER}/dags/{dag['dag_id']}/tasks",
+                    auth=(AIRFLOW_USER, AIRFLOW_PASSWORD),
+                    timeout=10
+                )
+                tasks_resp.raise_for_status()
+                tasks = tasks_resp.json().get("tasks", [])
+                logger.info(f"DAG {dag['dag_id']}: {len(tasks)} tasks")
+                task_count_per_dag_gauge.labels(dag_id=dag['dag_id']).set(len(tasks))
+            except Exception as e:
+                logger.error(f"Erreur récupération tasks pour {dag['dag_id']}: {e}")
 
         # Calculer la date limite pour le filtrage (X jours en arrière) en UTC
         from datetime import timezone
@@ -541,6 +594,7 @@ def airflow_metrics():
 @app.route("/metrics")
 def metrics():
     """Main endpoint for Prometheus (Loki errors)"""
+    logger.info("[DEBUG] Entrée dans la route /metrics")
     try:
         error_counts, critical_counts, timeout_counts, import_error_counts, error_details = extract_error_metrics()
         
@@ -569,7 +623,6 @@ def metrics():
                 task_id=task_id, 
                 run_id=run_id
             ).set(traceback_count)
-            
             error_types = details.get("error_types", set())
             for error_type in error_types:
                 airflow_error_details.labels(
@@ -578,6 +631,45 @@ def metrics():
                     run_id=run_id,
                     error_type=error_type
                 ).set(1)
+        
+        logger.info("[DEBUG] Fin traitement erreurs, début exposition tâches")
+        
+        # Exposition simplifiée du nombre de tâches via API Airflow
+        logger.info("Exposition des métriques de tâches via API")
+        try:
+            airflow_task_count_gauge.clear()
+            total_tasks = 0
+            
+            # Récupérer la liste des DAGs
+            dags_resp = requests.get(
+                f"{AIRFLOW_WEBSERVER}/dags",
+                auth=(AIRFLOW_USER, AIRFLOW_PASSWORD),
+                params={"limit": 500},
+                timeout=10
+            )
+            dags_resp.raise_for_status()
+            dags = dags_resp.json().get("dags", [])
+            
+            for dag in dags:
+                dag_id = dag["dag_id"]
+                try:
+                    tasks_resp = requests.get(
+                        f"{AIRFLOW_WEBSERVER}/dags/{dag_id}/tasks",
+                        auth=(AIRFLOW_USER, AIRFLOW_PASSWORD),
+                        timeout=10
+                    )
+                    tasks_resp.raise_for_status()
+                    tasks = tasks_resp.json().get("tasks", [])
+                    num_tasks = len(tasks)
+                    airflow_task_count_gauge.labels(dag_id=dag_id).set(num_tasks)
+                    total_tasks += num_tasks
+                except Exception as e:
+                    logger.error(f"Erreur API tasks pour DAG {dag_id}: {e}")
+            
+            airflow_task_count_total_gauge.set(total_tasks)
+            logger.info(f"Métriques tâches exposées: {total_tasks} tâches totales")
+        except Exception as e:
+            logger.error(f"Erreur exposition métriques tâches: {e}")
         
         logger.info("Metrics generated successfully")
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)

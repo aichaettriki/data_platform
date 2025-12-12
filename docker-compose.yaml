@@ -217,6 +217,7 @@ services:
         - "9112:9112"
       volumes:
         - ./airflow/logs:/opt/airflow/logs:ro
+        - ./airflow/dags:/opt/airflow/dags:ro
       depends_on:
         - airflow-webserver
         - loki
