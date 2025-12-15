@@ -48,8 +48,7 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - ${PGDATA_PATH}:/var/lib/postgresql/data
-      - ./postgres-init:/docker-entrypoint-initdb.d   # <-- to initialize metabase intern bd
-
+      - ./postgres-init:/docker-entrypoint-initdb.d
     restart: always
 
   # ------------------------
@@ -60,7 +59,6 @@ services:
       - traefik-public
     image: prometheuscommunity/postgres-exporter:latest
     environment:
-      # Connexion au PostgreSQL Airflow
       DATA_SOURCE_NAME: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}?sslmode=disable"
     ports:
       - "${POSTGRES_EXPORTER_PORT}:9187"
@@ -70,7 +68,7 @@ services:
 
 
   # ------------------------
-  # Airflow Initialization (Windows friendly)
+  # Airflow Initialization
   # ------------------------
   airflow-init:
     build: ./airflow
@@ -165,7 +163,6 @@ services:
       - ./data:/opt/airflow/data
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs 
     command: airflow scheduler
-
     restart: always
 
   # ------------------------
@@ -212,7 +209,7 @@ services:
         AIRFLOW_PASSWORD: "${AIRFLOW_ADMIN_PASSWORD}"
         AIRFLOW__API__AUTH_BACKEND: airflow.api.auth.backend.basic_auth
         LOKI_URL: "http://loki:3100"
-        METRICS_TIME_WINDOW_DAYS: "30"  # Période de filtrage des métriques (peut être modifiée)
+        METRICS_TIME_WINDOW_DAYS: "30"
       ports:
         - "9112:9112"
       volumes:
@@ -252,7 +249,7 @@ services:
     restart: always
 
   # ------------------------
-  # MinIO pour stockage
+  # MinIO
   # ------------------------
   minio:
     image: minio/minio:latest
@@ -267,14 +264,13 @@ services:
       - "${MINIO_CONSOLE_PORT}:9001"
     command: server /data --console-address ":${MINIO_CONSOLE_PORT}"
     volumes:
-      - ./minio:/data   # raw + transformed
+      - ./minio:/data
     restart: always
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.minio.rule=Host(`minio.itceq.tn`)"
       - "traefik.http.routers.minio.entrypoints=web"
       - "traefik.http.services.minio.loadbalancer.server.port=9000"
-
 
   minio-create-buckets:
     image: minio/mc:latest
@@ -294,22 +290,34 @@ services:
       "
     restart: "no"  
                                                 
+  # -------------------------------------------------------
+  # Spark Master
+  # -------------------------------------------------------
   spark-master:
     build: ./spark
     container_name: spark-master
     networks:
       - traefik-public
     user: root
+    depends_on:
+      - atlas-server
+      - kafka
     environment:
       USER: root
       SPARK_USER: root
       HADOOP_USER_NAME: root
       SPARK_DAEMON_JAVA_OPTS: "-javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent.jar=8090:/opt/jmx_exporter/config.yaml"
       SPARK_METRICS_CONF: "/opt/spark/conf/metrics.properties"
+
+      # ATLAS CONFIGURATION (Points to atlas-server)
+      SPARK_CONF_spark_extraListeners: com.hortonworks.spark.atlas.SparkAtlasEventTracker
+      ATLAS_REST_ADDRESS: http://atlas-server:21000
+      SPARK_CONF_spark_atlas_kafka_bootstrap_servers: kafka:9092
+      SPARK_CONF_spark_atlas_rest_address: http://atlas-server:21000
     ports:
       - "${SPARK_MASTER_UI_PORT}:8080"
       - "${SPARK_MASTER_PORT}:7077"
-      - "8090:8090"  # JMX Prometheus Exporter
+      - "8090:8090"
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
       --host spark-master --port 7077
@@ -324,7 +332,7 @@ services:
       - "traefik.http.routers.spark.rule=Host(`spark.itceq.tn`)"
       - "traefik.http.routers.spark.entrypoints=web"
       - "traefik.http.services.spark.loadbalancer.server.port=8080"
-    
+     
   # ------------------------
   # Spark Workers
   # ------------------------
@@ -335,6 +343,7 @@ services:
       - traefik-public
     depends_on:
       - spark-master
+      - kafka
     environment:
       USER: root
       SPARK_USER: root
@@ -342,9 +351,11 @@ services:
       SPARK_MASTER_URL: spark://spark-master:7077
       SPARK_DAEMON_JAVA_OPTS: "-javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent.jar=8091:/opt/jmx_exporter/config.yaml"
       SPARK_METRICS_CONF: "/opt/spark/conf/metrics.properties"
+      # FIXED: Points to atlas-server
+      ATLAS_REST_ADDRESS: http://atlas-server:21000
     ports:
       - "${SPARK_WORKER_UI_PORT}:8081"
-      - "8091:8091"  # JMX Prometheus Exporter
+      - "8091:8091"
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
       spark://spark-master:7077
@@ -369,7 +380,6 @@ services:
       - "9091:9091"
     restart: always
  
-
   # ------------------------
   # Prometheus
   # ------------------------
@@ -381,8 +391,8 @@ services:
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=365d'  # 1 an de rétention (au lieu de 90j)
-      - '--storage.tsdb.retention.size=100GB'  # 100GB max (au lieu de 50GB)
+      - '--storage.tsdb.retention.time=365d'
+      - '--storage.tsdb.retention.size=100GB'
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
     volumes:
@@ -395,7 +405,6 @@ services:
       - "traefik.http.routers.prometheus.rule=Host(`prometheus.itceq.tn`)"
       - "traefik.http.routers.prometheus.entrypoints=web"
       - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
-
 
   # ------------------------
   # Grafana
@@ -424,7 +433,6 @@ services:
   # ------------------------
   # Metabase
   # ------------------------
-    # 1. METABASE APP (Port 3021)
   metabase:
     build:
       context: ./metabase/build
@@ -446,8 +454,6 @@ services:
       - "traefik.http.routers.metabase.entrypoints=web"
       - "traefik.http.services.metabase.loadbalancer.server.port=3000"
     
- 
-  # 2. INTERNAL METADATA DB
   metabase_db_internal:
     image: postgres:15
     networks:
@@ -464,9 +470,6 @@ services:
       interval: 5s
       retries: 5
     
-  # ------------------------
-  # Metabase Exporter
-  # ------------------------
   metabase-exporter:
     build: ./metabase/metabase-exporter
     container_name: metabase-exporter
@@ -484,7 +487,6 @@ services:
       - metabase
     restart: always
  
-  # 3. ZERO-TOUCH DEPLOYER (The Magic)
   metabase_deployer:
     image: python:3.9-slim
     networks:
@@ -498,12 +500,8 @@ services:
     working_dir: /scripts
     env_file:
       - ./metabase/env/metabase.env
-    # Install libs -> Run Setup -> Run Import -> Exit
     command: >
       sh -c "pip install requests metabase-api && python deploy_solution.py"
- 
- 
-
 
   # ------------------------
   # pgAdmin
@@ -529,9 +527,8 @@ services:
       - "traefik.http.routers.pgadmin.entrypoints=web"
       - "traefik.http.services.pgadmin.loadbalancer.server.port=80"
 
-
   # ------------------------
-  # Loki (pour logs Airflow)
+  # Loki / Promtail
   # ------------------------
   loki:
     image: grafana/loki:2.8.2
@@ -545,12 +542,8 @@ services:
       - ./loki-data/chunks:/loki/chunks
       - ./loki-data/wal:/loki/wal
       - ./loki-config.yaml:/etc/loki/local-config.yaml
-      
     restart: always
  
-  # ------------------------
-  # Promtail (agent qui envoie les logs à Loki)
-  # ------------------------
   promtail:
     image: grafana/promtail:2.9.0
     networks:
@@ -558,16 +551,574 @@ services:
     volumes:
       - ./promtail-config.yaml:/etc/promtail/config.yaml:ro
       - ./airflow/logs:/opt/airflow/logs:ro
-      # Pas de volume persistant pour positions - force la relecture à chaque restart
     ports:
       - "9080:9080"
     command: -config.file=/etc/promtail/config.yaml
     restart: always
 
+  # # -------------------------------------------------------
+  # # SERVICES FOR APACHE ATLAS
+  # # -------------------------------------------------------
+  # zookeeper:
+  #   image: confluentinc/cp-zookeeper:7.5.0
+  #   networks:
+  #     - traefik-public
+  #   environment:
+  #     ZOOKEEPER_CLIENT_PORT: 2181
+  #     ZOOKEEPER_TICK_TIME: 2000
+  #   restart: always
+
+  # kafka:
+  #   image: confluentinc/cp-kafka:7.5.0
+  #   networks:
+  #     - traefik-public
+  #   depends_on:
+  #     - zookeeper
+  #   ports:
+  #     - "9092:9092"
+  #   environment:
+  #     KAFKA_BROKER_ID: 1
+  #     KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #     KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+  #   restart: always
+
+  # # # ------------------------
+  # # # Apache Atlas (Fixed & Renamed)
+  # # # ------------------------
+  # # atlas-server:
+  # #   image: sburn/apache-atlas:2.3.0
+  # #   container_name: atlas-server
+  # #   networks:
+  # #     - traefik-public
+  # #   depends_on:
+  # #     - zookeeper
+  # #     - kafka
+  # #   ports:
+  # #     - "21000:21000"
+  # #   environment:
+  # #     # 1. Enable Internal Database Services
+  # #     MANAGE_LOCAL_ZK: "true"
+  # #     MANAGE_LOCAL_HBASE: "true"
+  # #     MANAGE_LOCAL_SOLR: "true"
+      
+  # #     # 2. Disable Internal Kafka (Use External)
+  # #     MANAGE_LOCAL_KAFKA: "false"
+      
+  # #     # 3. Explicitly Configure External Kafka Connection
+  # #     ATLAS_SERVER_CONF_atlas_kafka_bootstrap_servers: kafka:9092
+  # #     ATLAS_SERVER_CONF_atlas_kafka_zookeeper_connect: zookeeper:2181
+      
+  # #     # 4. CRITICAL: Force Graph/Audit DB to use INTERNAL Zookeeper (Localhost)
+  # #     ATLAS_SERVER_CONF_atlas_graph_storage_hostname: localhost
+  # #     ATLAS_SERVER_CONF_atlas_audit_hbase_zookeeper_quorum: localhost
+      
+  # #     # 5. Force Re-Read of Kafka Messages
+  # #     ATLAS_SERVER_CONF_atlas_hook_group_id: spark_atlas_consumer_v2
+      
+  # #     # 6. Ensure Topics are defined
+  # #     ATLAS_SERVER_CONF_atlas_notification_create_topics: "true"
+  # #     ATLAS_SERVER_CONF_atlas_notification_replicas: "1"
+      
+  # #   # Use a named volume
+  # #   volumes:
+  # #     - atlas_storage_data:/root/atlas-bin/data
+  # #   restart: always
+  # #   labels:
+  # #     - "traefik.enable=true"
+  # #     - "traefik.http.routers.atlas.rule=Host(`atlas.itceq.tn`)"
+  # #     - "traefik.http.routers.atlas.entrypoints=web"
+  # #     - "traefik.http.services.atlas.loadbalancer.server.port=21000"
+
+  # atlas-server:
+  #   image: sburn/apache-atlas:2.3.0
+  #   container_name: atlas-server
+  #   networks:
+  #     - traefik-public
+  #   depends_on:
+  #     - zookeeper
+  #     - kafka
+  #     - hbase
+  #     - solr
+  #   ports:
+  #     - "21000:21000"
+  #   environment:
+  #     # Disable ALL internal services
+  #     MANAGE_LOCAL_ZK: "false"
+  #     MANAGE_LOCAL_HBASE: "false"
+  #     MANAGE_LOCAL_SOLR: "false"
+  #     MANAGE_LOCAL_KAFKA: "false"
+      
+  #     # Configure external services
+  #     ATLAS_SERVER_CONF_atlas_kafka_bootstrap_servers: "kafka:9092"
+  #     ATLAS_SERVER_CONF_atlas_kafka_zookeeper_connect: "zookeeper:2181"
+  #     ATLAS_SERVER_CONF_atlas_graph_storage_hostname: "hbase"
+  #     ATLAS_SERVER_CONF_atlas_graph_storage_hbase_table: "atlas_janus"
+  #     ATLAS_SERVER_CONF_atlas_audit_hbase_zookeeper_quorum: "zookeeper:2181"
+      
+  #     # Solr configuration
+  #     ATLAS_SERVER_CONF_atlas_graph_index_search_solr_mode: "cloud"
+  #     ATLAS_SERVER_CONF_atlas_graph_index_search_solr_zookeeper_url: "zookeeper:2181"
+      
+  #   volumes:
+  #     - atlas_storage_data:/opt/apache-atlas-2.3.0/data
+  #   restart: always
+
+  #   # Add HBase
+  # hbase:
+  #   image: harisekhon/hbase:1.4
+  #   container_name: hbase
+  #   networks:
+  #     - traefik-public
+  #   depends_on:
+  #     - zookeeper
+  #   ports:
+  #     - "16010:16010"  # HBase Master Web UI
+  #     - "16000:16000"  # HBase Master
+  #     - "16020:16020"  # HBase RegionServer
+  #   environment:
+  #     HBASE_MANAGES_ZK: "false"
+  #     HBASE_ZOOKEEPER_QUORUM: "zookeeper:2181"
+  #   volumes:
+  #     - hbase_data:/hbase-data
+  #   restart: always
+
+  # # Add Solr
+  # solr:
+  #   image: solr:8.11
+  #   container_name: solr
+  #   networks:
+  #     - traefik-public
+  #   depends_on:
+  #     - zookeeper
+  #   ports:
+  #     - "8983:8983"
+  #   environment:
+  #     ZK_HOST: "zookeeper:2181"
+  #   command: ["solr", "-c", "-f", "-z", "zookeeper:2181"]
+  #   volumes:
+  #     - solr_data:/var/solr
+  #   restart: always
+
+  
+
+  # # -------------------------------------------------------
+  # # AUTOMATION: Upload COMPLETE Spark Model to Atlas
+  # # -------------------------------------------------------
+  # atlas-init:
+  #   image: curlimages/curl:latest
+  #   networks:
+  #     - traefik-public
+  #   depends_on:
+  #     - atlas-server
+  #   restart: "no"
+  #   entrypoint: ["/bin/sh", "-c"]
+  #   command:
+  #     - |
+  #       echo "⏳ Waiting for Atlas API..."
+  #       # FIXED: URL points to atlas-server
+  #       until curl -s -u admin:admin http://atlas-server:21000/api/atlas/v2/types/typedefs > /dev/null; do
+  #         sleep 5
+  #       done
+
+  #       echo "✅ Atlas is UP! Defining COMPLETE Spark Model..."
+        
+  #       # Create the FULL JSON model file
+  #       cat <<EOF > /tmp/spark_model.json
+  #       {
+  #         "enumDefs": [],
+  #         "structDefs": [],
+  #         "classificationDefs": [],
+  #         "entityDefs": [
+  #           {
+  #             "name": "spark_db",
+  #             "superTypes": ["DataSet"],
+  #             "serviceType": "spark",
+  #             "typeVersion": "1.0",
+  #             "attributeDefs": [
+  #               { "name": "clusterName", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+  #               { "name": "location", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+  #               { "name": "parameters", "typeName": "map<string,string>", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false }
+  #             ]
+  #           },
+  #           {
+  #             "name": "spark_storagedesc",
+  #             "superTypes": ["DataSet"],
+  #             "serviceType": "spark",
+  #             "typeVersion": "1.0",
+  #             "attributeDefs": [
+  #               { "name": "location", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+  #               { "name": "inputFormat", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+  #               { "name": "outputFormat", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+  #               { "name": "serde", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+  #               { "name": "compressed", "typeName": "boolean", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+  #               { "name": "parameters", "typeName": "map<string,string>", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false }
+  #             ]
+  #           },
+  #           {
+  #             "name": "spark_table",
+  #             "superTypes": ["DataSet"],
+  #             "serviceType": "spark",
+  #             "typeVersion": "1.0",
+  #             "attributeDefs": [
+  #               { "name": "db", "typeName": "spark_db", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+  #               { "name": "sd", "typeName": "spark_storagedesc", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+  #               { "name": "createTime", "typeName": "date", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+  #               { "name": "tableType", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+  #               { "name": "schemaDesc", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+  #               { "name": "parameters", "typeName": "map<string,string>", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+  #               { "name": "partitionColumnNames", "typeName": "array<string>", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+  #               { "name": "provider", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false }
+  #             ]
+  #           },
+  #           {
+  #             "name": "spark_process",
+  #             "superTypes": ["Process"],
+  #             "serviceType": "spark",
+  #             "typeVersion": "1.0",
+  #             "attributeDefs": [
+  #               { "name": "executionId", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+  #               { "name": "currUser", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+  #               { "name": "remoteUser", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+  #               { "name": "details", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+  #               { "name": "sparkPlanDescription", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false }
+  #             ]
+  #           },
+  #           {
+  #             "name": "spark_column_lineage",
+  #             "superTypes": ["Process"],
+  #             "serviceType": "spark",
+  #             "typeVersion": "1.0",
+  #             "attributeDefs": [
+  #               { "name": "depenendencyType", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+  #               { "name": "expression", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false }
+  #             ]
+  #           }
+  #         ]
+  #       }
+  #       EOF
+
+  #       echo "🚀 Uploading Model..."
+  #       # FIXED: URL points to atlas-server
+  #       HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -u admin:admin -X POST -H "Content-Type: application/json" -d @/tmp/spark_model.json http://atlas-server:21000/api/atlas/v2/types/typedefs)
+
+  #       if [ "$$HTTP_CODE" -eq 200 ]; then
+  #         echo "🎉 Success! Spark Model (Tables & DBs) registered."
+  #       elif [ "$$HTTP_CODE" -eq 409 ]; then
+  #         echo "👌 Model already exists. Skipping."
+  #       else
+  #         echo "❌ Error registering model. HTTP Code: $$HTTP_CODE"
+  #       fi
+
+
+# -------------------------------------------------------
+  # SERVICES FOR APACHE ATLAS - COMPLETE EXTERNAL SETUP
+  # -------------------------------------------------------
+  
+  # Zookeeper - Required by Kafka, HBase, and Solr
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    networks:
+      - traefik-public
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+      - zookeeper_logs:/var/lib/zookeeper/log
+    restart: always
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Kafka - Messaging for Atlas metadata
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    networks:
+      - traefik-public
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_LOG_RETENTION_HOURS: 168
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    restart: always
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  # HBase - Storage for Atlas metadata
+  hbase:
+    image: harisekhon/hbase:1.4
+    container_name: hbase
+    networks:
+      - traefik-public
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "16000:16000"  # HBase Master
+      - "16010:16010"  # HBase Master Web UI
+      - "16020:16020"  # HBase RegionServer
+      - "16030:16030"  # HBase RegionServer Web UI
+      - "2888:2888"
+      - "3888:3888"
+    environment:
+      HBASE_MANAGES_ZK: "false"
+      HBASE_ZOOKEEPER_QUORUM: "zookeeper:2181"
+    volumes:
+      - hbase_data:/hbase-data
+    restart: always
+    healthcheck:
+      test: ["CMD", "bash", "-c", "echo 'status' | hbase shell -n | grep -q 'active master'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Solr - Search and indexing for Atlas
+  solr:
+    image: solr:8.11
+    container_name: solr
+    networks:
+      - traefik-public
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "8983:8983"
+    environment:
+      ZK_HOST: "zookeeper:2181"
+      SOLR_HEAP: "512m"
+    command: 
+      - bash
+      - -c
+      - |
+        solr start -c -f -z zookeeper:2181
+    volumes:
+      - solr_data:/var/solr
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8983/solr/admin/info/system"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Apache Atlas - Metadata management
+  atlas-server:
+    image: sburn/apache-atlas:2.3.0
+    container_name: atlas-server
+    networks:
+      - traefik-public
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      hbase:
+        condition: service_healthy
+      solr:
+        condition: service_healthy
+    ports:
+      - "21000:21000"
+    environment:
+      # Disable ALL internal services
+      MANAGE_LOCAL_ZK: "false"
+      MANAGE_LOCAL_HBASE: "false"
+      MANAGE_LOCAL_SOLR: "false"
+      MANAGE_LOCAL_KAFKA: "false"
+      
+      # Kafka Configuration
+      ATLAS_SERVER_CONF_atlas_kafka_bootstrap_servers: "kafka:9092"
+      ATLAS_SERVER_CONF_atlas_kafka_zookeeper_connect: "zookeeper:2181"
+      ATLAS_SERVER_CONF_atlas_notification_create_topics: "true"
+      ATLAS_SERVER_CONF_atlas_notification_replicas: "1"
+      ATLAS_SERVER_CONF_atlas_kafka_hook_group_id: "atlas_hook_consumer"
+      
+      # HBase Configuration
+      ATLAS_SERVER_CONF_atlas_graph_storage_backend: "hbase2"
+      ATLAS_SERVER_CONF_atlas_graph_storage_hostname: "hbase"
+      ATLAS_SERVER_CONF_atlas_graph_storage_hbase_table: "atlas_janus"
+      ATLAS_SERVER_CONF_atlas_audit_hbase_tablename: "apache_atlas_entity_audit"
+      ATLAS_SERVER_CONF_atlas_audit_hbase_zookeeper_quorum: "zookeeper:2181"
+      
+      # Solr Configuration
+      ATLAS_SERVER_CONF_atlas_graph_index_search_backend: "solr"
+      ATLAS_SERVER_CONF_atlas_graph_index_search_solr_mode: "cloud"
+      ATLAS_SERVER_CONF_atlas_graph_index_search_solr_zookeeper_url: "zookeeper:2181"
+      ATLAS_SERVER_CONF_atlas_graph_index_search_solr_zookeeper_connect_timeout: "60000"
+      ATLAS_SERVER_CONF_atlas_graph_index_search_solr_zookeeper_session_timeout: "60000"
+      
+      # Memory settings
+      ATLAS_SERVER_OPTS: "-Xms2g -Xmx4g"
+      
+    volumes:
+      - atlas_data:/opt/apache-atlas-2.3.0/data
+      - atlas_logs:/opt/apache-atlas-2.3.0/logs
+    restart: always
+    healthcheck:
+      test: ["CMD", "curl", "-f", "-u", "admin:admin", "http://localhost:21000/api/atlas/admin/version"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 180s
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.atlas.rule=Host(`atlas.itceq.tn`)"
+      - "traefik.http.routers.atlas.entrypoints=web"
+      - "traefik.http.services.atlas.loadbalancer.server.port=21000"
+
+  # -------------------------------------------------------
+  # Initialize Atlas with Spark Model
+  # -------------------------------------------------------
+  atlas-init:
+    image: curlimages/curl:latest
+    container_name: atlas-init
+    networks:
+      - traefik-public
+    depends_on:
+      atlas-server:
+        condition: service_healthy
+    restart: "no"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "⏳ Waiting for Atlas to be fully ready..."
+        sleep 30
+        
+        echo "✅ Atlas is UP! Defining Spark Model..."
+        
+        cat <<EOF > /tmp/spark_model.json
+        {
+          "enumDefs": [],
+          "structDefs": [],
+          "classificationDefs": [],
+          "entityDefs": [
+            {
+              "name": "spark_db",
+              "superTypes": ["DataSet"],
+              "serviceType": "spark",
+              "typeVersion": "1.0",
+              "attributeDefs": [
+                { "name": "clusterName", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+                { "name": "location", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+                { "name": "parameters", "typeName": "map<string,string>", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false }
+              ]
+            },
+            {
+              "name": "spark_storagedesc",
+              "superTypes": ["DataSet"],
+              "serviceType": "spark",
+              "typeVersion": "1.0",
+              "attributeDefs": [
+                { "name": "location", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+                { "name": "inputFormat", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+                { "name": "outputFormat", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+                { "name": "serde", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+                { "name": "compressed", "typeName": "boolean", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+                { "name": "parameters", "typeName": "map<string,string>", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false }
+              ]
+            },
+            {
+              "name": "spark_table",
+              "superTypes": ["DataSet"],
+              "serviceType": "spark",
+              "typeVersion": "1.0",
+              "attributeDefs": [
+                { "name": "db", "typeName": "spark_db", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+                { "name": "sd", "typeName": "spark_storagedesc", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+                { "name": "createTime", "typeName": "date", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+                { "name": "tableType", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+                { "name": "schemaDesc", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+                { "name": "parameters", "typeName": "map<string,string>", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+                { "name": "partitionColumnNames", "typeName": "array<string>", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+                { "name": "provider", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false }
+              ]
+            },
+            {
+              "name": "spark_process",
+              "superTypes": ["Process"],
+              "serviceType": "spark",
+              "typeVersion": "1.0",
+              "attributeDefs": [
+                { "name": "executionId", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+                { "name": "currUser", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+                { "name": "remoteUser", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+                { "name": "details", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false },
+                { "name": "sparkPlanDescription", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false }
+              ]
+            },
+            {
+              "name": "spark_column_lineage",
+              "superTypes": ["Process"],
+              "serviceType": "spark",
+              "typeVersion": "1.0",
+              "attributeDefs": [
+                { "name": "depenendencyType", "typeName": "string", "cardinality": "SINGLE", "isIndexable": true, "isOptional": true, "isUnique": false },
+                { "name": "expression", "typeName": "string", "cardinality": "SINGLE", "isIndexable": false, "isOptional": true, "isUnique": false }
+              ]
+            }
+          ]
+        }
+        EOF
+
+        echo "🚀 Uploading Spark Model..."
+        HTTP_CODE=$$(curl -s -o /dev/null -w "%{http_code}" \
+          -u admin:admin \
+          -X POST \
+          -H "Content-Type: application/json" \
+          -d @/tmp/spark_model.json \
+          http://atlas-server:21000/api/atlas/v2/types/typedefs)
+
+        if [ "$$HTTP_CODE" -eq 200 ]; then
+          echo "🎉 Success! Spark Model registered."
+        elif [ "$$HTTP_CODE" -eq 409 ]; then
+          echo "👌 Model already exists."
+        else
+          echo "❌ Error: HTTP Code $$HTTP_CODE"
+        fi
+
 volumes:
   mb_internal_data:
   pg_dwh_data:
   prometheus_data:
+  atlas_data:
+  atlas_logs:
+  zookeeper_data:
+  zookeeper_logs:
+  kafka_data:
+  hbase_data:
+  solr_data:
+
+
+# volumes:
+#   mb_internal_data:
+#   pg_dwh_data:
+#   prometheus_data:
+#   # Add this new volume
+#   atlas_storage_data:
+#   hbase_data:
+#   solr_data:
 
 networks:
   traefik-public:
