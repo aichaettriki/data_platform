@@ -23,6 +23,31 @@
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
       },
+      "gridPos": {
+        "h": 2,
+        "w": 23,
+        "x": 0,
+        "y": 0
+      },
+      "id": 61,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<p style=\"text-align:center; color:#3274D9; font-size:22px; font-weight:bold;\">\n  Airflow Monitoring Dashboard\n</p>\n",
+        "mode": "html"
+      },
+      "pluginVersion": "10.0.3",
+      "transparent": true,
+      "type": "text"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
       "description": "Total number of DAGs registered in Airflow",
       "fieldConfig": {
         "defaults": {
@@ -32,7 +57,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "blue",
                 "value": null
               }
             ]
@@ -44,11 +69,17 @@
         "h": 6,
         "w": 6,
         "x": 1,
-        "y": 0
+        "y": 2
       },
       "id": 1,
       "options": {
         "colorMode": "value",
+        "dataLinks": [
+          {
+            "title": "Filter by this DAG",
+            "url": "/d/a23a7e6f-3feb-45f4-902e-95dfbcec13da/airflow-monitoring-dashboard?orgId=1&from=${__from}&to=${__to}&var-dag_filter=${__data.fields.dag_id}"
+          }
+        ],
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
@@ -59,7 +90,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "text": {
+          "valueSize": 80
+        },
+        "textMode": "auto",
+        "textSize": 50
       },
       "pluginVersion": "10.0.3",
       "targets": [
@@ -69,7 +104,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "airflow_total_dags{job=\"airflow-global\"}",
+          "expr": "sum(airflow_total_dags{job=\"airflow-global\", dag_id=~\"${dag_filter}\"})",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
@@ -94,7 +129,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "blue",
                 "value": null
               },
               {
@@ -110,11 +145,17 @@
         "h": 6,
         "w": 6,
         "x": 9,
-        "y": 0
+        "y": 2
       },
       "id": 59,
       "options": {
         "colorMode": "value",
+        "dataLinks": [
+          {
+            "title": "Filter by this DAG",
+            "url": "/d/a23a7e6f-3feb-45f4-902e-95dfbcec13da/airflow-monitoring-dashboard?orgId=1&from=${__from}&to=${__to}&var-dag_filter=${__data.fields.dag_id}"
+          }
+        ],
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
@@ -125,7 +166,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "text": {
+          "valueSize": 80
+        },
+        "textMode": "auto",
+        "textSize": 50
       },
       "pluginVersion": "10.0.3",
       "targets": [
@@ -136,7 +181,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": " sum(airflow_dag_run_status{job=\"airflow-global\"})",
+          "expr": " sum(airflow_dag_run_status{job=\"airflow-global\", dag_id=~\"${dag_filter}\"})",
           "format": "heatmap",
           "instant": true,
           "interval": "",
@@ -157,7 +202,7 @@
       "fieldConfig": {
         "defaults": {
           "mappings": [],
-          "noValue": "0",
+          "noValue": "1",
           "thresholds": {
             "mode": "absolute",
             "steps": [
@@ -174,11 +219,17 @@
         "h": 6,
         "w": 6,
         "x": 17,
-        "y": 0
+        "y": 2
       },
       "id": 54,
       "options": {
         "colorMode": "value",
+        "dataLinks": [
+          {
+            "title": "Filter by this DAG",
+            "url": "/d/a23a7e6f-3feb-45f4-902e-95dfbcec13da/airflow-monitoring-dashboard?orgId=1&from=${__from}&to=${__to}&var-dag_filter=${__data.fields.dag_id}"
+          }
+        ],
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "auto",
@@ -189,7 +240,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "text": {
+          "valueSize": 80
+        },
+        "textMode": "auto",
+        "textSize": 50
       },
       "pluginVersion": "10.0.3",
       "targets": [
@@ -198,8 +253,9 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "editorMode": "builder",
-          "expr": "airflow_task_count_total{job=\"airflow-global\"}",
+          "editorMode": "code",
+          "expr": "sum(airflow_task_count{job=\"airflow-global\",dag_id=~\"${dag_filter}\"})",
+          "format": "table",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
@@ -215,7 +271,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 8
       },
       "id": 20,
       "panels": [],
@@ -273,9 +329,9 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 7,
-        "x": 0,
-        "y": 7
+        "w": 6,
+        "x": 1,
+        "y": 9
       },
       "id": 10,
       "options": {
@@ -296,6 +352,7 @@
           "fields": "",
           "values": false
         },
+        "textSize": 50,
         "tooltip": {
           "mode": "single",
           "sort": "desc"
@@ -308,7 +365,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum(airflow_dag_run_status{state=\"success\", job=\"airflow-global\"})",
+          "expr": "sum(airflow_dag_run_status{state=\"success\", job=\"airflow-global\", dag_id=~\"${dag_filter}\"})",
           "instant": true,
           "legendFormat": "Successfull run ",
           "range": false,
@@ -321,7 +378,7 @@
           },
           "editorMode": "code",
           "exemplar": false,
-          "expr": "sum(airflow_dag_run_status{state=\"failed\", job=\"airflow-global\"})",
+          "expr": "sum(airflow_dag_run_status{state=\"failed\", job=\"airflow-global\", dag_id=~\"${dag_filter}\"})",
           "hide": false,
           "instant": false,
           "legendFormat": "Failed run ",
@@ -341,7 +398,8 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "fixedColor": "orange",
+            "mode": "shades"
           },
           "custom": {
             "axisCenteredZero": false,
@@ -364,51 +422,132 @@
               "mode": "off"
             }
           },
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "etl_csv_pipeline": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "ETL csv pipeline"
+                },
+                "etl_csv_spark_pipeline_v2": {
+                  "color": "yellow",
+                  "index": 1,
+                  "text": "ETL csv spark pipeline"
+                },
+                "ingest_api_to_minio": {
+                  "color": "blue",
+                  "index": 2,
+                  "text": "Ingest api to minio"
+                }
+              },
+              "type": "value"
+            }
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 600
               }
             ]
           },
           "unit": "s"
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byValue",
+              "options": {
+                "value": "etl_csv_pipeline"
+              }
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "green",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byValue",
+              "options": {
+                "value": "etl_csv_pipeline_v2"
+              }
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "yellow",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byValue",
+              "options": {
+                "value": "ingest_api_to_minio"
+              }
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "fixedColor": "blue",
+                  "mode": "fixed"
+                }
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 8,
         "w": 10,
         "x": 7,
-        "y": 7
+        "y": 9
       },
       "id": 21,
       "options": {
         "barRadius": 0,
-        "barWidth": 0.97,
-        "fullHighlight": false,
+        "barWidth": 0.67,
+        "colorByField": "dag_id",
+        "dataLinks": [
+          {
+            "title": "Filter by this DAG",
+            "url": "/d/a23a7e6f-3feb-45f4-902e-95dfbcec13da/airflow-monitoring-dashboard?orgId=1&from=${__from}&to=${__to}&var-dag_filter=${__data.fields.dag_id}"
+          }
+        ],
+        "fullHighlight": true,
         "groupWidth": 0.7,
         "legend": {
           "calcs": [],
           "displayMode": "table",
           "placement": "right",
-          "showLegend": true
+          "showLegend": false
         },
         "orientation": "horizontal",
         "showValue": "always",
         "stacking": "none",
+        "text": {
+          "valueSize": 20
+        },
+        "textSize": 50,
         "tooltip": {
           "mode": "single",
           "sort": "asc"
         },
+        "xField": "dag_id",
         "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
+        "xTickLabelSpacing": 200
       },
       "targets": [
         {
@@ -417,7 +556,8 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "airflow_dag_avg_duration_seconds{job=\"airflow-global\"}",
+          "expr": "airflow_dag_avg_duration_seconds{job=\"airflow-global\", dag_id=~\"${dag_filter}\"}",
+          "format": "table",
           "instant": true,
           "interval": "",
           "legendFormat": "{{dag_id}}",
@@ -425,7 +565,7 @@
           "refId": "A"
         }
       ],
-      "title": "Duration of each DAG",
+      "title": "Average Duration of each DAG",
       "type": "barchart"
     },
     {
@@ -459,7 +599,28 @@
               "mode": "off"
             }
           },
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "etl_csv_pipeline": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "ETL csv pipeline"
+                },
+                "etl_csv_spark_pipeline_v2": {
+                  "color": "yellow",
+                  "index": 1,
+                  "text": "ETL csv spark pipeline"
+                },
+                "ingest_api_to_minio": {
+                  "color": "blue",
+                  "index": 2,
+                  "text": "Ingest api to minio"
+                }
+              },
+              "type": "value"
+            }
+          ],
           "noValue": "0",
           "thresholds": {
             "mode": "absolute",
@@ -467,14 +628,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 300
-              },
-              {
-                "color": "red",
-                "value": 600
               }
             ]
           },
@@ -484,29 +637,41 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 7,
+        "w": 6,
         "x": 17,
-        "y": 7
+        "y": 9
       },
       "id": 3,
       "options": {
         "barRadius": 0,
-        "barWidth": 0.97,
+        "barWidth": 0.61,
+        "colorByField": "dag_id",
+        "dataLinks": [
+          {
+            "title": "Filter by this DAG",
+            "url": "/d/a23a7e6f-3feb-45f4-902e-95dfbcec13da/airflow-monitoring-dashboard?orgId=1&from=${__from}&to=${__to}&var-dag_filter=${__data.fields.dag_id}"
+          }
+        ],
         "fullHighlight": true,
         "groupWidth": 0.7,
         "legend": {
           "calcs": [],
           "displayMode": "list",
           "placement": "bottom",
-          "showLegend": true
+          "showLegend": false
         },
         "orientation": "horizontal",
-        "showValue": "auto",
+        "showValue": "always",
         "stacking": "none",
+        "text": {
+          "valueSize": 20
+        },
+        "textSize": 50,
         "tooltip": {
           "mode": "single",
           "sort": "none"
         },
+        "xField": "dag_id",
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 0
       },
@@ -518,10 +683,11 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "airflow_task_count_per_dag{job=\"airflow-global\"}",
-          "format": "time_series",
+          "exemplar": false,
+          "expr": "airflow_task_count_per_dag{job=\"airflow-global\", dag_id=~\"${dag_filter}\"}",
+          "format": "table",
           "instant": true,
-          "legendFormat": "{{dag_id}}",
+          "legendFormat": "__auto",
           "range": false,
           "refId": "A"
         }
@@ -535,104 +701,12 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 15
+        "y": 17
       },
       "id": 60,
       "panels": [],
       "title": "Successful vs Failed DAG Runs",
       "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "List of all DAGs that failed execution, grouped by DAG ID",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "fixedColor": "red",
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "fillOpacity": 80,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineWidth": 1,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "noValue": "0",
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 7,
-        "x": 0,
-        "y": 16
-      },
-      "id": 58,
-      "options": {
-        "barRadius": 0,
-        "barWidth": 0.97,
-        "fullHighlight": false,
-        "groupWidth": 0.7,
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "right",
-          "showLegend": true
-        },
-        "orientation": "vertical",
-        "showValue": "auto",
-        "stacking": "none",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        },
-        "xTickLabelRotation": 0,
-        "xTickLabelSpacing": 0
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "airflow_dag_run_status{state=\"failed\", job=\"airflow-global\"}",
-          "instant": true,
-          "legendFormat": "{{dag_id}}",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Failed Run",
-      "type": "barchart"
     },
     {
       "datasource": {
@@ -666,7 +740,28 @@
               "mode": "off"
             }
           },
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "etl_csv_pipeline": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "ETL csv pipeline"
+                },
+                "etl_csv_spark_pipeline_v2": {
+                  "color": "yellow",
+                  "index": 1,
+                  "text": "ETL csv spark pipeline"
+                },
+                "ingest_api_to_minio": {
+                  "color": "blue",
+                  "index": 2,
+                  "text": "Ingest api to minio"
+                }
+              },
+              "type": "value"
+            }
+          ],
           "noValue": "0",
           "thresholds": {
             "mode": "absolute",
@@ -676,35 +771,48 @@
                 "value": null
               }
             ]
-          }
+          },
+          "unit": "none"
         },
         "overrides": []
       },
       "gridPos": {
         "h": 8,
         "w": 8,
-        "x": 8,
-        "y": 16
+        "x": 1,
+        "y": 18
       },
       "id": 7,
       "options": {
         "barRadius": 0,
-        "barWidth": 0.73,
+        "barWidth": 0.97,
+        "colorByField": "dag_id",
+        "dataLinks": [
+          {
+            "title": "Filter by this DAG",
+            "url": "/d/a23a7e6f-3feb-45f4-902e-95dfbcec13da/airflow-monitoring-dashboard?orgId=1&from=${__from}&to=${__to}&var-dag_filter=${__data.fields.dag_id}"
+          }
+        ],
         "fullHighlight": false,
         "groupWidth": 0.7,
         "legend": {
           "calcs": [],
           "displayMode": "list",
           "placement": "right",
-          "showLegend": true
+          "showLegend": false
         },
         "orientation": "vertical",
         "showValue": "always",
         "stacking": "none",
+        "text": {
+          "valueSize": 20
+        },
+        "textSize": 50,
         "tooltip": {
           "mode": "single",
           "sort": "none"
         },
+        "xField": "dag_id",
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 0
       },
@@ -716,7 +824,8 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "airflow_dag_run_status{state=\"success\", job=\"airflow-global\"}",
+          "expr": "airflow_dag_run_status{state=\"success\", job=\"airflow-global\", dag_id=~\"${dag_filter}\"}",
+          "format": "table",
           "instant": true,
           "legendFormat": "{{dag_id}}",
           "range": false,
@@ -727,119 +836,137 @@
       "type": "barchart"
     },
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "List of all DAGs that failed execution, grouped by DAG ID",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "fixedColor": "red",
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "fillOpacity": 80,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "lineWidth": 1,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [
+            {
+              "options": {
+                "etl_csv_pipeline": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "ETL csv pipeline"
+                },
+                "etl_csv_spark_pipeline_v2": {
+                  "color": "yellow",
+                  "index": 1,
+                  "text": "ETL csv spark pipeline"
+                },
+                "ingest_api_to_minio": {
+                  "color": "blue",
+                  "index": 2,
+                  "text": "Ingest api to minio"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "0",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 7,
+        "x": 10,
+        "y": 18
+      },
+      "id": 58,
+      "options": {
+        "barRadius": 0,
+        "barWidth": 0.97,
+        "colorByField": "dag_id",
+        "fullHighlight": false,
+        "groupWidth": 0.7,
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "right",
+          "showLegend": false
+        },
+        "orientation": "vertical",
+        "showValue": "auto",
+        "stacking": "none",
+        "text": {
+          "valueSize": 20
+        },
+        "textSize": 50,
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "xField": "dag_id",
+        "xTickLabelRotation": 0,
+        "xTickLabelSpacing": 0
+      },
+      "pluginVersion": "10.0.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "airflow_dag_run_status{state=\"failed\", job=\"airflow-global\", dag_id=~\"${dag_filter}\"}",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "{{dag_id}}",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Failed Run",
+      "type": "barchart"
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 24
+        "y": 26
       },
       "id": 17,
       "panels": [],
       "title": "❌ Failed DAGs & Tasks - Error Analysis",
       "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 10,
-        "x": 0,
-        "y": 25
-      },
-      "id": 50,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "Use the dropdowns below to filter failed DAGs and Tasks.",
-        "mode": "markdown"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "refId": "A"
-        }
-      ],
-      "transparent": true,
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 5,
-        "x": 10,
-        "y": 25
-      },
-      "id": 51,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "**DAG Filter:** `${failed_dag_filter:text}`",
-        "mode": "markdown"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "refId": "A"
-        }
-      ],
-      "transparent": true,
-      "type": "text"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 5,
-        "x": 15,
-        "y": 25
-      },
-      "id": 52,
-      "options": {
-        "code": {
-          "language": "plaintext",
-          "showLineNumbers": false,
-          "showMiniMap": false
-        },
-        "content": "**Task Filter:** `${failed_task_filter:text}`",
-        "mode": "markdown"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "refId": "A"
-        }
-      ],
-      "transparent": true,
-      "type": "text"
     },
     {
       "datasource": {
@@ -889,7 +1016,7 @@
                 "value": [
                   {
                     "title": "Filter by this DAG",
-                    "url": "/d/a23a7e6f-3feb-45f4-902e-95dfbcec13da/airflow-monitoring-dashboard?orgId=1&from=${__from}&to=${__to}&var-failed_dag_filter=${__data.fields.dag_id}"
+                    "url": "/d/a23a7e6f-3feb-45f4-902e-95dfbcec13da/airflow-monitoring-dashboard?orgId=1&from=${__from}&to=${__to}&var-dag_filter=${__data.fields.dag_id}"
                   }
                 ]
               }
@@ -914,7 +1041,7 @@
                 "value": [
                   {
                     "title": "Filter by this Task",
-                    "url": "/d/a23a7e6f-3feb-45f4-902e-95dfbcec13da/airflow-monitoring-dashboard?orgId=1&from=${__from}&to=${__to}&var-failed_task_filter=${__data.fields.task_id}"
+                    "url": "/d/a23a7e6f-3feb-45f4-902e-95dfbcec13da/airflow-monitoring-dashboard?orgId=1&from=${__from}&to=${__to}&var-task_filter=${__data.fields.task_id}"
                   }
                 ]
               }
@@ -1092,7 +1219,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "airflow_task_status{state=~\"failed|upstream_failed\", job=\"airflow-global\", dag_id=~\".*${failed_dag_filter}.*\", task_id=~\".*${failed_task_filter}.*\"}",
+          "expr": "airflow_task_status{state=~\"failed|upstream_failed\", job=\"airflow-global\", dag_id=~\"${dag_filter}\", task_id=~\".*${task_filter}.*\"}",
           "format": "table",
           "instant": false,
           "legendFormat": "{{dag_id}} - {{task_id}}",
@@ -1100,7 +1227,7 @@
           "refId": "A"
         }
       ],
-      "title": "Failed Tasks Details (Filtered: DAG=${failed_dag_filter}, Task=${failed_task_filter})",
+      "title": "Failed Tasks Details (Filtered: DAG=${dag_filter}, Task=${task_filter})",
       "type": "table"
     },
     {
@@ -1134,24 +1261,27 @@
             "uid": "loki-datasource"
           },
           "editorMode": "code",
-          "expr": "{job=\"airflow\", dag_id=~\".*${failed_dag_filter}.*\", task_id=~\".*${failed_task_filter}.*\"} |~ \"(?i)ERROR\"",
+          "expr": "{job=\"airflow\", dag_id=~\".*${dag_filter}.*\", task_id=~\".*${task_filter}.*\"} |~ \"(?i)ERROR\"",
           "maxLines": 1000,
           "queryType": "range",
           "refId": "A"
         }
       ],
-      "title": "Error Logs (Filtered: DAG=${failed_dag_filter}, Task=${failed_task_filter})",
+      "title": "Error Logs (Filtered: DAG=${dag_filter}, Task=${task_filter})",
       "type": "logs"
     }
   ],
-  "refresh": false,
+  "refresh": "",
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
     "airflow",
     "prometheus",
     "scheduler",
-    "logs"
+    "logs",
+    "DAGs",
+    "Tasks",
+    "monitoring"
   ],
   "templating": {
     "list": [
@@ -1168,9 +1298,9 @@
         "definition": "label_values(airflow_task_status{state=~\"failed|upstream_failed\", job=\"airflow-global\"}, dag_id)",
         "hide": 0,
         "includeAll": true,
-        "label": "🔴 Failed DAG",
+        "label": "DAG",
         "multi": false,
-        "name": "failed_dag_filter",
+        "name": "dag_filter",
         "options": [],
         "query": {
           "query": "label_values(airflow_task_status{state=~\"failed|upstream_failed\", job=\"airflow-global\"}, dag_id)",
@@ -1184,7 +1314,7 @@
       },
       {
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "All",
           "value": "$__all"
         },
@@ -1192,15 +1322,15 @@
           "type": "prometheus",
           "uid": "PBFA97CFB590B2093"
         },
-        "definition": "label_values(airflow_task_status{state=~\"failed|upstream_failed\", job=\"airflow-global\", dag_id=~\".*${failed_dag_filter}.*\"}, task_id)",
+        "definition": "label_values(airflow_task_status{state=~\"failed|upstream_failed\", job=\"airflow-global\", dag_id=~\".*${dag_filter}.*\"}, task_id)",
         "hide": 0,
         "includeAll": true,
-        "label": "🔴 Failed Task",
+        "label": "Task",
         "multi": false,
-        "name": "failed_task_filter",
+        "name": "task_filter",
         "options": [],
         "query": {
-          "query": "label_values(airflow_task_status{state=~\"failed|upstream_failed\", job=\"airflow-global\", dag_id=~\".*${failed_dag_filter}.*\"}, task_id)",
+          "query": "label_values(airflow_task_status{state=~\"failed|upstream_failed\", job=\"airflow-global\", dag_id=~\".*${dag_filter}.*\"}, task_id)",
           "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 2,
@@ -1223,7 +1353,7 @@
     ]
   },
   "time": {
-    "from": "now-2d",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {
@@ -1239,6 +1369,6 @@
   "timezone": "browser",
   "title": "Airflow Monitoring Dashboard",
   "uid": "a23a7e6f-3feb-45f4-902e-95dfbcec13da",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }

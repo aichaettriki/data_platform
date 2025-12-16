@@ -436,6 +436,7 @@ services:
     restart: unless-stopped
     ports:
       - "3001:3000"
+      - "9191:9191"
     env_file:
       - ./metabase/env/metabase.env
     depends_on:
@@ -446,7 +447,8 @@ services:
       - "traefik.http.routers.metabase.rule=Host(`metabase.itceq.tn`)"
       - "traefik.http.routers.metabase.entrypoints=web"
       - "traefik.http.services.metabase.loadbalancer.server.port=3000"
-    
+    environment:
+      - MB_PROMETHEUS_SERVER_PORT=9191
  
   # 2. INTERNAL METADATA DB
   metabase_db_internal:

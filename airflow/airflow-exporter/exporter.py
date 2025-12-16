@@ -66,7 +66,8 @@ task_status_gauge = Gauge(
 
 total_dags_gauge = Gauge(
     "airflow_total_dags",
-    "Nombre total de DAGs"
+    "Nombre total de DAGs",
+    ["dag_id"]
 )
 
 task_count_per_dag_gauge = Gauge(
@@ -163,6 +164,24 @@ airflow_traceback_count = Gauge(
 )
 
 # ---------------- Functions ---------------- #
+
+# ----------- Utilitaire pour compter les tâches d'un DAG ----------- #
+def get_task_count_for_dag(dag_id):
+    """Retourne le nombre de tâches pour un DAG donné via l'API Airflow"""
+    try:
+        resp = requests.get(
+            f"{AIRFLOW_WEBSERVER}/dags/{dag_id}/tasks",
+            auth=(AIRFLOW_USER, AIRFLOW_PASSWORD),
+            timeout=10
+        )
+        resp.raise_for_status()
+        tasks = resp.json().get("tasks", [])
+        logger.info(f"Nombre de tâches dans le DAG {dag_id} : {len(tasks)}")
+        return len(tasks)
+    except Exception as e:
+        logger.error(f"Erreur lors de la récupération des tâches pour {dag_id}: {e}")
+        return None
+
 
 def parse_scheduler_logs():
     """Parse scheduler logs to extract metrics"""
@@ -401,27 +420,17 @@ def collect_dag_metrics():
         logger.error(f"Error collecting DAG metrics: {e}")
 
 
-def expose_task_count_metrics():
-    try:
-        from airflow.models import DagBag
-        dagbag = DagBag()
-        airflow_task_count_gauge.clear()
-        total = 0
-        logger.info(f"DagBag import_errors: {dagbag.import_errors}")
-        logger.info(f"Nombre de DAGs trouvés: {len(dagbag.dags)}")
-        for dag_id, dag_obj in dagbag.dags.items():
-            num_tasks = len(dag_obj.tasks)
-            airflow_task_count_gauge.labels(dag_id=dag_id).set(num_tasks)
-            logger.info(f"DAG {dag_id}: {num_tasks} tasks")
-            total += num_tasks
-        airflow_task_count_total_gauge.set(total)
-        logger.info(f"Exposé airflow_task_count_total={total}")
-    except Exception as e:
-        logger.error(f"Erreur lors de l'exposition des métriques de tâches: {e}")
-
-# Fonction pour exposer le nombre de tâches par DAG via l'API Airflow
 
 # ---------------- Routes ---------------- #
+
+# Route pour obtenir le nombre de tâches d'un DAG spécifique
+@app.route("/dag_task_count/<dag_id>")
+def dag_task_count(dag_id):
+    count = get_task_count_for_dag(dag_id)
+    if count is not None:
+        return jsonify({"dag_id": dag_id, "task_count": count})
+    else:
+        return jsonify({"error": f"Impossible de récupérer le nombre de tâches pour {dag_id}"}), 500
 
 @app.route("/airflow_metrics")
 def airflow_metrics():
@@ -442,8 +451,10 @@ def airflow_metrics():
         dags_resp.raise_for_status()
         dags = dags_resp.json().get("dags", [])
 
-        # Metrics globales
-        total_dags_gauge.set(len(dags))
+        for dag in dags:
+            dag_id = dag["dag_id"]
+            total_dags_gauge.labels(dag_id=dag_id).set(1)
+            
         dag_run_status_gauge.clear()
         dag_run_avg_duration_gauge.clear()
         task_status_gauge.clear()

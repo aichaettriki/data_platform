@@ -22,12 +22,37 @@
   "liveNow": false,
   "panels": [
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 23,
+        "x": 0,
+        "y": 0
+      },
+      "id": 103,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<p style=\"text-align:center; color:#A352CC; font-size:22px; font-weight:bold;\">\n  Metabase Monitoring Dashboard\n</p>\n",
+        "mode": "html"
+      },
+      "pluginVersion": "10.0.3",
+      "transparent": true,
+      "type": "text"
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 2
       },
       "id": 100,
       "panels": [],
@@ -82,7 +107,7 @@
         "h": 5,
         "w": 3,
         "x": 1,
-        "y": 1
+        "y": 3
       },
       "id": 1,
       "options": {
@@ -131,7 +156,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "cyan",
+                "color": "#8acbff",
                 "value": null
               }
             ]
@@ -144,7 +169,7 @@
         "h": 5,
         "w": 3,
         "x": 5,
-        "y": 1
+        "y": 3
       },
       "id": 8,
       "options": {
@@ -168,7 +193,9 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "expr": "time() - process_start_time_seconds{job=\"metabase\"}",
+          "editorMode": "code",
+          "expr": "time() - process_start_time_seconds{job=\"metabase\",instance=\"metabase-exporter:9101\"}",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -203,7 +230,7 @@
         "h": 5,
         "w": 4,
         "x": 9,
-        "y": 1
+        "y": 3
       },
       "id": 4,
       "options": {
@@ -262,7 +289,7 @@
         "h": 5,
         "w": 4,
         "x": 14,
-        "y": 1
+        "y": 3
       },
       "id": 6,
       "options": {
@@ -321,7 +348,7 @@
         "h": 5,
         "w": 4,
         "x": 19,
-        "y": 1
+        "y": 3
       },
       "id": 5,
       "options": {
@@ -358,7 +385,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 8
       },
       "id": 102,
       "panels": [],
@@ -470,7 +497,7 @@
         "h": 6,
         "w": 8,
         "x": 1,
-        "y": 7
+        "y": 9
       },
       "id": 12,
       "options": {
@@ -493,8 +520,8 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "editorMode": "code",
-          "expr": "metabase_database_status",
+          "editorMode": "builder",
+          "expr": "metabase_database_status{job=\"metabase\"}",
           "format": "table",
           "instant": true,
           "refId": "A"
@@ -589,7 +616,7 @@
         "h": 6,
         "w": 13,
         "x": 10,
-        "y": 7
+        "y": 9
       },
       "id": 13,
       "options": {
@@ -623,159 +650,6 @@
       ],
       "title": "Database Latency",
       "type": "timeseries"
-    },
-    {
-      "collapsed": true,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 13
-      },
-      "id": 103,
-      "panels": [],
-      "title": "Metabase Errors",
-      "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "transparent",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 10
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 5,
-        "x": 2,
-        "y": 14
-      },
-      "id": 14,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "sum(increase(metabase_database_errors_total[5m])) OR vector(0)",
-          "legendFormat": "Total Errors",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Database Errors (last 5m)",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "transparent",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 5
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 5,
-        "x": 9,
-        "y": 14
-      },
-      "id": 15,
-      "options": {
-        "colorMode": "background",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "textMode": "value_and_name"
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "sum(increase(metabase_database_timeouts_total[5m])) OR vector(0)",
-          "legendFormat": "Total Timeouts",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Database Timeouts (last 5m)",
-      "type": "stat"
     }
   ],
   "refresh": "30s",

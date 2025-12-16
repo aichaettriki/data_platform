@@ -22,12 +22,37 @@
   "liveNow": false,
   "panels": [
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 23,
+        "x": 0,
+        "y": 0
+      },
+      "id": 401,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<p style=\"text-align:center; color:#FF7D14; font-size:22px; font-weight:bold;\">\n  Data lake Monitoring Dashboard\n</p>\n",
+        "mode": "html"
+      },
+      "pluginVersion": "10.0.3",
+      "transparent": true,
+      "type": "text"
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 2
       },
       "id": 100,
       "panels": [],
@@ -82,7 +107,7 @@
         "h": 4,
         "w": 6,
         "x": 1,
-        "y": 1
+        "y": 3
       },
       "id": 16,
       "options": {
@@ -146,7 +171,7 @@
         "h": 4,
         "w": 6,
         "x": 8,
-        "y": 1
+        "y": 3
       },
       "id": 15,
       "options": {
@@ -207,7 +232,7 @@
         "h": 4,
         "w": 6,
         "x": 16,
-        "y": 1
+        "y": 3
       },
       "id": 5,
       "options": {
@@ -268,7 +293,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 7
       },
       "id": 200,
       "panels": [],
@@ -370,7 +395,7 @@
         "h": 6,
         "w": 9,
         "x": 0,
-        "y": 6
+        "y": 8
       },
       "id": 20,
       "options": {
@@ -480,7 +505,7 @@
         "h": 6,
         "w": 5,
         "x": 10,
-        "y": 6
+        "y": 8
       },
       "id": 201,
       "options": {
@@ -541,7 +566,7 @@
         "h": 3,
         "w": 6,
         "x": 16,
-        "y": 6
+        "y": 8
       },
       "id": 19,
       "options": {
@@ -607,7 +632,7 @@
         "h": 3,
         "w": 6,
         "x": 16,
-        "y": 9
+        "y": 11
       },
       "id": 202,
       "options": {
@@ -649,7 +674,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 12
+        "y": 14
       },
       "id": 300,
       "panels": [],
@@ -694,7 +719,7 @@
         "h": 6,
         "w": 6,
         "x": 1,
-        "y": 13
+        "y": 15
       },
       "id": 14,
       "options": {
@@ -785,7 +810,7 @@
         "h": 6,
         "w": 14,
         "x": 8,
-        "y": 13
+        "y": 15
       },
       "id": 8,
       "options": {
@@ -831,7 +856,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 21
       },
       "id": 400,
       "panels": [],
@@ -884,8 +909,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -913,7 +937,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 20
+        "y": 22
       },
       "id": 7,
       "options": {
@@ -992,8 +1016,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "yellow",
-                "value": null
+                "color": "yellow"
               }
             ]
           },
@@ -1021,7 +1044,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 20
+        "y": 22
       },
       "id": 17,
       "options": {
@@ -1066,7 +1089,8 @@
   "tags": [
     "datalake",
     "minio",
-    "storage"
+    "storage",
+    "monitoring"
   ],
   "templating": {
     "list": []
@@ -1079,6 +1103,6 @@
   "timezone": "browser",
   "title": "Data Lake Health",
   "uid": "minio_data_lake_dashboard",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

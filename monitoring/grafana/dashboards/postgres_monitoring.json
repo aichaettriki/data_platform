@@ -19,12 +19,37 @@
   "liveNow": false,
   "panels": [
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 23,
+        "x": 0,
+        "y": 0
+      },
+      "id": 109,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<p style=\"text-align:center; color:#79A9F5; font-size:22px; font-weight:bold;\">\n  PostgreSQL Monitoring Dashboard\n</p>\n",
+        "mode": "html"
+      },
+      "pluginVersion": "10.0.3",
+      "transparent": true,
+      "type": "text"
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 2
       },
       "id": 100,
       "panels": [],
@@ -79,7 +104,7 @@
         "h": 5,
         "w": 4,
         "x": 1,
-        "y": 1
+        "y": 3
       },
       "id": 1,
       "options": {
@@ -148,7 +173,7 @@
         "h": 5,
         "w": 5,
         "x": 8,
-        "y": 1
+        "y": 3
       },
       "id": 2,
       "options": {
@@ -218,7 +243,7 @@
         "h": 5,
         "w": 5,
         "x": 15,
-        "y": 1
+        "y": 3
       },
       "id": 3,
       "options": {
@@ -259,166 +284,12 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 8
       },
       "id": 101,
       "panels": [],
       "title": "🔄 Connections & Transactions Activity",
       "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "PBFA97CFB590B2093"
-      },
-      "description": "Number of active connections per database",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Value"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Connections"
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "datname"
-            },
-            "properties": [
-              {
-                "id": "displayName",
-                "value": "Database"
-              },
-              {
-                "id": "custom.width",
-                "value": 200
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "__name__"
-            },
-            "properties": [
-              {
-                "id": "custom.hidden",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "job"
-            },
-            "properties": [
-              {
-                "id": "custom.hidden",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "instance"
-            },
-            "properties": [
-              {
-                "id": "custom.hidden",
-                "value": true
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Time"
-            },
-            "properties": [
-              {
-                "id": "custom.hidden",
-                "value": true
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 10,
-        "x": 1,
-        "y": 7
-      },
-      "id": 10,
-      "options": {
-        "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
-        "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Connections"
-          }
-        ]
-      },
-      "pluginVersion": "10.0.3",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "editorMode": "code",
-          "expr": "sum(pg_stat_activity_count) by (datname)",
-          "format": "table",
-          "instant": true,
-          "legendFormat": "__auto",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Active Connections by Database",
-      "type": "table"
     },
     {
       "datasource": {
@@ -459,7 +330,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 200
+                "value": 229
               }
             ]
           },
@@ -570,14 +441,38 @@
                 "value": 191
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Inserted"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 134
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Updated"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 224
+              }
+            ]
           }
         ]
       },
       "gridPos": {
-        "h": 7,
-        "w": 10,
-        "x": 12,
-        "y": 7
+        "h": 6,
+        "w": 13,
+        "x": 1,
+        "y": 9
       },
       "id": 12,
       "options": {
@@ -591,12 +486,7 @@
           "show": false
         },
         "showHeader": true,
-        "sortBy": [
-          {
-            "desc": true,
-            "displayName": "Fetched (lastNotNull)"
-          }
-        ]
+        "sortBy": []
       },
       "pluginVersion": "10.0.3",
       "targets": [
@@ -753,7 +643,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 15
       },
       "id": 103,
       "panels": [],
@@ -809,7 +699,7 @@
         "h": 10,
         "w": 10,
         "x": 1,
-        "y": 15
+        "y": 16
       },
       "id": 30,
       "options": {
@@ -942,7 +832,7 @@
         "h": 10,
         "w": 10,
         "x": 12,
-        "y": 15
+        "y": 16
       },
       "id": 20,
       "options": {
@@ -996,7 +886,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 25
+        "y": 26
       },
       "id": 104,
       "panels": [],
@@ -1013,7 +903,7 @@
         "h": 2,
         "w": 24,
         "x": 0,
-        "y": 26
+        "y": 27
       },
       "id": 108,
       "options": {
@@ -1171,7 +1061,19 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 180
+                "value": 134
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Database"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 125
               }
             ]
           }
@@ -1179,9 +1081,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 28
+        "w": 11,
+        "x": 1,
+        "y": 29
       },
       "id": 40,
       "options": {
@@ -1272,7 +1174,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 150
+                "value": 120
               }
             ]
           },
@@ -1284,7 +1186,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 180
+                "value": 159
               },
               {
                 "id": "unit",
@@ -1316,7 +1218,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 200
+                "value": 121
               }
             ]
           }
@@ -1324,9 +1226,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 12,
+        "w": 11,
         "x": 12,
-        "y": 28
+        "y": 29
       },
       "id": 41,
       "options": {

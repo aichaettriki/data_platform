@@ -38,6 +38,7 @@ metabase_collection_count = Gauge('metabase_collection_count', 'Total number of 
 metabase_query_executions = Counter('metabase_query_executions_total', 'Total number of query executions')
 metabase_query_avg_duration = Gauge('metabase_query_avg_duration_seconds', 'Average query execution time')
 metabase_failed_queries = Counter('metabase_failed_queries_total', 'Total number of failed queries')
+metabase_failed_cards = Gauge('metabase_failed_cards', 'Current number of dashboard cards with errors')
 metabase_cache_hit_rate = Gauge('metabase_cache_hit_rate', 'Query cache hit rate')
 metabase_scrape_duration = Gauge('metabase_scrape_duration_seconds', 'Time taken to scrape metrics')
 metabase_scrape_errors = Counter('metabase_scrape_errors_total', 'Total number of scrape errors')
@@ -193,7 +194,7 @@ class MetabaseExporter:
                         database_name=db_name,
                         database_id=db_id
                     ).inc()
-                    
+                    metabase_failed_queries.inc()
                     logger.warning(f"Database {db_name} (ID: {db_id}): connection failed")
                     
             except RequestException as e:
@@ -216,6 +217,7 @@ class MetabaseExporter:
                         database_id=db_id
                     ).inc()
                     logger.error(f"Database {db_name} (ID: {db_id}): error - {e}")
+                metabase_failed_queries.inc()
     
     def collect_auth_security_metrics(self):
         """Collect authentication and security metrics"""
@@ -288,21 +290,52 @@ class MetabaseExporter:
         """Collect metrics about questions, dashboards, and collections"""
         # Questions/Cards
         cards = self.get('/card')
+        failed_cards_count = 0
         if cards and isinstance(cards, list):
             metabase_question_count.set(len(cards))
-            logger.debug(f"Questions/Cards: {len(cards)}")
+            logger.info(f"Questions/Cards: {len(cards)}")
+            # (Suppression de la vérification individuelle des cards/questions échouées ici)
+            logger.info(f"Cards/Questions échouées: {failed_cards_count}")
+        else:
+            logger.info("Aucune card/question trouvée.")
+        # Vous pouvez exposer ce nombre via Prometheus si besoin, par exemple :
+        metabase_failed_cards.set(failed_cards_count)
         
         # Dashboards
         dashboards = self.get('/dashboard')
         if dashboards and isinstance(dashboards, list):
             metabase_dashboard_count.set(len(dashboards))
-            logger.debug(f"Dashboards: {len(dashboards)}")
+            logger.info(f"Dashboards: {len(dashboards)}")
+            # Vérifier les cards échouées dans chaque dashboard via query_metadata
+            for dashboard in dashboards:
+                dashboard_id = dashboard.get('id')
+                if not dashboard_id:
+                    continue
+                try:
+                    metadata = self.get(f'/dashboard/{dashboard_id}/query_metadata')
+                    logger.info(f"Récupéré query_metadata pour dashboard {dashboard_id}: {metadata}")
+
+                    metadata1 = self.get(f'/dashboard/{dashboard_id}/items')
+                    logger.info(f"Récupéré iteeeeeeeeeeeeeeeeeeeeeeeems pour dashboard {dashboard_id}: {metadata1}")
+
+                    metadata2 = self.get(f'/dashboard/{dashboard_id}/related')
+                    logger.info(f"Récupéré relateeeeeeeeeeedddddddddddddddddddddddd pour dashboard {dashboard_id}: {metadata2}")
+                    # metadata est une liste de dicts, chaque dict = une card/question du dashboard
+                    if metadata and isinstance(metadata, list):
+                        for card_meta in metadata:
+                            # Si la card a une erreur, on incrémente le compteur
+                            if card_meta.get('error') or (card_meta.get('status') == 'error'):
+                                failed_cards_count += 1
+                except Exception as e:
+                    logger.debug(f"Erreur lors de la récupération de query_metadata pour dashboard {dashboard_id}: {e}")
+            # Mettre à jour la métrique après le passage sur les dashboards
+            metabase_failed_cards.set(failed_cards_count)
         
         # Collections
         collections = self.get('/collection')
         if collections and isinstance(collections, list):
             metabase_collection_count.set(len(collections))
-            logger.debug(f"Collections: {len(collections)}")
+            logger.info(f"Collections: {len(collections)}")
     
     def collect_query_metrics(self):
         """Collect query execution metrics from activity logs"""
@@ -315,6 +348,7 @@ class MetabaseExporter:
                 logger.debug(f"Recent activity items: {len(data)}")
         except Exception as e:
             logger.debug(f"Could not fetch activity metrics: {e}")
+
     
     def collect_all_metrics(self):
         """Collect all Metabase metrics"""
@@ -322,26 +356,22 @@ class MetabaseExporter:
         
         try:
             logger.info("Starting metrics collection")
-            
             # Health check first
             if not self.collect_health_metrics():
                 logger.warning("Metabase is not healthy, skipping detailed metrics")
                 return
-            
             # Collect all metrics
             self.collect_version_info()
             self.collect_database_metrics()
             self.collect_database_health_metrics()
-            self.collect_auth_security_metrics()
             self.collect_user_metrics()
             self.collect_content_metrics()
             self.collect_query_metrics()
-            
             duration = time.time() - start_time
             metabase_scrape_duration.set(duration)
             logger.info(f"Metrics collection completed in {duration:.2f}s")
-            
         except Exception as e:
+            print(f"[DEBUG] Exception pendant la collecte des métriques : {e}")
             logger.error(f"Error during metrics collection: {e}")
             metabase_scrape_errors.inc()
             duration = time.time() - start_time

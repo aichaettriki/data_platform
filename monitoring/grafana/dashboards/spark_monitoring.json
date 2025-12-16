@@ -22,12 +22,37 @@
   "liveNow": false,
   "panels": [
     {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "gridPos": {
+        "h": 2,
+        "w": 23,
+        "x": 0,
+        "y": 0
+      },
+      "id": 103,
+      "options": {
+        "code": {
+          "language": "plaintext",
+          "showLineNumbers": false,
+          "showMiniMap": false
+        },
+        "content": "<p style=\"text-align:center; color:#3274D9; font-size:22px; font-weight:bold;\">\n  Spark Monitoring Dashboard\n</p>\n",
+        "mode": "html"
+      },
+      "pluginVersion": "10.0.3",
+      "transparent": true,
+      "type": "text"
+    },
+    {
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 0
+        "y": 2
       },
       "id": 100,
       "panels": [],
@@ -62,7 +87,7 @@
         "h": 4,
         "w": 4,
         "x": 1,
-        "y": 1
+        "y": 3
       },
       "id": 1,
       "options": {
@@ -77,7 +102,9 @@
           "fields": "",
           "values": false
         },
-        "text": {},
+        "text": {
+          "valueSize": 40
+        },
         "textMode": "auto"
       },
       "pluginVersion": "10.0.3",
@@ -126,7 +153,7 @@
         "h": 4,
         "w": 5,
         "x": 6,
-        "y": 1
+        "y": 3
       },
       "id": 4,
       "options": {
@@ -141,7 +168,9 @@
           "fields": "",
           "values": false
         },
-        "text": {},
+        "text": {
+          "valueSize": 40
+        },
         "textMode": "value_and_name"
       },
       "pluginVersion": "10.0.3",
@@ -204,7 +233,7 @@
         "h": 4,
         "w": 5,
         "x": 12,
-        "y": 1
+        "y": 3
       },
       "id": 3,
       "options": {
@@ -219,7 +248,9 @@
           "fields": "",
           "values": false
         },
-        "text": {},
+        "text": {
+          "valueSize": 40
+        },
         "textMode": "value_and_name"
       },
       "pluginVersion": "10.0.3",
@@ -282,7 +313,7 @@
         "h": 4,
         "w": 5,
         "x": 18,
-        "y": 1
+        "y": 3
       },
       "id": 2,
       "options": {
@@ -297,7 +328,9 @@
           "fields": "",
           "values": false
         },
-        "text": {},
+        "text": {
+          "valueSize": 40
+        },
         "textMode": "value_and_name"
       },
       "pluginVersion": "10.0.3",
@@ -391,7 +424,7 @@
         "h": 8,
         "w": 10,
         "x": 1,
-        "y": 5
+        "y": 7
       },
       "id": 5,
       "options": {
@@ -411,15 +444,6 @@
       },
       "pluginVersion": "8.0.0",
       "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "PBFA97CFB590B2093"
-          },
-          "expr": "spark_workers_alive",
-          "legendFormat": "Alive Workers",
-          "refId": "A"
-        },
         {
           "datasource": {
             "type": "prometheus",
@@ -500,7 +524,7 @@
         "h": 8,
         "w": 11,
         "x": 12,
-        "y": 5
+        "y": 7
       },
       "id": 6,
       "options": {
@@ -548,7 +572,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 13
+        "y": 15
       },
       "id": 101,
       "panels": [],
@@ -727,7 +751,7 @@
         "h": 8,
         "w": 22,
         "x": 1,
-        "y": 14
+        "y": 16
       },
       "id": 12,
       "options": {
@@ -861,7 +885,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 24
       },
       "id": 102,
       "panels": [],
@@ -896,7 +920,7 @@
         "h": 4,
         "w": 5,
         "x": 1,
-        "y": 23
+        "y": 25
       },
       "id": 11,
       "options": {
@@ -911,6 +935,9 @@
           "fields": "",
           "values": false
         },
+        "text": {
+          "valueSize": 40
+        },
         "textMode": "value_and_name"
       },
       "pluginVersion": "10.0.3",
@@ -924,7 +951,7 @@
           "exemplar": false,
           "expr": "spark_worker_memory_mb",
           "instant": true,
-          "legendFormat": "Worker {{worker_host}}",
+          "legendFormat": "{{worker_host}}",
           "range": false,
           "refId": "A"
         }
@@ -960,7 +987,7 @@
         "h": 4,
         "w": 5,
         "x": 6,
-        "y": 23
+        "y": 25
       },
       "id": 15,
       "options": {
@@ -974,6 +1001,9 @@
           ],
           "fields": "",
           "values": false
+        },
+        "text": {
+          "valueSize": 40
         },
         "textMode": "value_and_name"
       },
@@ -1009,7 +1039,7 @@
     "list": []
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},
