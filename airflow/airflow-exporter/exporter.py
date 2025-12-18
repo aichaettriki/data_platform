@@ -27,7 +27,11 @@ LOKI_URL = os.getenv("LOKI_URL", "http://loki:3100")
 LOGS_PATH = os.getenv("LOGS_PATH", "/opt/airflow/logs")
 METRICS_TIME_WINDOW_DAYS = int(os.getenv("METRICS_TIME_WINDOW_DAYS", "30"))  # Filtre les métriques sur X jours
 
-# ---------------- Metrics ---------------- #
+ # ---------------- Metrics ---------------- #
+airflow_up_gauge = Gauge(
+    "airflow_up",
+    "Etat global d'Airflow (1=up, 0=down)"
+)
 dag_log_lines_gauge = Gauge(
     "airflow_scheduler_log_lines",
     "Nombre de lignes dans le log du scheduler par DAG et date",
@@ -327,12 +331,15 @@ def get_scheduler_health():
         )
         health_resp.raise_for_status()
         health_data = health_resp.json()
-        
         scheduler_status = health_data.get("scheduler", {}).get("status")
+        webserver_status = health_data.get("metadatabase", {}).get("status")
+        # On considère Airflow up si le scheduler ET la metadatabase sont healthy
+        is_up = (scheduler_status == "healthy") and (webserver_status == "healthy")
+        airflow_up_gauge.set(1 if is_up else 0)
         scheduler_heartbeat_gauge.set(1 if scheduler_status == "healthy" else 0)
-        
     except Exception as e:
         logger.error(f"Error fetching scheduler health: {e}")
+        airflow_up_gauge.set(0)
         scheduler_heartbeat_gauge.set(0)
 
 

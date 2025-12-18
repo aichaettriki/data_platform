@@ -39,7 +39,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<p style=\"text-align:center; color:#A352CC; font-size:22px; font-weight:bold;\">\n  Metabase Monitoring Dashboard\n</p>\n",
+        "content": "<p style=\"text-align:center; font-size:22px; font-weight:bold;\">\n  Metabase Monitoring Dashboard\n</p>\n",
         "mode": "html"
       },
       "pluginVersion": "10.0.3",
@@ -935,6 +935,6 @@
   "timezone": "",
   "title": "Metabase Monitoring",
   "uid": "metabase-monitoring",
-  "version": 18,
+  "version": 1,
   "weekStart": ""
 }

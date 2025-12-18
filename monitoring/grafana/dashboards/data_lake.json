@@ -39,7 +39,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<p style=\"text-align:center; color:#FF7D14; font-size:22px; font-weight:bold;\">\n  Data lake Monitoring Dashboard\n</p>\n",
+        "content": "<p style=\"text-align:center; font-size:22px; font-weight:bold;\">\n  Data lake Monitoring Dashboard\n</p>\n",
         "mode": "html"
       },
       "pluginVersion": "10.0.3",
@@ -909,8 +909,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
-                "value": null
+                "color": "green"
               }
             ]
           },
@@ -1017,8 +1016,7 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "yellow",
-                "value": null
+                "color": "yellow"
               }
             ]
           },

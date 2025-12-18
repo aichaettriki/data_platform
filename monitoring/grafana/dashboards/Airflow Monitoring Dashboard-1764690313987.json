@@ -36,7 +36,7 @@
           "showLineNumbers": false,
           "showMiniMap": false
         },
-        "content": "<p style=\"text-align:center; color:#3274D9; font-size:22px; font-weight:bold;\">\n  Airflow Monitoring Dashboard\n</p>\n",
+        "content": "<p style=\"text-align:center; font-size:22px; font-weight:bold;\">\n  Airflow Monitoring Dashboard\n</p>\n",
         "mode": "html"
       },
       "pluginVersion": "10.0.3",
@@ -1287,7 +1287,7 @@
     "list": [
       {
         "current": {
-          "selected": true,
+          "selected": false,
           "text": "All",
           "value": "$__all"
         },
