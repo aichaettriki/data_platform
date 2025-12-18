@@ -33,10 +33,10 @@ metabase_info = Info('metabase_info', 'Metabase version and build information')
 metabase_database_count = Gauge('metabase_database_count', 'Number of configured databases')
 metabase_user_count = Gauge('metabase_user_count', 'Total number of users')
 metabase_active_users = Gauge('metabase_active_users', 'Number of active users in last 30 days')
-metabase_question_count = Gauge('metabase_question_count', 'Total number of questions/cards')
-metabase_dashboard_count = Gauge('metabase_dashboard_count', 'Total number of dashboards')
-metabase_collection_count = Gauge('metabase_collection_count', 'Total number of collections')
-metabase_failed_cards = Gauge('metabase_failed_cards', 'Current number of dashboard cards with errors')
+metabase_question_count = Gauge('metabase_question_count', 'Total number of questions/cards', ['database_name'])
+metabase_dashboard_count = Gauge('metabase_dashboard_count', 'Total number of dashboards', ['database_name'])
+metabase_collection_count = Gauge('metabase_collection_count', 'Total number of collections', ['database_name'])
+metabase_failed_cards = Gauge('metabase_failed_cards', 'Current number of dashboard cards with errors', ['database_name'])
 metabase_scrape_duration = Gauge('metabase_scrape_duration_seconds', 'Time taken to scrape metrics')
 metabase_scrape_errors = Counter('metabase_scrape_errors_total', 'Total number of scrape errors')
 
@@ -133,7 +133,7 @@ class MetabaseExporter:
             logger.debug(f"Metabase version: {version_info.get('tag', 'unknown')}")
     
     def collect_database_metrics(self):
-        """Collect database connection metrics and health status"""
+        """Collect database connection metrics, health status, and latency"""
         data = self.get('/database')
         if data:
             if isinstance(data, dict) and 'data' in data:
@@ -145,18 +145,24 @@ class MetabaseExporter:
             metabase_database_count.set(len(databases))
             logger.debug(f"Databases configured: {len(databases)}")
 
-            # Check health for each database
+            # Check health and latency for each database
             for db in databases:
                 db_id = str(db.get('id', 'unknown'))
                 db_name = db.get('name', 'unknown')
                 db_engine = db.get('engine', 'unknown')
+                latency_ms = None
                 try:
-                    # Try to fetch database details as a health check
+                    start = time.time()
                     resp = self.get(f'/database/{db_id}')
+                    elapsed = (time.time() - start) * 1000  # ms
                     status = 1 if resp else 0
+                    latency_ms = elapsed
                 except Exception:
                     status = 0
+                    latency_ms = None
                 metabase_database_status.labels(database_name=db_name, database_id=db_id, engine=db_engine).set(status)
+                if latency_ms is not None:
+                    metabase_database_latency_ms.labels(database_name=db_name, database_id=db_id).set(latency_ms)
     
     def collect_user_metrics(self):
         """Collect user statistics"""
@@ -183,47 +189,81 @@ class MetabaseExporter:
             logger.debug(f"Total users: {len(data)}, Active users (30d): {active_count}")
     
     def collect_content_metrics(self):
-        """Collect metrics about questions, dashboards, and collections, and count failed cards by executing their queries"""
+        """Collect metrics about questions, dashboards, and collections, and count failed cards by executing their queries, all by database_name"""
+        # Get all databases to map id -> name
+        db_data = self.get('/database')
+        db_id_to_name = {}
+        if db_data:
+            if isinstance(db_data, dict) and 'data' in db_data:
+                dbs = db_data['data']
+            elif isinstance(db_data, list):
+                dbs = db_data
+            else:
+                dbs = []
+            for db in dbs:
+                db_id = str(db.get('id', 'unknown'))
+                db_name = db.get('name', 'unknown')
+                db_id_to_name[db_id] = db_name
+
         # Questions/Cards
         cards = self.get('/card')
-        failed_cards_count = 0
+        questions_per_db = {}
+        failed_cards_per_db = {}
         if cards and isinstance(cards, list):
-            metabase_question_count.set(len(cards))
-            logger.info(f"Questions/Cards: {len(cards)}")
             for card in cards:
+                db_id = str(card.get('database_id', 'unknown'))
+                db_name = db_id_to_name.get(db_id, 'unknown')
+                questions_per_db.setdefault(db_name, 0)
+                failed_cards_per_db.setdefault(db_name, 0)
+                questions_per_db[db_name] += 1
                 card_id = card.get('id')
                 if not card_id:
                     continue
                 try:
-                    # Exécuter la requête de la card
                     query_result = self.get(f'/card/{card_id}/query')
-                    # Si la réponse contient une clé 'error', 'status' == 'error', ou 'message' non vide, c'est une erreur
                     if isinstance(query_result, dict):
                         if (
                             query_result.get('error')
                             or query_result.get('status') == 'error'
                             or (query_result.get('message') and isinstance(query_result.get('message'), str))
                         ):
-                            failed_cards_count += 1
+                            failed_cards_per_db[db_name] += 1
                 except Exception as e:
                     logger.warning(f"Erreur lors de l'exécution de la card {card_id}: {e}")
-                    failed_cards_count += 1
+                    failed_cards_per_db[db_name] += 1
+            for db_name, count in questions_per_db.items():
+                metabase_question_count.labels(database_name=db_name).set(count)
+            for db_name, count in failed_cards_per_db.items():
+                metabase_failed_cards.labels(database_name=db_name).set(count)
+            logger.info(f"Questions/Cards by DB: {questions_per_db}")
         else:
             logger.info("No cards/questions found.")
 
         # Dashboards
         dashboards = self.get('/dashboard')
+        dashboards_per_db = {}
         if dashboards and isinstance(dashboards, list):
-            metabase_dashboard_count.set(len(dashboards))
-            logger.info(f"Dashboards: {len(dashboards)}")
+            for dash in dashboards:
+                db_id = str(dash.get('database_id', 'unknown'))
+                db_name = db_id_to_name.get(db_id, 'unknown')
+                dashboards_per_db.setdefault(db_name, 0)
+                dashboards_per_db[db_name] += 1
+            for db_name, count in dashboards_per_db.items():
+                metabase_dashboard_count.labels(database_name=db_name).set(count)
+            logger.info(f"Dashboards by DB: {dashboards_per_db}")
+
         # Collections
         collections = self.get('/collection')
+        collections_per_db = {}
         if collections and isinstance(collections, list):
-            metabase_collection_count.set(len(collections))
-            logger.info(f"Collections: {len(collections)}")
-
-        # Exposer le nombre de cards/questions en erreur
-        metabase_failed_cards.set(failed_cards_count)
+            for coll in collections:
+                db_id = str(coll.get('database_id', 'unknown'))
+                db_name = db_id_to_name.get(db_id, 'unknown')
+                collections_per_db.setdefault(db_name, 0)
+                collections_per_db[db_name] += 1
+            for db_name, count in collections_per_db.items():
+                metabase_collection_count.labels(database_name=db_name).set(count)
+            logger.info(f"Collections by DB: {collections_per_db}")
 
 
     

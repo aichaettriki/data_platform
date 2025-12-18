@@ -254,7 +254,9 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "code",
           "expr": "metabase_database_count",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -313,7 +315,9 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "code",
           "expr": "metabase_dashboard_count",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -372,7 +376,9 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
+          "editorMode": "code",
           "expr": "metabase_question_count",
+          "range": true,
           "refId": "A"
         }
       ],
@@ -520,7 +526,7 @@
             "type": "prometheus",
             "uid": "PBFA97CFB590B2093"
           },
-          "editorMode": "builder",
+          "editorMode": "code",
           "expr": "metabase_database_status{job=\"metabase\"}",
           "format": "table",
           "instant": true,
@@ -705,7 +711,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "metabase_failed_cards{instance=\"metabase-exporter:9101\", job=\"metabase\"}",
+          "expr": "metabase_failed_cards{instance=\"metabase-exporter:9101\", job=\"metabase\",database_name=~\"$database\"}",
           "instant": false,
           "range": true,
           "refId": "A"
@@ -726,13 +732,13 @@
     "list": []
   },
   "time": {
-    "from": "now-12h",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Metabase Monitoring",
   "uid": "metabase-monitoring",
-  "version": 3,
+  "version": 6,
   "weekStart": ""
 }
