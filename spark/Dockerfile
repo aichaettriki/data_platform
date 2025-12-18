@@ -17,10 +17,7 @@ ADD https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aw
 # Add driver postgresql
 ADD https://jdbc.postgresql.org/download/postgresql-42.7.3.jar /opt/spark/jars/
 
-# Add JMX Prometheus Exporter for metrics
-ADD https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar /opt/jmx_exporter/jmx_prometheus_javaagent.jar
-COPY jmx_exporter/config.yaml /opt/jmx_exporter/config.yaml
-RUN chmod -R 755 /opt/jmx_exporter
+## JMX exporter supprimé : aucune installation ni configuration
 
 # ADD USER 1001
 WORKDIR /opt/spark

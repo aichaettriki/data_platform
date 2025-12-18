@@ -27,20 +27,6 @@ scrape_configs:
     static_configs:
       - targets: ['postgres-exporter:9187']
 
-  - job_name: 'spark-master-jmx'
-    metrics_path: /metrics
-    static_configs:
-      - targets: ['spark-master:8090']
-    scrape_interval: 30s
-    scrape_timeout: 25s
-
-  - job_name: 'spark-worker-jmx'
-    metrics_path: /metrics
-    static_configs:
-      - targets: ['spark-worker:8091']
-    scrape_interval: 30s
-    scrape_timeout: 25s
-
   - job_name: 'spark-master-app'
     metrics_path: /metrics/prometheus
     static_configs:
