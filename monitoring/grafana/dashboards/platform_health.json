@@ -1148,7 +1148,7 @@
   "timepicker": {},
   "timezone": "",
   "title": "Spark Cluster Monitoring",
-  "uid": "spark-monitoring",
+  "uid": "platform-health-monitoring",
   "version": 2,
   "weekStart": ""
 }

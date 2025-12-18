@@ -394,7 +394,7 @@
       "gridPos": {
         "h": 6,
         "w": 9,
-        "x": 0,
+        "x": 1,
         "y": 8
       },
       "id": 20,
@@ -503,8 +503,8 @@
       },
       "gridPos": {
         "h": 6,
-        "w": 5,
-        "x": 10,
+        "w": 4,
+        "x": 11,
         "y": 8
       },
       "id": 201,
@@ -909,7 +909,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
@@ -1016,7 +1017,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "yellow"
+                "color": "yellow",
+                "value": null
               }
             ]
           },
@@ -1103,6 +1105,6 @@
   "timezone": "browser",
   "title": "Data Lake Health",
   "uid": "minio_data_lake_dashboard",
-  "version": 2,
+  "version": 1,
   "weekStart": ""
 }

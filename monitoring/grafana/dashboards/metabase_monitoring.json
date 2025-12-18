@@ -122,6 +122,7 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "value_and_name"
       },
       "pluginVersion": "10.0.3",
@@ -184,6 +185,7 @@
           "fields": "",
           "values": false
         },
+        "text": {},
         "textMode": "auto"
       },
       "pluginVersion": "10.0.3",
@@ -244,6 +246,9 @@
           ],
           "fields": "",
           "values": false
+        },
+        "text": {
+          "valueSize": 80
         },
         "textMode": "auto"
       },
@@ -306,6 +311,9 @@
           "fields": "",
           "values": false
         },
+        "text": {
+          "valueSize": 80
+        },
         "textMode": "auto"
       },
       "pluginVersion": "10.0.3",
@@ -367,6 +375,9 @@
           "fields": "",
           "values": false
         },
+        "text": {
+          "valueSize": 80
+        },
         "textMode": "auto"
       },
       "pluginVersion": "10.0.3",
@@ -377,7 +388,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "metabase_question_count",
+          "expr": "sum(metabase_question_count)",
           "range": true,
           "refId": "A"
         }
@@ -658,6 +669,91 @@
       "type": "timeseries"
     },
     {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 15
+      },
+      "id": 106,
+      "panels": [],
+      "title": "Errors",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "PBFA97CFB590B2093"
+      },
+      "description": "Number of dashboard cards (questions) that returned an error during the last scrape. Indicates issues with data sources, queries, or permissions.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 6,
+        "x": 2,
+        "y": 16
+      },
+      "id": 104,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {
+          "valueSize": 80
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.0.3",
+      "targets": [
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum(metabase_failed_cards)",
+          "format": "table",
+          "hide": false,
+          "instant": true,
+          "range": false,
+          "refId": "B"
+        }
+      ],
+      "title": "Failed Dashboard Cards",
+      "type": "stat"
+    },
+    {
       "datasource": {
         "type": "prometheus",
         "uid": "PBFA97CFB590B2093"
@@ -666,6 +762,14 @@
         "defaults": {
           "color": {
             "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": true
           },
           "mappings": [],
           "thresholds": {
@@ -682,26 +786,117 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "__name__"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "job"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "instance"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "custom.hidden",
+                "value": true
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Time"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 180
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "card_id"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 93
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "database_name"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 159
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
-        "h": 5,
-        "w": 7,
-        "x": 2,
-        "y": 15
+        "h": 7,
+        "w": 14,
+        "x": 9,
+        "y": 16
       },
-      "id": 104,
+      "id": 107,
       "options": {
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
           "fields": "",
-          "values": false
+          "reducer": [
+            "sum"
+          ],
+          "show": false
         },
-        "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showHeader": true,
+        "sortBy": [
+          {
+            "desc": false,
+            "displayName": "Time"
+          }
+        ]
       },
       "pluginVersion": "10.0.3",
       "targets": [
@@ -711,17 +906,18 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "metabase_failed_cards{instance=\"metabase-exporter:9101\", job=\"metabase\",database_name=~\"$database\"}",
+          "expr": "metabase_last_sql_error",
+          "format": "table",
           "instant": false,
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "Panel Title",
-      "type": "gauge"
+      "title": "Logs of the errors",
+      "type": "table"
     }
   ],
-  "refresh": "30s",
+  "refresh": "30m",
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
@@ -739,6 +935,6 @@
   "timezone": "",
   "title": "Metabase Monitoring",
   "uid": "metabase-monitoring",
-  "version": 6,
+  "version": 18,
   "weekStart": ""
 }
