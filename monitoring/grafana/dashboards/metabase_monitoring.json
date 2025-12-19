@@ -843,7 +843,7 @@
             "properties": [
               {
                 "id": "custom.width",
-                "value": 180
+                "value": 183
               }
             ]
           },
@@ -906,14 +906,43 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "metabase_last_sql_error",
+          "exemplar": false,
+          "expr": "max by (card_id, database_name, error) (metabase_last_sql_error)",
           "format": "table",
-          "instant": false,
-          "range": true,
+          "instant": true,
+          "range": false,
           "refId": "A"
         }
       ],
       "title": "Logs of the errors",
+      "transformations": [
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "Time": {
+                "aggregations": [
+                  "last"
+                ]
+              },
+              "card_id": {
+                "aggregations": []
+              },
+              "database_name": {
+                "aggregations": []
+              },
+              "error": {
+                "aggregations": []
+              }
+            },
+            "rowBy": [
+              "card_id",
+              "database_name",
+              "error"
+            ]
+          }
+        }
+      ],
       "type": "table"
     }
   ],
@@ -935,6 +964,6 @@
   "timezone": "",
   "title": "Metabase Monitoring",
   "uid": "metabase-monitoring",
-  "version": 1,
+  "version": 2,
   "weekStart": ""
 }

@@ -1,5 +1,6 @@
 from flask import Flask, Response, jsonify
 from prometheus_client import Gauge, Counter, Summary, generate_latest, CONTENT_TYPE_LATEST
+import psutil
 import requests
 import os
 from collections import defaultdict
@@ -7,6 +8,7 @@ from datetime import datetime, timedelta
 from dateutil import parser
 import logging
 import sys
+import psutil
 
 app = Flask(__name__)
 
@@ -31,6 +33,14 @@ METRICS_TIME_WINDOW_DAYS = int(os.getenv("METRICS_TIME_WINDOW_DAYS", "30"))  # F
 airflow_up_gauge = Gauge(
     "airflow_up",
     "Etat global d'Airflow (1=up, 0=down)"
+)
+airflow_ram_usage_gauge = Gauge(
+    "airflow_ram_usage_mb",
+    "Utilisation RAM du process Airflow en MB"
+)
+airflow_cpu_usage_gauge = Gauge(
+    "airflow_cpu_usage_percent",
+    "Utilisation CPU du process Airflow en pourcentage (%)"
 )
 dag_log_lines_gauge = Gauge(
     "airflow_scheduler_log_lines",
@@ -168,6 +178,29 @@ airflow_traceback_count = Gauge(
 )
 
 # ---------------- Functions ---------------- #
+
+# ----------- RAM/CPU Usage Function ----------- #
+def get_airflow_resource_usage():
+    """Retourne l'utilisation RAM (MB) et CPU (%) du process Airflow principal"""
+    ram = None
+    cpu = None
+    for proc in psutil.process_iter(['name', 'pid', 'cmdline']):
+        try:
+            # Cherche le process principal Airflow (webserver, scheduler, etc.)
+            if proc.info['name'] and 'airflow' in proc.info['name'].lower():
+                p = psutil.Process(proc.info['pid'])
+                ram = p.memory_info().rss / (1024 * 1024)  # RAM en MB
+                cpu = p.cpu_percent(interval=0.5)  # CPU en %
+                break
+            # Alternative: cherche dans la cmdline
+            elif proc.info['cmdline'] and any('airflow' in c for c in proc.info['cmdline']):
+                p = psutil.Process(proc.info['pid'])
+                ram = p.memory_info().rss / (1024 * 1024)
+                cpu = p.cpu_percent(interval=0.5)
+                break
+        except Exception:
+            continue
+    return ram, cpu
 
 # ----------- Utilitaire pour compter les tâches d'un DAG ----------- #
 def get_task_count_for_dag(dag_id):
@@ -428,6 +461,7 @@ def collect_dag_metrics():
 
 
 
+
 # ---------------- Routes ---------------- #
 
 # Route pour obtenir le nombre de tâches d'un DAG spécifique
@@ -614,6 +648,12 @@ def metrics():
     """Main endpoint for Prometheus (Loki errors)"""
     logger.info("[DEBUG] Entrée dans la route /metrics")
     try:
+        # --- RAM/CPU Usage --- #
+        ram, cpu = get_airflow_resource_usage()
+        if ram is not None:
+            airflow_ram_usage_gauge.set(ram)
+        if cpu is not None:
+            airflow_cpu_usage_gauge.set(cpu)
         error_counts, critical_counts, timeout_counts, import_error_counts, error_details = extract_error_metrics()
         
         airflow_error_count.clear()

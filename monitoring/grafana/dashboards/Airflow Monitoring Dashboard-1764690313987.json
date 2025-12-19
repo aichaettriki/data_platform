@@ -1219,11 +1219,12 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
+          "exemplar": false,
           "expr": "airflow_task_status{state=~\"failed|upstream_failed\", job=\"airflow-global\", dag_id=~\"${dag_filter}\", task_id=~\".*${task_filter}.*\"}",
           "format": "table",
-          "instant": false,
+          "instant": true,
           "legendFormat": "{{dag_id}} - {{task_id}}",
-          "range": true,
+          "range": false,
           "refId": "A"
         }
       ],
@@ -1271,7 +1272,7 @@
       "type": "logs"
     }
   ],
-  "refresh": "",
+  "refresh": false,
   "schemaVersion": 38,
   "style": "dark",
   "tags": [
@@ -1314,7 +1315,7 @@
       },
       {
         "current": {
-          "selected": false,
+          "selected": true,
           "text": "All",
           "value": "$__all"
         },
@@ -1353,8 +1354,8 @@
     ]
   },
   "time": {
-    "from": "now-24h",
-    "to": "now"
+    "from": "2025-12-18T09:33:20.225Z",
+    "to": "2025-12-19T09:33:20.225Z"
   },
   "timepicker": {
     "refresh_intervals": [
