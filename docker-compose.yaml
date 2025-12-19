@@ -1677,8 +1677,64 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
     restart: always
 
+  
   # ------------------------
-  # Apache Atlas (ENV VAR FIX)
+  # Apache Atlas (Best Practice Config)
+  # ------------------------
+  # atlas-server:
+  #   image: sburn/apache-atlas:2.3.0
+  #   container_name: atlas-server
+  #   networks:
+  #     - traefik-public
+  #   depends_on:
+  #     - zookeeper
+  #     - kafka
+  #   ports:
+  #     - "21000:21000"
+  #   environment:
+  #     # 1. Internal Storage (Keep True)
+  #     MANAGE_LOCAL_ZK: "true"
+  #     MANAGE_LOCAL_HBASE: "true"
+  #     MANAGE_LOCAL_SOLR: "true"
+      
+  #     # 2. External Kafka (Keep False)
+  #     MANAGE_LOCAL_KAFKA: "false"
+      
+  #     # 3. Memory Settings
+  #     ATLAS_SERVER_OPTS: "-Xms2048m -Xmx3072m"
+
+  #     # 4. KAFKA CONFIGURATION (Writes to atlas-application.properties)
+  #     ATLAS_SERVER_CONF_atlas_notification_embedded: "false"
+  #     ATLAS_SERVER_CONF_atlas_kafka_bootstrap_servers: kafka:9092
+  #     ATLAS_SERVER_CONF_atlas_kafka_zookeeper_connect: zookeeper:2181
+  #     ATLAS_SERVER_CONF_atlas_kafka_hook_group_id: spark_atlas_consumer_v15
+  #     # Ensure notifications are enabled
+  #     ATLAS_SERVER_CONF_atlas_notification_relationships_enabled: "true"
+  #     ATLAS_SERVER_CONF_atlas_notification_entity_enabled: "true"
+
+  #     # 5. STORAGE CONFIGURATION (Point to Localhost)
+  #     ATLAS_SERVER_CONF_atlas_graph_storage_hostname: localhost
+  #     ATLAS_SERVER_CONF_atlas_audit_hbase_zookeeper_quorum: localhost
+
+  #     # 6. STABILITY & PERFORMANCE TUNING
+  #     # Fixes 503 Service Unavailable crash:
+  #     ATLAS_SERVER_CONF_atlas_graph_index_search_solr_wait_searcher: "false"
+  #     # Fixes Stale Transaction error:
+  #     ATLAS_SERVER_CONF_atlas_graph_storage_lock_wait_time: 60000
+      
+  #   # Use a FRESH volume (v15) to force config file regeneration
+  #   volumes:
+  #     - atlas_storage_data_v15:/root/atlas-bin/data
+      
+  #   restart: always
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.atlas.rule=Host(`atlas.itceq.tn`)"
+  #     - "traefik.http.routers.atlas.entrypoints=web"
+  #     - "traefik.http.services.atlas.loadbalancer.server.port=21000"
+  
+  # # ------------------------
+  # # Apache Atlas (Best Practice Config)
   # # ------------------------
   # atlas-server:
   #   image: sburn/apache-atlas:2.3.0
@@ -1691,29 +1747,35 @@ services:
   #   ports:
   #     - "21000:21000"
   #   environment:
-  #     # 1. Keep Internal Storage (HBase/Solr)
+  #     # 1. Internal Storage (Keep this true)
   #     MANAGE_LOCAL_ZK: "true"
   #     MANAGE_LOCAL_HBASE: "true"
   #     MANAGE_LOCAL_SOLR: "true"
-      
-  #     # 2. Disable Internal Kafka
+     
+  #     # 2. Disable Internal Kafka (CRITICAL)
   #     MANAGE_LOCAL_KAFKA: "false"
-      
-  #     # 3. THE MAGIC FIX: Force settings via Java Options
-  #     # This bypasses the file system and forces the correct config
-  #     ATLAS_SERVER_OPTS: >-
-  #       -Xms2048m -Xmx3072m
-  #       -Datlas.graph.index.search.solr.wait-searcher=false
-  #       -Datlas.notification.embedded=false
-  #       -Datlas.kafka.bootstrap.servers=kafka:9092
-  #       -Datlas.kafka.zookeeper.connect=zookeeper:2181
-  #       -Datlas.kafka.hook.group.id=spark_atlas_consumer_env_v1
-  #       -Datlas.graph.storage.lock.wait-time=60000
-      
-  #   # Use the existing data volume (v8)
+  #     ATLAS_SERVER_CONF_atlas_notification_embedded: "false"
+     
+  #     # 3. Point to External Kafka
+  #     ATLAS_SERVER_CONF_atlas_kafka_bootstrap_servers: kafka:9092
+  #     ATLAS_SERVER_CONF_atlas_kafka_zookeeper_connect: zookeeper:2181
+     
+  #     # 4. THE FIX: Change the Consumer Group ID
+  #     # Changing this name (e.g. to 'v20') tricks Kafka into sending ALL previous messages again.
+  #     ATLAS_SERVER_CONF_atlas_kafka_hook_group_id: spark_atlas_consumer_RESET_v20
+     
+  #     # 5. Define the Topic Explicitly
+  #     ATLAS_SERVER_CONF_atlas_notification_hook_topic_name: ATLAS_HOOK
+     
+  #     # 6. Performance Tuning (Prevent the 503 Crash)
+  #     ATLAS_SERVER_OPTS: "-Xms2048m -Xmx3072m"
+  #     ATLAS_SERVER_CONF_atlas_graph_storage_lock_wait_time: 60000
+  #     ATLAS_SERVER_CONF_atlas_graph_index_search_solr_wait_searcher: "false"
+ 
+  #   # Use your existing volume (assuming it is not corrupt)
   #   volumes:
-  #     - atlas_storage_data_v8:/root/atlas-bin/data
-      
+  #     - atlas_storage_data_v15:/root/atlas-bin/data
+     
   #   restart: always
   #   labels:
   #     - "traefik.enable=true"
@@ -1721,13 +1783,7 @@ services:
   #     - "traefik.http.routers.atlas.entrypoints=web"
   #     - "traefik.http.services.atlas.loadbalancer.server.port=21000"
 
-  # ------------------------
-  # Apache Atlas (FINAL STABLE CONFIG)
 
-
-  # ------------------------
-  # Apache Atlas (Best Practice Config)
-  # ------------------------
   atlas-server:
     image: sburn/apache-atlas:2.3.0
     container_name: atlas-server
@@ -1739,39 +1795,23 @@ services:
     ports:
       - "21000:21000"
     environment:
-      # 1. Internal Storage (Keep True)
+      # --- HYBRID SETUP ---
+      # Keep Internal Storage ON
       MANAGE_LOCAL_ZK: "true"
       MANAGE_LOCAL_HBASE: "true"
       MANAGE_LOCAL_SOLR: "true"
-      
-      # 2. External Kafka (Keep False)
+      # Disable Internal Kafka (We are using the config file to point to external)
       MANAGE_LOCAL_KAFKA: "false"
       
-      # 3. Memory Settings
       ATLAS_SERVER_OPTS: "-Xms2048m -Xmx3072m"
-
-      # 4. KAFKA CONFIGURATION (Writes to atlas-application.properties)
-      ATLAS_SERVER_CONF_atlas_notification_embedded: "false"
-      ATLAS_SERVER_CONF_atlas_kafka_bootstrap_servers: kafka:9092
-      ATLAS_SERVER_CONF_atlas_kafka_zookeeper_connect: zookeeper:2181
-      ATLAS_SERVER_CONF_atlas_kafka_hook_group_id: spark_atlas_consumer_v15
-      # Ensure notifications are enabled
-      ATLAS_SERVER_CONF_atlas_notification_relationships_enabled: "true"
-      ATLAS_SERVER_CONF_atlas_notification_entity_enabled: "true"
-
-      # 5. STORAGE CONFIGURATION (Point to Localhost)
-      ATLAS_SERVER_CONF_atlas_graph_storage_hostname: localhost
-      ATLAS_SERVER_CONF_atlas_audit_hbase_zookeeper_quorum: localhost
-
-      # 6. STABILITY & PERFORMANCE TUNING
-      # Fixes 503 Service Unavailable crash:
-      ATLAS_SERVER_CONF_atlas_graph_index_search_solr_wait_searcher: "false"
-      # Fixes Stale Transaction error:
-      ATLAS_SERVER_CONF_atlas_graph_storage_lock_wait_time: 60000
       
-    # Use a FRESH volume (v15) to force config file regeneration
     volumes:
-      - atlas_storage_data_v15:/root/atlas-bin/data
+      # 1. MOUNT YOUR EDITED FILE (Crucial Step)
+      # Ensure 'atlas-application.properties' is in the same folder as docker-compose.yaml
+      - ./atlas-application.properties:/apache-atlas/conf/atlas-application.properties
+      
+      # 2. Persistent Data (Use v3 or v20, whichever is clean)
+      - atlas_storage_final_v3:/root/atlas-bin/data
       
     restart: always
     labels:
@@ -1779,8 +1819,6 @@ services:
       - "traefik.http.routers.atlas.rule=Host(`atlas.itceq.tn`)"
       - "traefik.http.routers.atlas.entrypoints=web"
       - "traefik.http.services.atlas.loadbalancer.server.port=21000"
-  
-  # -------------------------------------------------------
   atlas-init:
     image: curlimages/curl:latest
     networks:
@@ -1890,7 +1928,7 @@ volumes:
   pg_dwh_data:
   prometheus_data:
   # Updated Volume Name
-  atlas_storage_data_v15:
+  atlas_storage_final_v3:
 
 networks:
   traefik-public:
