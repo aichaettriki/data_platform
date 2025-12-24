@@ -174,7 +174,7 @@
       "pluginVersion": "10.0.3",
       "targets": [
         {
-          "expr": "time() - max_over_time(timestamp(minio_cluster_health_status == 1)[24h:])",
+          "expr": "sum_over_time((minio_cluster_health_status == 1)[24h:])",
           "instant": true,
           "refId": "A"
         }
@@ -492,7 +492,7 @@
       "pluginVersion": "10.0.3",
       "targets": [
         {
-          "expr": "time() - max_over_time(timestamp(metabase_up == 1)[24h:])",
+          "expr": "sum_over_time((metabase_up == 1)[24h:])",
           "instant": true,
           "refId": "A"
         }
@@ -808,7 +808,7 @@
       "pluginVersion": "10.0.3",
       "targets": [
         {
-          "expr": "time() - max_over_time(timestamp(pg_up == 1)[24h:])",
+          "expr": "sum_over_time((pg_up == 1)[24h:])",
           "instant": true,
           "refId": "A"
         }
@@ -1010,6 +1010,11 @@
           "mappings": [
             {
               "options": {
+                "0": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "DOWN"
+                },
                 "1": {
                   "color": "green",
                   "index": 0,
@@ -1025,10 +1030,6 @@
               {
                 "color": "green",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
               }
             ]
           }
@@ -1127,7 +1128,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "time() - max_over_time(timestamp(airflow_up{job=\"airflow-global\"} == 1)[24h:])",
+          "expr": "sum_over_time((airflow_up{job=\"airflow-global\"} == 1)[24h:])",
           "instant": true,
           "refId": "A"
         }
@@ -1333,6 +1334,11 @@
           "mappings": [
             {
               "options": {
+                "0": {
+                  "color": "red",
+                  "index": 1,
+                  "text": "DOWN"
+                },
                 "1": {
                   "color": "green",
                   "index": 0,
@@ -1445,7 +1451,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "time() - max_over_time(timestamp(spark_exporter_up == 1)[24h:])",
+          "expr": "sum_over_time((spark_exporter_up == 1)[24h:])",
           "instant": true,
           "refId": "A"
         }
@@ -1626,13 +1632,13 @@
     "list": []
   },
   "time": {
-    "from": "now-3h",
+    "from": "now-24h",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "",
   "title": "Platform Monitoring Overview",
   "uid": "platform-health-monitoring",
-  "version": 6,
+  "version": 1,
   "weekStart": ""
 }
