@@ -13,3 +13,4 @@ seaborn
 openpyxl               
 xlrd                   
 lxml                   
+openlineage-python

@@ -43,3 +43,10 @@ prometheus-api-client
 
 flask
 requests
+
+# Ajout pour CeleryExecutor
+apache-airflow-providers-celery==3.6.0
+celery
+redis
+
+#apache-airflow-providers-openlineage

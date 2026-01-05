@@ -1,0 +1,24 @@
+source:
+  type: spark
+  serviceName: spark_itceq
+  serviceConnection:
+    config:
+      type: Spark
+      hostPort: http://spark-master:8080
+      # master est optionnel ici si hostPort est présent, mais on peut le laisser
+      master: spark://spark-master:7077
+  sourceConfig:
+    config:
+      type: PipelineMetadata
+
+sink:
+  type: metadata-rest
+  config: {}
+
+workflowConfig:
+  loggerLevel: INFO
+  openMetadataServerConfig:
+    hostPort: http://openmetadata-server:8585/api
+    authProvider: openmetadata
+    securityConfig:
+      jwtToken: ""

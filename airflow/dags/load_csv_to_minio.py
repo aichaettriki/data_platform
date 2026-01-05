@@ -9,7 +9,7 @@ MINIO_ACCESS_KEY = "minio"
 MINIO_SECRET_KEY = "minio123"
  
 BUCKET_RAW = "raw"
-LOCAL_FILE_PATH = "/opt/airflow/data/equipe.csv"
+LOCAL_FILE_PATH = "/opt/airflow/data/equipe2.csv"
 RAW_OBJECT = "equipe1.csv"
  
 def get_minio_client():
@@ -25,6 +25,7 @@ def upload_to_raw():
     if not client.bucket_exists(BUCKET_RAW):
         client.make_bucket(BUCKET_RAW)
     client.fput_object(BUCKET_RAW, RAW_OBJECT, LOCAL_FILE_PATH)
+    print("client------------>",client)
     print("📌 Upload RAW terminé.")
  
 with DAG(
