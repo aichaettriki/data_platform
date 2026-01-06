@@ -1,0 +1,6 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6959999,28020139,Nombre des ménages,,Nombre,,Nombre total des ménages,,Institut National de la Statistique,25/08/2016 04:25:30,"1, 2",,
+OBJ6959999,28020149,Utilisation d'électricité pour éclairage,,Nombre,,Nombre des ménages Utilisant l'électricité pour l'éclairage,,Institut National de la Statistique,25/08/2016 04:25:30,"1, 2",,
+OBJ6959999,28020159,Utilisation de gaz de bouteille et de gaz de ville pour cuisson,,Nombre,,Nombre des ménages Utilisant le gaz de bouteille et le gaz de ville pour cuisson,,Institut National de la Statistique,25/08/2016 04:25:30,"1, 2",,
+OBJ6959999,28020169,Utilisation de gaz de bouteille et de gaz de ville pour réchauffement d'eau,,Nombre,,Nombre des ménages Utilisant le gaz de bouteille et le gaz de ville pour réchauffement d'eau,,Institut National de la Statistique,25/08/2016 04:25:30,"1, 2",,
+OBJ6959999,28020179,Utilisation de gaz de bouteille et de gaz de ville pour réchauffement,,Nombre,,Nombre des ménages Utilisant le gaz de bouteille et le gaz de ville pour réchauffement,,Institut National de la Statistique,25/08/2016 04:25:30,"1, 2",,

@@ -1,0 +1,6 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6960559,28028659,Nombre ménages,,Nombre,,Nombre total de ménages,,Institut National de la Statistique,26/08/2016 01:10:12,,
+OBJ6960559,28028669,Téléphone fixe,,Nombre,,Nombre de ménages possédant au moins un téléphone fixe,,Institut National de la Statistique,26/08/2016 01:10:12,,
+OBJ6960559,28028679,Téléphone portable,,Nombre,,Nombre de ménages possédant au moins un téléphone mobile,,Institut National de la Statistique,26/08/2016 01:10:12,,
+OBJ6960559,28028689,Ordinateur,,Nombre,,Nombre de ménages possédant au moins un ordinateur,,Institut National de la Statistique,26/08/2016 01:10:12,,
+OBJ6960559,28028699,Connexion Internet,,Nombre,,Nombre de ménages possédant au moins une Connexion Internet,,Institut National de la Statistique,26/08/2016 01:10:12,,

@@ -1,0 +1,7 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6960669,28030809,Nombre Logements,,Nombre,,Nombre total des logements,,Institut National de la Statistique,26/08/2016 01:59:53,"1, 2",,
+OBJ6960669,28030819,Houch ou MaisonTradionnel ou Borj,,Nombre,,Nombre des maisons de type Houch ou MaisonTradionnel ou Borj,,Institut National de la Statistique,26/08/2016 01:59:53,"1, 2",,
+OBJ6960669,28030829,Logement jumelé ou étage de logement jumelet,,Nombre,,Nombre des maisons de type logement jumelé ou étage de logement jumelet,,Institut National de la Statistique,26/08/2016 01:59:53,"1, 2",,
+OBJ6960669,28030839,Villa ou duplex,,Nombre,,Nombre des maisons de type villa ou duplex,,Institut National de la Statistique,26/08/2016 01:59:53,"1, 2",,
+OBJ6960669,28030849,Appartement ou Studio,,Nombre,,Nombre des maisons de type appartement ou studio,,Institut National de la Statistique,26/08/2016 01:59:53,"1, 2",,
+OBJ6960669,28030859,Logement Rudimentaire,,Nombre,,Nombre des maisons de type logement rudimentaire,,Institut National de la Statistique,26/08/2016 01:59:53,"1, 2",,

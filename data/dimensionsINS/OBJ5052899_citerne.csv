@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,ISCALCULATED,C_DESCRIPTION,C_CODER,C_NOMENCLATURE
+OBJ5052899,27798439,Total,,,,Var 211,
+OBJ5052899,27798449,Equipé par une citerne,,,,Var 211,
+OBJ5052899,27798459,Non équipée par une citerne,,,,Var 211,
+OBJ5052899,27798469,Équipement par une citerne non déclarée,,,,Var 211,

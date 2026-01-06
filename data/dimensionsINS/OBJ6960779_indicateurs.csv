@@ -1,0 +1,7 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6960779,28032969,Nombre Logements,,Nombre,,Nombre total de logements,,Institut National de la Statistique,26/08/2016 02:25:50,"1, 2",,
+OBJ6960779,28032979,Une Pièce,,Nombre,,Nombre de maisons composé d'une pièce,,Institut National de la Statistique,26/08/2016 02:25:50,"1, 2",,
+OBJ6960779,28032989,Deux Pièces,,Nombre,,Nombre de maisons composées de deux pièces,,Institut National de la Statistique,26/08/2016 02:25:50,"1, 2",,
+OBJ6960779,28032999,Trois Pièces,,Nombre,,Nombre de maisons composées de trois pièces,,Institut National de la Statistique,26/08/2016 02:25:50,"1, 2",,
+OBJ6960779,28033009,Quatre pièces,,Nombre,,Nombre de maisons composées de quatre pièces,,Institut National de la Statistique,26/08/2016 02:25:50,"1, 2",,
+OBJ6960779,28033019,Cinq pièces et plus,,Nombre,,Nombre de maisons composé de cinq pièces et plus,,Institut National de la Statistique,26/08/2016 02:25:50,"1, 2",,

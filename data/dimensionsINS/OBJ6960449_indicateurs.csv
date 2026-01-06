@@ -1,0 +1,8 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6960449,28026619,Nombre ménages,,Nombre,,Nombre total des ménages,,Institut National de la Statistique,26/08/2016 00:36:59,"1, 2",,
+OBJ6960449,28026629,Réfrigérateur,,Nombre,,Nombre des ménages possédant au moins un réfrigérateur,,Institut National de la Statistique,26/08/2016 00:36:59,"1, 2",,
+OBJ6960449,28026639,Cuisinière avec four,,Nombre,,Nombre des ménages possédant au moins une cuisinière à four,,Institut National de la Statistique,26/08/2016 00:36:59,"1, 2",,
+OBJ6960449,28026649,Machine à laver,,Nombre,,Nombre des ménages possédant au moins une machine à laver,,Institut National de la Statistique,26/08/2016 00:36:59,"1, 2",,
+OBJ6960449,28026659,Lave vaisselle,,Nombre,,Nombre des ménages possédant au moins une lave vaisselle,,Institut National de la Statistique,26/08/2016 00:36:59,"1, 2",,
+OBJ6960449,28026669,Climatiseur,,Nombre,,Nombre des ménages possédant au moins un climatiseur,,Institut National de la Statistique,26/08/2016 00:36:59,"1, 2",,
+OBJ6960449,28026679,Système de Chauffage centrale,,Nombre,,Nombre des ménages possédant au moins un système de Chauffage centrale,,Institut National de la Statistique,26/08/2016 00:36:59,"1, 2",,

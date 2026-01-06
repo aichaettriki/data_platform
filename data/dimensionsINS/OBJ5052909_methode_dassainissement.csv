@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,ISCALCULATED,C_DESCRIPTION,C_CODER,C_NOMENCLATURE
+OBJ5052909,27798479,Total,,,,Var 212,
+OBJ5052909,27798489,Assainissement via le réseau de l'ONAS,,,,Var 212,
+OBJ5052909,27798499,Assainissement vers un Puit Couvert,,,,Var 212,
+OBJ5052909,27798509,"Assainissement vers une destination naturel (vallée, …)",,,,Var 212,

@@ -8,7 +8,7 @@ data-platform/
 ├─ airflow/
 │   ├─ dags/
 │   ├─ plugins/
-│   └─ Dockerfile
+│   └─ Dockerfile 
 ├─ coredns/
 │   ├─ Corefile
 │   └─ hosts
@@ -83,4 +83,22 @@ Default database connection is configured to PostgreSQL using the environment fi
 
     - Grafana : http://localhost:3000
 
+INS Data 
+lien documentation INS : http://dataportal.ins.tn/fr/API
+ 
+- getStructure Api : http://dataportal.ins.tn/WebApi/GetStructure 
+		body exple : <QueryMessage></QueryMessage>
+- getData api : http://dataportal.ins.tn/WebApi/GetData
+		body : 
+      <QueryMessage SourceId='OBJ4325069'>
+         <Period From='2014' To='2014' Frequency='Y'></Period>   
+         <DataWhere></DataWhere>
+      </QueryMessage>
+- getDimension Api : http://dataportal.ins.tn/WebApi/GetDimensionElements
+		body exple : 
+      <QueryMessage>
+         <DataWhere>
+            <DimensionId WithData='true'>OBJ6953489</DimensionId>
+         </DataWhere>
+      </QueryMessage>
 

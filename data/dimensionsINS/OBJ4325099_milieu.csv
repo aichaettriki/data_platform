@@ -1,0 +1,4 @@
+dimension_id,KEY,NAME,parent_key,IS_CODE_GENERATED,CODE,ISCALCULATED
+OBJ4325099,27667449,Milieu communal,,True,01,
+OBJ4325099,27667459,Milieu non communal,,True,02,
+OBJ4325099,27667469,Ensemble  milieux,,True,03,

@@ -1,0 +1,1046 @@
+dimension_id,dimension_name,element_key,element_name
+OBJ7279029,Produits,28164559,PRODUITS ALIMENTAIRES ET BOISSONS NON ALCOOLISEES
+OBJ7279029,Produits,28164569,CEREALES
+OBJ7279029,Produits,28164579,BLE DUR ET DERIVES
+OBJ7279029,Produits,28164589,Blé dur en grain
+OBJ7279029,Produits,28164599,Borghol
+OBJ7279029,Produits,28164609,Semoule industriel en paquet
+OBJ7279029,Produits,28164619,Semoule industrielle
+OBJ7279029,Produits,28164629,Couscous industriel en paquet
+OBJ7279029,Produits,28164639,Couscous industriel en vrac
+OBJ7279029,Produits,28164649,M’hames industriel
+OBJ7279029,Produits,28164659,Pâte  alimentaire en paquet
+OBJ7279029,Produits,28164669,Pâte  alimentaire en vrac
+OBJ7279029,Produits,28164679,Pain à base de semoule
+OBJ7279029,Produits,28164689,Pain à base de son blé dur
+OBJ7279029,Produits,28164699,Autres produits à base de blé dur
+OBJ7279029,Produits,28164709,BLE TENDRE ET DERIVES
+OBJ7279029,Produits,28164719,Blé tendre en grain
+OBJ7279029,Produits,28164729,Farine de blé tendre industrielle en paquet
+OBJ7279029,Produits,28164739,Farine de blé tendre industrielle en vrac
+OBJ7279029,Produits,28164749,Gros pain de boulangerie
+OBJ7279029,Produits,28164759,Baguette de boulangerie ou assimilé
+OBJ7279029,Produits,28164769,Pain «grillé » (Bochmat)
+OBJ7279029,Produits,28164779,Autre pain à base de farine (pain mbassès ; pain brioche…)
+OBJ7279029,Produits,28164789,Autres produits à base de blé tendre
+OBJ7279029,Produits,28164799,ORGE ET DERIVES
+OBJ7279029,Produits,28164809,ORGE EN GRAIN
+OBJ7279029,Produits,28164819,Semoule d’orge en paquet
+OBJ7279029,Produits,28164829,Semoule d’orge en vrac
+OBJ7279029,Produits,28164839,Pain d’orge
+OBJ7279029,Produits,28164849,Autres produits à base d’orge
+OBJ7279029,Produits,28164859,AUTRES CEREALES
+OBJ7279029,Produits,28164869,Riz en grain ; en paquet
+OBJ7279029,Produits,28164879,Riz en grain ; en vrac
+OBJ7279029,Produits,28164889,Sorgho en grain
+OBJ7279029,Produits,28164899,Maïs en grains
+OBJ7279029,Produits,28164909,Farine de sorgho
+OBJ7279029,Produits,28164919,Amidon
+OBJ7279029,Produits,28164929,Mélange farine et semoule
+OBJ7279029,Produits,28164939,Autres céréales transformées
+OBJ7279029,Produits,28164949,AUTRES PRODUITS A BASE DE  CEREALES
+OBJ7279029,Produits,28164959,Levure pour pain et pâtisserie
+OBJ7279029,Produits,28164969,"Biscuit simple, Biscuit fourré, gaufrettes"
+OBJ7279029,Produits,28164979,Cake
+OBJ7279029,Produits,28164989,Pâtisserie souk
+OBJ7279029,Produits,28164999,Beignet souk
+OBJ7279029,Produits,28165009,Bsissa
+OBJ7279029,Produits,28165019,Farine lactée (Céréale ; Sha ; Sinlac …)
+OBJ7279029,Produits,28165029,Malsouka (brik)
+OBJ7279029,Produits,28165039,Dépense de pâtisserie maison non ventilées
+OBJ7279029,Produits,28165049,Autres produits à base de céréales (biscotte - grain d'or …)
+OBJ7279029,Produits,28165059,"LEGUMINEUSES, SEL ET CONDIMENTS"
+OBJ7279029,Produits,28165069,LEGUMINEUSES SECHES
+OBJ7279029,Produits,28165079,Fève sèche
+OBJ7279029,Produits,28165089,Petit fève sèche
+OBJ7279029,Produits,28165099,Pois chiche sec
+OBJ7279029,Produits,28165109,Pois chiche moulu
+OBJ7279029,Produits,28165119,Petit pois sec
+OBJ7279029,Produits,28165129,Haricot sec
+OBJ7279029,Produits,28165139,Lentilles sèches
+OBJ7279029,Produits,28165149,Autres légumineuses sèches (Helba…)
+OBJ7279029,Produits,28165159,LEGUMINEUSES TREMPEES
+OBJ7279029,Produits,28165169,Fève trempée
+OBJ7279029,Produits,28165179,Pois chiche trempé
+OBJ7279029,Produits,28165189,Haricot trempé
+OBJ7279029,Produits,28165199,Autres légumineuses trempées
+OBJ7279029,Produits,28165209,LEGUMINEUSES VERTES
+OBJ7279029,Produits,28165219,Fève vert
+OBJ7279029,Produits,28165229,Pois chiche vert
+OBJ7279029,Produits,28165239,Petit pois vers
+OBJ7279029,Produits,28165249,Haricot vert
+OBJ7279029,Produits,28165259,Autres légumineuses vertes (Helba...)
+OBJ7279029,Produits,28165269,LEGUMINEUSES EN CONSERVES
+OBJ7279029,Produits,28165279,Petit pois en conserve
+OBJ7279029,Produits,28165289,Haricot en conserve
+OBJ7279029,Produits,28165299,Autres légumineuses en conserve
+OBJ7279029,Produits,28165309,Sel
+OBJ7279029,Produits,28165319,CONDIMENTS SECS
+OBJ7279029,Produits,28165329,Poivre
+OBJ7279029,Produits,28165339,Tabel
+OBJ7279029,Produits,28165349,Carouia
+OBJ7279029,Produits,28165359,Tabel et  Carouia
+OBJ7279029,Produits,28165369,Cumin (camoun)
+OBJ7279029,Produits,28165379,Korkom
+OBJ7279029,Produits,28165389,Naânaâ sec
+OBJ7279029,Produits,28165399,Mloukhia en poudre
+OBJ7279029,Produits,28165409,Autres condiments
+OBJ7279029,Produits,28165419,CONDIMENTS VERTS
+OBJ7279029,Produits,28165429,Naânaâ vert
+OBJ7279029,Produits,28165439,Feuilles de coriandre (rand)
+OBJ7279029,Produits,28165449,Mloukhia feuilles vertes
+OBJ7279029,Produits,28165459,Autres condiments verts
+OBJ7279029,Produits,28165469,Vinaigre
+OBJ7279029,Produits,28165479,Condiments sans autres indications
+OBJ7279029,Produits,28165489,LEGUMES
+OBJ7279029,Produits,28165499,Piments frais
+OBJ7279029,Produits,28165509,Tomates fraîches
+OBJ7279029,Produits,28165519,Tomates sèches
+OBJ7279029,Produits,28165529,Oignon vert
+OBJ7279029,Produits,28165539,Oignon sec
+OBJ7279029,Produits,28165549,Ail sec
+OBJ7279029,Produits,28165559,Ail vert
+OBJ7279029,Produits,28165569,Navet
+OBJ7279029,Produits,28165579,carotte
+OBJ7279029,Produits,28165589,Radis
+OBJ7279029,Produits,28165599,betterave
+OBJ7279029,Produits,28165609,Poireaux
+OBJ7279029,Produits,28165619,Autres légumes à bulbe et tubercules
+OBJ7279029,Produits,28165629,Blette
+OBJ7279029,Produits,28165639,Epinard
+OBJ7279029,Produits,28165649,Choux
+OBJ7279029,Produits,28165659,Feuille de fenouil
+OBJ7279029,Produits,28165669,Salade verte (laitue…)
+OBJ7279029,Produits,28165679,Persil
+OBJ7279029,Produits,28165689,Cèleri
+OBJ7279029,Produits,28165699,Choux fleur
+OBJ7279029,Produits,28165709,Autres légumes à feuilles vertes
+OBJ7279029,Produits,28165719,Pomme de terre
+OBJ7279029,Produits,28165729,Aubergine
+OBJ7279029,Produits,28165739,Courge
+OBJ7279029,Produits,28165749,Courgette
+OBJ7279029,Produits,28165759,Artichaut
+OBJ7279029,Produits,28165769,Concombre
+OBJ7279029,Produits,28165779,Cardon
+OBJ7279029,Produits,28165789,Fenouil
+OBJ7279029,Produits,28165799,Gombo
+OBJ7279029,Produits,28165809,"Autres légumes (champignons,,,)"
+OBJ7279029,Produits,28165819,LEGUMES EN CONSERVE
+OBJ7279029,Produits,28165829,Harissa industrielle
+OBJ7279029,Produits,28165839,Harissa « diari »
+OBJ7279029,Produits,28165849,Piment sec moulu
+OBJ7279029,Produits,28165859,Piment sec en gousse
+OBJ7279029,Produits,28165869,"Tomate en conserve industrielle (en boite, en vrac)"
+OBJ7279029,Produits,28165879,Ketchup
+OBJ7279029,Produits,28165889,Olive en conserve
+OBJ7279029,Produits,28165899,Variantes
+OBJ7279029,Produits,28165909,Câpre en conserve
+OBJ7279029,Produits,28165919,Piment frais en conserve
+OBJ7279029,Produits,28165929,champignons en conserve
+OBJ7279029,Produits,28165939,Autres produits en conserve
+OBJ7279029,Produits,28165949,FRUITS
+OBJ7279029,Produits,28165959,AGRUMES
+OBJ7279029,Produits,28165969,Clémentine (mandarine)
+OBJ7279029,Produits,28165979,Orange
+OBJ7279029,Produits,28165989,Citron
+OBJ7279029,Produits,28165999,Autres agrumes (pamplemousse…)
+OBJ7279029,Produits,28166009,FRUITS A PEPINS
+OBJ7279029,Produits,28166019,figue
+OBJ7279029,Produits,28166029,Grenade
+OBJ7279029,Produits,28166039,Raisin de table
+OBJ7279029,Produits,28166049,Pomme
+OBJ7279029,Produits,28166059,Poire
+OBJ7279029,Produits,28166069,Melon
+OBJ7279029,Produits,28166079,Pastèque
+OBJ7279029,Produits,28166089,Fraise
+OBJ7279029,Produits,28166099,Figue de barbarie
+OBJ7279029,Produits,28166109,Autres fruits à pépins
+OBJ7279029,Produits,28166119,FRUITS A NOYAUX
+OBJ7279029,Produits,28166129,Abricot
+OBJ7279029,Produits,28166139,Nèfle
+OBJ7279029,Produits,28166149,Pèche
+OBJ7279029,Produits,28166159,Prune
+OBJ7279029,Produits,28166169,Dattes vertes
+OBJ7279029,Produits,28166179,Olives vertes (non en conserve)
+OBJ7279029,Produits,28166189,Autres fruits à noyaux (cerise)
+OBJ7279029,Produits,28166199,FRUITS SECHES
+OBJ7279029,Produits,28166209,Dattes degla
+OBJ7279029,Produits,28166219,Dattes aligh
+OBJ7279029,Produits,28166229,Kenta
+OBJ7279029,Produits,28166239,Dattes communes
+OBJ7279029,Produits,28166249,Raisin sec
+OBJ7279029,Produits,28166259,Amande sèche avec coque
+OBJ7279029,Produits,28166269,Amande sèche sans coque
+OBJ7279029,Produits,28166279,Kharroub
+OBJ7279029,Produits,28166289,Figue sèche
+OBJ7279029,Produits,28166299,Autres fruits secs
+OBJ7279029,Produits,28166309,AUTRES FRUITS
+OBJ7279029,Produits,28166319,Amande verte
+OBJ7279029,Produits,28166329,Banane
+OBJ7279029,Produits,28166339,Fruits de cueillette
+OBJ7279029,Produits,28166349,Autres fruits non ventilés ailleurs
+OBJ7279029,Produits,28166359,NOIX ET GRAINES COMESTIBLES
+OBJ7279029,Produits,28166369,Arachide sèche décortiquée
+OBJ7279029,Produits,28166379,Arachide sèche non décortiquée
+OBJ7279029,Produits,28166389,"Pignon, pistache, noisette, noix"
+OBJ7279029,Produits,28166399,Graine de courge et de tournesol
+OBJ7279029,Produits,28166409,Graines de maïs grillé
+OBJ7279029,Produits,28166419,Jeljlan
+OBJ7279029,Produits,28166429,Zgougou
+OBJ7279029,Produits,28166439,Autres graines et noix (et dépense ventilées)
+OBJ7279029,Produits,28166449,FRUITS EN CONSERVE
+OBJ7279029,Produits,28166459,VIANDES ET VOLAILLES
+OBJ7279029,Produits,28166469,VIANDE OVINE
+OBJ7279029,Produits,28166479,Viande de mouton
+OBJ7279029,Produits,28166489,Tête et pattes  de mouton
+OBJ7279029,Produits,28166499,Mouton vivant
+OBJ7279029,Produits,28166509,VIANDE BOVINE
+OBJ7279029,Produits,28166519,Viande bovine avec os
+OBJ7279029,Produits,28166529,Viande bovine sans os
+OBJ7279029,Produits,28166539,Viande de tête et pattes de  bovin
+OBJ7279029,Produits,28166549,Veau ou bœuf vivant
+OBJ7279029,Produits,28166559,Os de bœuf
+OBJ7279029,Produits,28166569,Viande bovine sans indication
+OBJ7279029,Produits,28166579,VIANDE DE CAPRIN
+OBJ7279029,Produits,28166589,Viande de caprin
+OBJ7279029,Produits,28166599,Tête et pattes de caprin
+OBJ7279029,Produits,28166609,Chèvre ou chevreau vivant
+OBJ7279029,Produits,28166619,VIANDE DE CHAMEAU
+OBJ7279029,Produits,28166629,Viande de chameau
+OBJ7279029,Produits,28166639,Viande de tête de chameau
+OBJ7279029,Produits,28166649,Chameau vivant
+OBJ7279029,Produits,28166659,TRIPES
+OBJ7279029,Produits,28166669,Tripes de mouton
+OBJ7279029,Produits,28166679,Tripes de bœuf
+OBJ7279029,Produits,28166689,Tripes de caprin
+OBJ7279029,Produits,28166699,Tripes de chameau
+OBJ7279029,Produits,28166709,Daouara de mouton
+OBJ7279029,Produits,28166719,Daouara de caprin
+OBJ7279029,Produits,28166729,Daouara sans indications
+OBJ7279029,Produits,28166739,Autres (langue…)
+OBJ7279029,Produits,28166749,FOIE ET VISCERES
+OBJ7279029,Produits,28166759,Foie de mouton
+OBJ7279029,Produits,28166769,Foie de bœuf
+OBJ7279029,Produits,28166779,Foie de caprin
+OBJ7279029,Produits,28166789,Foie de chameau
+OBJ7279029,Produits,28166799,"Rognon, rognon blanc, cervelle"
+OBJ7279029,Produits,28166809,"VIANDE HACHEE,  MERGUEZ ET SALAMI"
+OBJ7279029,Produits,28166819,Viande hachée bovine
+OBJ7279029,Produits,28166829,Merguez
+OBJ7279029,Produits,28166839,Salami de bœuf
+OBJ7279029,Produits,28166849,VOLAILLES ET GIBIERS
+OBJ7279029,Produits,28166859,Poulet vif
+OBJ7279029,Produits,28166869,Poulet éplumé
+OBJ7279029,Produits,28166879,Viande de poulet en détail (foie de poulet…)
+OBJ7279029,Produits,28166889,Dindon vif
+OBJ7279029,Produits,28166899,Escalope de dinde
+OBJ7279029,Produits,28166909,"Autre viande de dinde (salami, quika...)"
+OBJ7279029,Produits,28166919,Viande d’autruche
+OBJ7279029,Produits,28166929,Lapin
+OBJ7279029,Produits,28166939,"Autres volailles et gibiers (perdrix , alouette, caille, tourterelle…)"
+OBJ7279029,Produits,28166949,VIANDE CHEVALINE ET PORCINE
+OBJ7279029,Produits,28166959,Viande  chevaline
+OBJ7279029,Produits,28166969,Merguez chevaline
+OBJ7279029,Produits,28166979,Viande de porc
+OBJ7279029,Produits,28166989,AUTRES PRODUITS  A BASE DE VIANDE ET VOLAILLES
+OBJ7279029,Produits,28166999,« knor » viandes
+OBJ7279029,Produits,28167009,« knor » volailles
+OBJ7279029,Produits,28167019,POISSONS
+OBJ7279029,Produits,28167029,POISSONS FRAIS
+OBJ7279029,Produits,28167039,Sardine
+OBJ7279029,Produits,28167049,Maquereau
+OBJ7279029,Produits,28167059,Rouget
+OBJ7279029,Produits,28167069,Pageau
+OBJ7279029,Produits,28167079,Mulet
+OBJ7279029,Produits,28167089,""" Sbares"""
+OBJ7279029,Produits,28167099,loup de mer
+OBJ7279029,Produits,28167109,daurade
+OBJ7279029,Produits,28167119,Autres variétés de poisons frais
+OBJ7279029,Produits,28167129,"POULPES, SEICHES ET CALAMAR"
+OBJ7279029,Produits,28167139,Poulpe frais
+OBJ7279029,Produits,28167149,Seiche
+OBJ7279029,Produits,28167159,Calamar
+OBJ7279029,Produits,28167169,AUTRES PRODUITS DE MER
+OBJ7279029,Produits,28167179,Escargot
+OBJ7279029,Produits,28167189,Fruits de mer(écrevisse…)
+OBJ7279029,Produits,28167199,"Crustacés (chevrette, crevettes, langouste)"
+OBJ7279029,Produits,28167209,Poissons congelés
+OBJ7279029,Produits,28167219,POISSON  SECHES
+OBJ7279029,Produits,28167229,Poisons salés séchés
+OBJ7279029,Produits,28167239,Poulpe séché
+OBJ7279029,Produits,28167249,POISSON EN CONSERVE
+OBJ7279029,Produits,28167259,Thon en conserve
+OBJ7279029,Produits,28167269,Sardine en conserve
+OBJ7279029,Produits,28167279,Onchoua
+OBJ7279029,Produits,28167289,Autres poisons en conserve
+OBJ7279029,Produits,28167299,"LAIT, PRODUITS LAITIERS ET OEUFS"
+OBJ7279029,Produits,28167309,LAIT FRAIS
+OBJ7279029,Produits,28167319,Lait de vache frais ou caillé
+OBJ7279029,Produits,28167329,Lait de chèvre frais ou caillé
+OBJ7279029,Produits,28167339,Lait de brebis frais ou caillé
+OBJ7279029,Produits,28167349,Lait frais sans indications (lait de chamelle…)
+OBJ7279029,Produits,28167359,PETIT LAIT FRAIS
+OBJ7279029,Produits,28167369,Petit lait frais de vache (lben)
+OBJ7279029,Produits,28167379,Petit lait frais de chèvre (lben)
+OBJ7279029,Produits,28167389,Petit lait frais de brebis
+OBJ7279029,Produits,28167399,Petit lait en berlingot
+OBJ7279029,Produits,28167409,Lait caillé en berlingot
+OBJ7279029,Produits,28167419,Petit lait frais sans indications
+OBJ7279029,Produits,28167429,LAIT INDUSTRIEL
+OBJ7279029,Produits,28167439,"Lait naturel entier stérilisé (en bouteille plastique ou en carton tetrabrik) exemple : (Délice, Beldi, Vitalait…)"
+OBJ7279029,Produits,28167449,Lait naturel demi-écrémé stérilisé
+OBJ7279029,Produits,28167459,Lait naturel écrémé stérilisé (0% matière grace)
+OBJ7279029,Produits,28167469,Lait naturel stérilisé sans indications
+OBJ7279029,Produits,28167479,Lait pasteurisé
+OBJ7279029,Produits,28167489,Lait régénéré stérilisé
+OBJ7279029,Produits,28167499,Lait aromatisé stérilisé
+OBJ7279029,Produits,28167509,Lait industriel sans autres indications
+OBJ7279029,Produits,28167519,LAIT CONCENTRE
+OBJ7279029,Produits,28167529,Lait concentré sucré
+OBJ7279029,Produits,28167539,Lait concentré non sucré
+OBJ7279029,Produits,28167549,Lait concentré sans autres indications
+OBJ7279029,Produits,28167559,LAIT EN POUDRE
+OBJ7279029,Produits,28167569,Lait en poudre sucré
+OBJ7279029,Produits,28167579,Lait en poudre non  sucré
+OBJ7279029,Produits,28167589,Lait en poudre sans autres indications
+OBJ7279029,Produits,28167599,YAOURT
+OBJ7279029,Produits,28167609,Yaourt naturel
+OBJ7279029,Produits,28167619,Yaourt aromatisé
+OBJ7279029,Produits,28167629,Yaourt aux fruits
+OBJ7279029,Produits,28167639,"Yaourt crème dessert (chocolat, flan, liégeoise…)"
+OBJ7279029,Produits,28167649,"Yaourt à boire (DAN-UP, NOV-UP, YOGO…)"
+OBJ7279029,Produits,28167659,"Autres types de Yaourt (petit suisse, jockey,,,)"
+OBJ7279029,Produits,28167669,Crème fraiche
+OBJ7279029,Produits,28167679,Yaourt sans autres indications
+OBJ7279029,Produits,28167689,FROMAGE
+OBJ7279029,Produits,28167699,Fromage type Nestlé (morceau)
+OBJ7279029,Produits,28167709,Fromage type gruyère
+OBJ7279029,Produits,28167719,Fromage type rouge
+OBJ7279029,Produits,28167729,Fromage « gervais »
+OBJ7279029,Produits,28167739,Rigouta
+OBJ7279029,Produits,28167749,Jebna frais
+OBJ7279029,Produits,28167759,Fromage râpé
+OBJ7279029,Produits,28167769,Fromage sans indications
+OBJ7279029,Produits,28167779,AUTRES PRODUITS LAITIERS
+OBJ7279029,Produits,28167789,Beurre animal
+OBJ7279029,Produits,28167799,"Beurre végétale (goldina, jedida…)"
+OBJ7279029,Produits,28167809,Smen
+OBJ7279029,Produits,28167819,Crème légère
+OBJ7279029,Produits,28167829,Crème chantilly
+OBJ7279029,Produits,28167839,Autres produits laitiers
+OBJ7279029,Produits,28167849,ŒUFS ET PRODUITS A BASE  D’OEUFS
+OBJ7279029,Produits,28167859,Œufs
+OBJ7279029,Produits,28167869,"Produits à base d’œufs (mayonnaise, moutarde…)"
+OBJ7279029,Produits,28167879,SUCRE ET PRODUITS SUCRES
+OBJ7279029,Produits,28167889,SUCRE
+OBJ7279029,Produits,28167899,Sucre en morceau
+OBJ7279029,Produits,28167909,Sucre cristallisé ou en poudre
+OBJ7279029,Produits,28167919,Sucre vanillé
+OBJ7279029,Produits,28167929,Sucre Glacé
+OBJ7279029,Produits,28167939,Saccharine
+OBJ7279029,Produits,28167949,PRODUITS SUCRES
+OBJ7279029,Produits,28167959,Bonbon
+OBJ7279029,Produits,28167969,Halwa chamia
+OBJ7279029,Produits,28167979,Halkoum
+OBJ7279029,Produits,28167989,Shwing gum
+OBJ7279029,Produits,28167999,Autres produits sucrés
+OBJ7279029,Produits,28168009,"CONFITURE, COMPOTE ET PUREE DE FRUITS"
+OBJ7279029,Produits,28168019,MIEL ET AUTRES PRODUITS SUCRES
+OBJ7279029,Produits,28168029,Miel d’abeille
+OBJ7279029,Produits,28168039,"Chocolat (tablette, barre …)"
+OBJ7279029,Produits,28168049,"Glace, thelja, gervais…"
+OBJ7279029,Produits,28168059,Crème en poudre pour fabrication de glace
+OBJ7279029,Produits,28168069,Crème en poudre pour fabrication
+OBJ7279029,Produits,28168079,Autres produits sucrés non indiqués ailleurs (fruits confis)
+OBJ7279029,Produits,28168089,HUILES
+OBJ7279029,Produits,28168099,HUILES D’OLIVE
+OBJ7279029,Produits,28168109,Huile d’Olive emballé
+OBJ7279029,Produits,28168119,Huile d’olive en vrac
+OBJ7279029,Produits,28168129,HUILES DE GRAINE VEGETALE
+OBJ7279029,Produits,28168139,Huile de graine végétale subventionné
+OBJ7279029,Produits,28168149,Huile de maïs
+OBJ7279029,Produits,28168159,Huile de tournesol
+OBJ7279029,Produits,28168169,Huiles mélangées (huile d'olives et huile de graine végétale)
+OBJ7279029,Produits,28168179,"Huile de friture (frit's,,,)"
+OBJ7279029,Produits,28168189,Autres huiles (soja…)
+OBJ7279029,Produits,28168199,BOISSONS NON ALCOOLISEES ET PLATS CUISINES OU LIVRES A DOMICILE
+OBJ7279029,Produits,28168209,BOISSONS EN NATURE
+OBJ7279029,Produits,28168219,Thé noir
+OBJ7279029,Produits,28168229,Thé vert
+OBJ7279029,Produits,28168239,Café nature pur
+OBJ7279029,Produits,28168249,Café nature mélangé
+OBJ7279029,Produits,28168259,"Café (nescafé, Mawell,,,)"
+OBJ7279029,Produits,28168269,Tisane
+OBJ7279029,Produits,28168279,Thé infusion
+OBJ7279029,Produits,28168289,BOISSONS NON ALCOOLISEES CONSOMMEES  A DOMICILE
+OBJ7279029,Produits,28168299,Eau minérale
+OBJ7279029,Produits,28168309,Boisson gazeuse
+OBJ7279029,Produits,28168319,"Boisson non gazeuse sucré (sirop, essence pour sirop…)"
+OBJ7279029,Produits,28168329,Jus de fruits (en bouteille tetrabrik…)
+OBJ7279029,Produits,28168339,Jus de légumes
+OBJ7279029,Produits,28168349,Boisson infusion
+OBJ7279029,Produits,28168359,Legmi doux
+OBJ7279029,Produits,28168369,Boisson énergitique
+OBJ7279029,Produits,28168379,Autres boissons
+OBJ7279029,Produits,28168389,PLATS CUISINES OU LIVRES A DOMICILE
+OBJ7279029,Produits,28168399,Pizza à domicile
+OBJ7279029,Produits,28168409,Poulet à emporter
+OBJ7279029,Produits,28168419,Autres plats cuisinés ou livrés à domicile
+OBJ7279029,Produits,28168429,AUTRES PRODUITS ALIMENTAIRES
+OBJ7279029,Produits,28168439,Pâtisserie
+OBJ7279029,Produits,28168449,Bol de sorgho
+OBJ7279029,Produits,28168459,Crêpe
+OBJ7279029,Produits,28168469,Beignet
+OBJ7279029,Produits,28168479,"Fricassé, pâté"
+OBJ7279029,Produits,28168489,Pizza
+OBJ7279029,Produits,28168499,Brik
+OBJ7279029,Produits,28168509,"Glace, gervais, thelja"
+OBJ7279029,Produits,28168519,"Chips, pomme de terre frite"
+OBJ7279029,Produits,28168529,NOIX ET AUTRES
+OBJ7279029,Produits,28168539,Graines de tournesol et de courge
+OBJ7279029,Produits,28168549,Pois chiche grillé
+OBJ7279029,Produits,28168559,"Amandes grillées, noix acajoux"
+OBJ7279029,Produits,28168569,Arachides grillées (cacahouète)
+OBJ7279029,Produits,28168579,"Noix, noisettes, pistache, pignon"
+OBJ7279029,Produits,28168589,"Kaki, maïs grillé, pop-corn"
+OBJ7279029,Produits,28168599,Dépenses alimentaires exceptionelles non ventilées
+OBJ7279029,Produits,28168609,SERVICES  RELATIFS AUX PRODUITS ALIMENTAIRES
+OBJ7279029,Produits,28168619,"Frais de mouture (blé, orge, sorgho, condiments…)"
+OBJ7279029,Produits,28168629,Frais de cuisson pour pain
+OBJ7279029,Produits,28168639,Frais de cuisson pour gâteau ; maison
+OBJ7279029,Produits,28168649,Frais de cuisson pour autres produits alimentaires
+OBJ7279029,Produits,28168659,Frais pour égorger (aiguisage des couteaux)
+OBJ7279029,Produits,28168669,Autres services relatifs aux produits alimentaires (Oula)
+OBJ7279029,Produits,28168679,"BOISSONS ALCOOLISEES, TABAC ET STUPEFIANTS"
+OBJ7279029,Produits,28168689,BOISSONS ALCOOLISEES
+OBJ7279029,Produits,28168699,BOISSONS ALCOOLISEES CONSOMMEES  A DOMICILE
+OBJ7279029,Produits,28168709,Bière
+OBJ7279029,Produits,28168719,Vin
+OBJ7279029,Produits,28168729,Liqueur
+OBJ7279029,Produits,28168739,Legmi fermenté
+OBJ7279029,Produits,28168749,Boissons alcoolisées sans indications
+OBJ7279029,Produits,28168759,BOISSONS ALCOOLISEES prises à l'extérieur
+OBJ7279029,Produits,28168769,Bière au bar
+OBJ7279029,Produits,28168779,Vin  au bar
+OBJ7279029,Produits,28168789,Legmi fermenté  au bar
+OBJ7279029,Produits,28168799,Boissons alcoolisées  au bar sans indications
+OBJ7279029,Produits,28168809,TABAC ET NEFA
+OBJ7279029,Produits,28168819,Paquet de cigarette
+OBJ7279029,Produits,28168829,Cigarette (en détail)
+OBJ7279029,Produits,28168839,Autre tabac (cigare…)
+OBJ7279029,Produits,28168849,Nefa
+OBJ7279029,Produits,28168859,"Maâssel, chicha"
+OBJ7279029,Produits,28168869,"Accessoires (pipe, étui à cigarettes, filtre, briquet, chicha, cendrier…)"
+OBJ7279029,Produits,28168879,"HABILLEMENT, ARTICLES CHAUSSURES ET EFFETS PERSONNELS"
+OBJ7279029,Produits,28168889,VETEMENTS PRINCIPAUX MODERNES DE CONFECTION
+OBJ7279029,Produits,28168899,Costume
+OBJ7279029,Produits,28168909,"Veste, blouson, veste « fourrure »"
+OBJ7279029,Produits,28168919,"Manteau, imperméable, cape, parkas..."
+OBJ7279029,Produits,28168929,"Robe, tailleur, ensemble"
+OBJ7279029,Produits,28168939,Pantalon jean
+OBJ7279029,Produits,28168949,"Pantalon en autre tissu, pantacour"
+OBJ7279029,Produits,28168959,Short
+OBJ7279029,Produits,28168969,"Jupe, jupe short"
+OBJ7279029,Produits,28168979,Tablier
+OBJ7279029,Produits,28168989,Autres vêtements principaux modernes
+OBJ7279029,Produits,28169009,"Kachabia, gadroun"
+OBJ7279029,Produits,28169019,Burnous
+OBJ7279029,Produits,28169029,Jebba
+OBJ7279029,Produits,28169039,Fouta et blousa
+OBJ7279029,Produits,28169049,Caftan
+OBJ7279029,Produits,28169059,"Safsari, haik, hrem"
+OBJ7279029,Produits,28169069,Melia
+OBJ7279029,Produits,28169079,Seroual traditionnel
+OBJ7279029,Produits,28169089,Fouta
+OBJ7279029,Produits,28169099,Autres vêtements traditionnels
+OBJ7279029,Produits,28168999,VETEMENTS PRINCPAUX TRADITIONNELS
+OBJ7279029,Produits,28169109,LINGE DE CORPS
+OBJ7279029,Produits,28169119,Chemise ou chemisier
+OBJ7279029,Produits,28169129,"Pull over, gilet"
+OBJ7279029,Produits,28169139,Combinaison pour enfants
+OBJ7279029,Produits,28169149,"Farmela, sidria, bidïa, mintène"
+OBJ7279029,Produits,28169159,"Pyjama, robe de chambre"
+OBJ7279029,Produits,28169169,"Survêtement, jogging"
+OBJ7279029,Produits,28169179,Caleçon en forme de pantalon pour femme
+OBJ7279029,Produits,28169189,Autres linges de corps et linges de corps sans indications
+OBJ7279029,Produits,28169199,SOUS VETEMENT
+OBJ7279029,Produits,28169209,Tricots de corps
+OBJ7279029,Produits,28169219,"Tee shirt, sweat shirts"
+OBJ7279029,Produits,28169229,Tricots et pantalons en coton pour hommes
+OBJ7279029,Produits,28169239,"Soutien gorge, gaine, justaucorps, body…"
+OBJ7279029,Produits,28169249,"Combinaison de femme, chemise de nuit"
+OBJ7279029,Produits,28169259,"Slip, culotte, maillot de bain"
+OBJ7279029,Produits,28169269,Couche en linge pour bébé (autre que couche pharmaceutique)
+OBJ7279029,Produits,28169279,Autres sous vêtement et sous vêtement sans indications
+OBJ7279029,Produits,28169289,EFFETS PERSONNELS
+OBJ7279029,Produits,28169299,"Cravate, cache col"
+OBJ7279029,Produits,28169309,"Ceinture, hzem"
+OBJ7279029,Produits,28169319,"Chaussettes, bas, collant"
+OBJ7279029,Produits,28169329,Montre
+OBJ7279029,Produits,28169339,Parapluie
+OBJ7279029,Produits,28169349,"Sac à main, sacoche, porte feuille, pochette"
+OBJ7279029,Produits,28169359,Faux bijoux et autres effets similaires
+OBJ7279029,Produits,28169369,lunette solaire
+OBJ7279029,Produits,28169379,"Autres effets personnels (gants, bracelet de montre...)"
+OBJ7279029,Produits,28169389,"Réparation d’effets personnels (montre,  parapluie, de collier,…)"
+OBJ7279029,Produits,28169399,COUVRE CHEFS
+OBJ7279029,Produits,28169409,"Chechia (tarboucha, kalbak, bonnet…)"
+OBJ7279029,Produits,28169419,Bichkir pour couver tête
+OBJ7279029,Produits,28169429,"Chamla, lahfa, kachta"
+OBJ7279029,Produits,28169439,"Foulard, écharpe…"
+OBJ7279029,Produits,28169449,"Autre couvre tête (casquette, bêret…)"
+OBJ7279029,Produits,28169459,ARTICLES CHAUSSANTS
+OBJ7279029,Produits,28169469,Souliers
+OBJ7279029,Produits,28169479,Sandales
+OBJ7279029,Produits,28169489,Espadrilles
+OBJ7279029,Produits,28169499,"Babouche, belgha, affase, kontra"
+OBJ7279029,Produits,28169509,tangues
+OBJ7279029,Produits,28169519,Pantoufles
+OBJ7279029,Produits,28169529,Bottes
+OBJ7279029,Produits,28169539,Tmak (mule)
+OBJ7279029,Produits,28169549,Sabot - kobkab
+OBJ7279029,Produits,28169559,Réparation et entretien des chaussures
+OBJ7279029,Produits,28169569,TISSUS D’HABILLEMENT ET ACHAT LAINE
+OBJ7279029,Produits,28169579,Tissus pour habillement
+OBJ7279029,Produits,28169589,Achat de laine
+OBJ7279029,Produits,28169599,AUTRES ARTICLES D’HABILLEMENT
+OBJ7279029,Produits,28169609,"Serviette de toilette,  cape de bain"
+OBJ7279029,Produits,28169619,Autres articles d’habillement et dépense d’habillement non ventilés (Trousseau pour bébé)
+OBJ7279029,Produits,28169629,FRAIS DE COUTURE ET MERCERIE
+OBJ7279029,Produits,28169639,Frais de couture
+OBJ7279029,Produits,28169649,"Mercerie (fil à coudre, fil à tricoter, bouton…)"
+OBJ7279029,Produits,28169659,Frais de couture et Mercerie sans indications de détail
+OBJ7279029,Produits,28169669,Frais de location d’habillement
+OBJ7279029,Produits,28169679,"Autres frais liés à l’habillement (tricotage, broderie…)"
+OBJ7279029,Produits,28169689,"DEPENSES LOGEMENT, EAU, GAZ, ELECTRICITE ET AUTRES COMBUSTIBLES"
+OBJ7279029,Produits,28169699,"LOYER, REMBOURSEMENT, TAXES ET CHARGES"
+OBJ7279029,Produits,28169709,Loyer effectif
+OBJ7279029,Produits,28169719,Loyer fictif
+OBJ7279029,Produits,28169729,Taxe locative annuelle
+OBJ7279029,Produits,28169739,DEPENSES D’ENERGIE ET DE COMBUSTIBLES
+OBJ7279029,Produits,28169749,DEPENSES D’ENERGIE
+OBJ7279029,Produits,28169759,Dépense d’eau courante SONEDE
+OBJ7279029,Produits,28169769,Dépense d’électricité et de gaz de ville STEG
+OBJ7279029,Produits,28169779,"Dépense d’eau achetée (par citerne, « guarbaji »…)"
+OBJ7279029,Produits,28169789,"COMBUSTIBLES DECLAIRAGE, PREPARATION ET CHAUFFFAGE"
+OBJ7279029,Produits,28169799,Gaz en bouteille
+OBJ7279029,Produits,28169809,Pétrole
+OBJ7279029,Produits,28169819,Charbon de bois
+OBJ7279029,Produits,28169829,Bois
+OBJ7279029,Produits,28169839,Gaz oil (fuel lourd)
+OBJ7279029,Produits,28169849,Alcool
+OBJ7279029,Produits,28169859,Bougie
+OBJ7279029,Produits,28169869,allumette
+OBJ7279029,Produits,28169879,"Autres dépenses liées aux combustibles (accessoires de briquet, essence…)"
+OBJ7279029,Produits,28169889,DEPENSE D’ENTRETIEN ET DE REPARATION DU LOGEMENT
+OBJ7279029,Produits,28169899,MACONNERIE
+OBJ7279029,Produits,28169909,"Matières première de maçonnerie et de marbririe (ciment, sable, chaux, fer, briques, gravier…)"
+OBJ7279029,Produits,28169919,"Fer forgé (porte, fenêtre, porte-fenêtre, clôture…)"
+OBJ7279029,Produits,28169929,Main d’œuvre de maçonnerie et de marbrerie
+OBJ7279029,Produits,28169939,Dépense de maçonnerie non ventilée (matière première et main d’œuvre)
+OBJ7279029,Produits,28169949,MENUISERIE VITRERIE ET QUINCAILLERIE
+OBJ7279029,Produits,28169959,"Dépense de boiserie (bois, contre plaqué…)"
+OBJ7279029,Produits,28169969,"Dépense de quincaillerie (serrure, charnière, vis...)"
+OBJ7279029,Produits,28169979,"Dépense de vitrerie (miroir, carreau de vitre…)"
+OBJ7279029,Produits,28169989,Main d’œuvre de menuiserie
+OBJ7279029,Produits,28169999,Main d’œuvre de vitrerie
+OBJ7279029,Produits,28170009,"Dépense de menuiserie, vitrerie, et de quincaillerie non ventilée"
+OBJ7279029,Produits,28170019,PLOMBERIE SANITAIRE
+OBJ7279029,Produits,28170029,"Articles sanitaires (baignoire, lavabo, évier…)"
+OBJ7279029,Produits,28170039,"Dépense de robinetterie et d’accessoires de plomberie (robinet, mélangeur, coudes, tuyaux  en plomb, en plastique, en cuivre…)"
+OBJ7279029,Produits,28170049,"Chauffe bain, chauffe eau (à gaz ou électrique)"
+OBJ7279029,Produits,28170059,Main d’œuvre de plomberie et d’installation sanitaire
+OBJ7279029,Produits,28170069,Dépense de plomberie et d’installation sanitaire
+OBJ7279029,Produits,28170079,INSTALLATION BRANCHEMENT ET ACCESSSOIRE ELECTRIQUES
+OBJ7279029,Produits,28170089,"Dépense d’installation et de branchement électrique (tuyaux, fils électriques, interrupteur, fusible, boite de dérivation)"
+OBJ7279029,Produits,28170099,"Ampoule électrique, tube néon, starter électrique"
+OBJ7279029,Produits,28170109,"Ampoule électrique (tube néon, starter électrique) économique"
+OBJ7279029,Produits,28170119,"Lampadaire lustre, veilleuse appliqué « abat jour »"
+OBJ7279029,Produits,28170129,"Autres accessoires électriques (transformateur, fiche, douille…)"
+OBJ7279029,Produits,28170139,Main d’œuvre pour installation et branchement électrique
+OBJ7279029,Produits,28170149,"Dépense d’installation, de branchement et d’accessoires électriques non ventilée"
+OBJ7279029,Produits,28170159,PEINTURE BADIGEONNAGE ET ETANCHEITE
+OBJ7279029,Produits,28170169,Chaux
+OBJ7279029,Produits,28170179,"Peinture à l’eau (type “surfaçaire”, “flash”…)"
+OBJ7279029,Produits,28170189,Peinture à l’huile (laquet…)
+OBJ7279029,Produits,28170199,"Autres matières liées à la peinture au badigeonnage  et d’étanchéité (mastic, blanc d’Espagne, flincot, pinceau, colorant…)"
+OBJ7279029,Produits,28170209,Main d’oeuvre
+OBJ7279029,Produits,28170219,"Dépense de peinture, badigeonnage et d’étanchéité non ventilée"
+OBJ7279029,Produits,28170229,AUTRES SERVICES LIES A L’HABITATION
+OBJ7279029,Produits,28170239,"Services domestiques (bonne, femme de ménage…)"
+OBJ7279029,Produits,28170249,Services de gardiennage du logement
+OBJ7279029,Produits,28170259,Services de jardinage (main d’œuvre pour jardinier…)
+OBJ7279029,Produits,28170269,Service syndicat
+OBJ7279029,Produits,28170279,Service chauffeur
+OBJ7279029,Produits,28170289,Autres services liés à l’habitation (location de meubles …)
+OBJ7279029,Produits,28170299,AUTRES DEPENSES D’ENTRETIEN
+OBJ7279029,Produits,28170309,"Articles de bricolage (marteau, scies, pince, tenaille, clou, échelle…)"
+OBJ7279029,Produits,28170319,"Articles de jardinage (râteau, semence et pépinières pour jardin, pelle, brouette, tuyaux de rosages…)"
+OBJ7279029,Produits,28170329,"Achat, alimentation et entretien d’animaux domestique (de compagnie) (oiseau, chien, cage,niche…)"
+OBJ7279029,Produits,28170339,Autres dépenses d’entretien
+OBJ7279029,Produits,28170349,GROSSES DEPENSES D’ACQUISITION ET DE CONSTRUCTION DE LOGEMENT
+OBJ7279029,Produits,28170359,Achat de terrain pour construction de logement
+OBJ7279029,Produits,28170369,Dépense pour construction de logement
+OBJ7279029,Produits,28170379,Achat de logement
+OBJ7279029,Produits,28170389,"MEUBLES, ARTICLES DE MENAGES ET ENTRETIEN COURANT DU FOYER"
+OBJ7279029,Produits,28170399,MEUBLES ET LITERIES
+OBJ7279029,Produits,28170409,Chambre à coucher
+OBJ7279029,Produits,28170419,Salle à manger
+OBJ7279029,Produits,28170429,Salon
+OBJ7279029,Produits,28170439,Bibliothèque
+OBJ7279029,Produits,28170449,Autres mobiliers complets
+OBJ7279029,Produits,28170459,Frais d’entretien et de réparation de mobilier complet
+OBJ7279029,Produits,28170469,"Table, maïda"
+OBJ7279029,Produits,28170479,"Armoire, commode, étagère"
+OBJ7279029,Produits,28170489,"Buffet, argentière"
+OBJ7279029,Produits,28170499,Banc
+OBJ7279029,Produits,28170509,"Chaise, chaise longue"
+OBJ7279029,Produits,28170519,"Fauteuil, canapé divan"
+OBJ7279029,Produits,28170529,"Lit, sommier"
+OBJ7279029,Produits,28170539,"Autres mobiliers séparés (porte manteau, ceintres…)"
+OBJ7279029,Produits,28170549,Frais d’entretien et de réparation de mobilier séparés
+OBJ7279029,Produits,28170559,LITTERIE
+OBJ7279029,Produits,28170569,Matelas
+OBJ7279029,Produits,28170579,"Oreiller, cousins, traversin"
+OBJ7279029,Produits,28170589,"Achat de laine, de mousse ou de crin (pour matelas, pour oreiller, pour traversin…)"
+OBJ7279029,Produits,28170599,Frais de couture de matelas en laine ou en crin
+OBJ7279029,Produits,28170609,ARTICLES POUR ENFANT
+OBJ7279029,Produits,28170619,Lit pour Bébé
+OBJ7279029,Produits,28170629,Landau et berceau
+OBJ7279029,Produits,28170639,Poussette
+OBJ7279029,Produits,28170649,"Chaise pour bébé, parc et autres articles"
+OBJ7279029,Produits,28170659,REVETEMENT DU SOL ET DES MURS
+OBJ7279029,Produits,28170669,Tapis
+OBJ7279029,Produits,28170679,Klim et margoum
+OBJ7279029,Produits,28170689,Jild
+OBJ7279029,Produits,28170699,Natte
+OBJ7279029,Produits,28170709,Mousse pour revêtement du sol
+OBJ7279029,Produits,28170719,Moquette
+OBJ7279029,Produits,28170729,Papier peint
+OBJ7279029,Produits,28170739,"Frais de tissage de tapis, klim, margoum et frais de pose de moquette et papier peint"
+OBJ7279029,Produits,28170749,ARTICLE DE DÉCOR
+OBJ7279029,Produits,28170759,Tableau de décor
+OBJ7279029,Produits,28170769,Bouquets de fleurs (naturel ou synthétique)
+OBJ7279029,Produits,28170779,"Biblots (objet d’art décoratif en verre, en porcelaine, en bois, en marbre…)"
+OBJ7279029,Produits,28170789,Pots et bacs à fleurs ou plantes synthétiques
+OBJ7279029,Produits,28170799,Autres objets de décor (papier collant de décor…)
+OBJ7279029,Produits,28170809,APPAREILS MENAGERS ET ELECTROMENAGERS
+OBJ7279029,Produits,28170819,APPAREILS ELECTROMENAGERS
+OBJ7279029,Produits,28170829,"Réfrigérateur, congélateur"
+OBJ7279029,Produits,28170839,Lave  linge – sèche linge
+OBJ7279029,Produits,28170849,Lave vaisselle
+OBJ7279029,Produits,28170859,"Micro-onde, four electrique …"
+OBJ7279029,Produits,28170869,"Séchoir, babilisse"
+OBJ7279029,Produits,28170879,Cafetière électrique
+OBJ7279029,Produits,28170889,Fer à repasser
+OBJ7279029,Produits,28170899,"Batteur électrique, yaourtière, presse fruits et légumes (citron, orange, carotte, tomate…), hachoir de viande"
+OBJ7279029,Produits,28170909,"Autres appareils électroménagers (aspirateur de moquette, moulin à café…)"
+OBJ7279029,Produits,28170919,Accessoires et frais de réparation et d’entretien d’appareils électroménagers
+OBJ7279029,Produits,28170929,APPAREILS DE CUISINE
+OBJ7279029,Produits,28170939,Cuisinière à gaz ou électrique  plaque de cuisson
+OBJ7279029,Produits,28170949,Primus à pétrole pour cuisine
+OBJ7279029,Produits,28170959,Réchaud électrique de cuisine Réchaud à gaz (pour camping)
+OBJ7279029,Produits,28170969,Chauffe-eau
+OBJ7279029,Produits,28170979,"Foureau (en terre cuite, en métal)"
+OBJ7279029,Produits,28170989,Aspirateur électrique de cuisine
+OBJ7279029,Produits,28170999,Glacière
+OBJ7279029,Produits,28171009,Accessoires et frais de réparation et d’entretien d’appareil de cuisine
+OBJ7279029,Produits,28171019,APPAREILS DE CHAUFFAGE ET DE CLIMATISATION
+OBJ7279029,Produits,28171029,"Appareil de chauffage (électrique, à pétrole, à gaz à mazout…)"
+OBJ7279029,Produits,28171039,Ventilateur
+OBJ7279029,Produits,28171049,Climatiseur
+OBJ7279029,Produits,28171059,"Autres articles de chauffage et de climatisation (bouillotte, éventail en vannerie…)"
+OBJ7279029,Produits,28171069,"Dépense d’installation, d’entretien et réparation d’appareils de chauffage et de climatisation"
+OBJ7279029,Produits,28171079,APPAREILS D’ECLAIRAGE ELECTRIQUE
+OBJ7279029,Produits,28171089,Primus d’éclairage
+OBJ7279029,Produits,28171099,Autres appareils d’éclairage
+OBJ7279029,Produits,28171109,Accessoires d’appareils d’éclairage
+OBJ7279029,Produits,28171119,Frais d’entretien et de réparation
+OBJ7279029,Produits,28171129,USTENSILES DE CUISINE ET SERVICES
+OBJ7279029,Produits,28171139,SERVICES
+OBJ7279029,Produits,28171149,Service de table
+OBJ7279029,Produits,28171159,Service à eau
+OBJ7279029,Produits,28171169,Service à café
+OBJ7279029,Produits,28171179,Service d’ustensile en métal
+OBJ7279029,Produits,28171189,Cocotte minute
+OBJ7279029,Produits,28171199,"Autres services (de couvert, de thé, de glace…)"
+OBJ7279029,Produits,28171209,"VERRERIE, VAISSELLE  ET USTENSILES DE CUISINE"
+OBJ7279029,Produits,28171219,"Ustensiles en métal  (casserole, marmite, couscoussier, cuillère, couteau, fourchette, poêle, sceau, plateau, cuvette, assiette, plat, cafetière, théière, grille…)"
+OBJ7279029,Produits,28171229,"Ustensiles en verre  (verre à eau, verre de thé, carage, bouteille, assiette, bol, plat, marmite ou casserole type « pyrex »…)"
+OBJ7279029,Produits,28171239,"Ustensiles en faïence et en porcelaine    (assiette, plat, tasse à café, bol…)"
+OBJ7279029,Produits,28171249,"Ustensiles de cuisine en plastique (sceau, bol, tasse, bassin, plateau, égouttoir, sac, couffin en plastique, panier à linge, planche à repasser…)"
+OBJ7279029,Produits,28171259,"Ustensiles en poterie (assiette, plat, gargoulette, jarre…)"
+OBJ7279029,Produits,28171269,"Ustensiles en vannerie, en osier, en bois, en peau (couffin, tamis, cuillère, pince à linge en bois…)"
+OBJ7279029,Produits,28171279,Ustensiles de cuisine sans spécification de matière première
+OBJ7279029,Produits,28171289,"Autres ustensiles de cuisine  (ouvre boite, bouchon, allume gaz…)"
+OBJ7279029,Produits,28171299,"LINGE DE MAISON, COUVERTURE ET TISSUE D’AMEUBLEMENT"
+OBJ7279029,Produits,28171309,LINGE DE MAISON
+OBJ7279029,Produits,28171319,Drap et taie
+OBJ7279029,Produits,28171329,Couvert lit et couvre matelas
+OBJ7279029,Produits,28171339,"Serviette de table, nappe"
+OBJ7279029,Produits,28171349,"Frais liés au linge de maison (frais de couture, de broderie…)"
+OBJ7279029,Produits,28171359,COUVERTURE
+OBJ7279029,Produits,28171369,"Couvertures (en laine, coton…)"
+OBJ7279029,Produits,28171379,Achat de laine pour couverture
+OBJ7279029,Produits,28171389,Frais de filature et tissage
+OBJ7279029,Produits,28171399,AMEUBLEMENT ET RIDEAUX
+OBJ7279029,Produits,28171409,"Tissus d’ameublement (pour salon, salle à manger…)"
+OBJ7279029,Produits,28171419,Rideaux
+OBJ7279029,Produits,28171429,Accessoires de rideaux (tringles…)
+OBJ7279029,Produits,28171439,Frais de couture de tapisserie et d’entretien d’ameublement
+OBJ7279029,Produits,28171449,AUTRES APPAREILS ET BIENS DURABLES
+OBJ7279029,Produits,28171459,"APPAREILS, ARTICLE ET ACCESSOIRES DE COUTURE TISSAGE ET BRODERIE"
+OBJ7279029,Produits,28171469,"Machine à coudre, à tricoter, à broder -coffre fort-"
+OBJ7279029,Produits,28171479,Appareils manuels et artisanaux de broderie et de tissage
+OBJ7279029,Produits,28171489,"Accessoires de couture et broderie (ciseaux, mètre ruban, dé, épingle, aiguille…)"
+OBJ7279029,Produits,28171499,Frais d’entretien et de réparation des appareils de couture de tissage…
+OBJ7279029,Produits,28171509,"SACS, VALISE ET AUTRES PRODUITS DE MAROQUINERIE"
+OBJ7279029,Produits,28171519,"Valise, sac, mallette, cabas"
+OBJ7279029,Produits,28171529,Autres produits de maroquinerie
+OBJ7279029,Produits,28171539,AUTRES BIENS DURABLES
+OBJ7279029,Produits,28171549,"Réveils, pendule"
+OBJ7279029,Produits,28171559,Autres biens durables
+OBJ7279029,Produits,28171569,Frais d’entretien et de réparation d'autres biens durables
+OBJ7279029,Produits,28171579,DEPENSE D’HYGIENE
+OBJ7279029,Produits,28171589,PRODUITS ET ARTICLES  DE NETOYAGE ET D'ENTRETIEN
+OBJ7279029,Produits,28171599,Savon de ménage
+OBJ7279029,Produits,28171609,"Détergent (Omo, vif, nadhif, dinol…)"
+OBJ7279029,Produits,28171619,Eau de javel
+OBJ7279029,Produits,28171629,Autres désinfectant (grésil…)
+OBJ7279029,Produits,28171639,"Insecticides (fly tox, Shell tox…)"
+OBJ7279029,Produits,28171649,"Articles d’hygiène (balai, ventouse, frottoir, torchon, brosse, poubelle, éponge, sacs, chiffon, peau de chamois…)"
+OBJ7279029,Produits,28171659,"Autres produits d’entretien (Ajax pour vitre, boite à cirage…)"
+OBJ7279029,Produits,28171669,"Déodorants, encens et assimilés"
+OBJ7279029,Produits,28171679,"Autres produits d’hygiène (papier aluminium, cellophane, serviette…)"
+OBJ7279029,Produits,28171689,FRAIS D’ENTRETIEN ET D’HYGIENE
+OBJ7279029,Produits,28171699,"Nettoyage à sec, teinturerie"
+OBJ7279029,Produits,28171709,Lavage et repassage
+OBJ7279029,Produits,28171719,"Autres service d'entretien des chaussures, des tapis, tapisseries…"
+OBJ7279029,Produits,28171729,HYGIENE ET SOINS
+OBJ7279029,Produits,28171739,SOINS MEDICAUX COURANTS
+OBJ7279029,Produits,28171749,FRAIS DE CONSULTATION MEDICALE (servicex médicaux)
+OBJ7279029,Produits,28171759,"Consultation dans un établissement public (hôpital, centre de maternité, dispensaire, polyclinique de la CNSS)"
+OBJ7279029,Produits,28171769,Consultation dans un clinique ou cabinet privé
+OBJ7279029,Produits,28171779,Consultation sans indications
+OBJ7279029,Produits,28171789,SOINS ET CHIRURGIE DENTAIRES (services dentaires)
+OBJ7279029,Produits,28171799,Soins  dentaires dans un établissement public
+OBJ7279029,Produits,28171809,Soins  dentaires dans un clinique ou cabinet privé
+OBJ7279029,Produits,28171819,Soins  dentaires sans autre indication
+OBJ7279029,Produits,28171829,SERVICES PARAMEDICAUX (radio- analyse- infirmerie)
+OBJ7279029,Produits,28171839,"Services de laboratoire, d'analyses médicales et de rdiologie dans un établissement public"
+OBJ7279029,Produits,28171849,"Services de laboratoire, d'analyses médicales et de radiologie dans un établissement privé"
+OBJ7279029,Produits,28171859,"Services de laboratoire, d'analyses médicales et de radiologie sans indication de l’établissement"
+OBJ7279029,Produits,28171869,"Frais d'infirmerie (injection de piqûre, soin de plaie …)"
+OBJ7279029,Produits,28171879,"Frais de kinésithérapie, d'orthophonistes …"
+OBJ7279029,Produits,28171889,"Frais d'analyse, de radiologie et chimiothérapie"
+OBJ7279029,Produits,28171899,"Autres frais liés à des services paramédicaux (location de matériel thérapeutique, service d'ambulance…)"
+OBJ7279029,Produits,28171909,PLANTES MEDICINALES (TRADITIONNELLES)
+OBJ7279029,Produits,28171919,Plantes médicamenteuses
+OBJ7279029,Produits,28171929,Consultation d'un voyant
+OBJ7279029,Produits,28171939,SOINS MEDICAUX EXCEPTIONNELS
+OBJ7279029,Produits,28171949,Frais de séjour et opérations chirurgicales
+OBJ7279029,Produits,28171959,Frais de séjour et opérations chirurgicales (circoncision) dans un établissement public
+OBJ7279029,Produits,28171969,Frais de séjour et opérations chirurgicales (circoncision) dans un établissement privé
+OBJ7279029,Produits,28171979,Frais de séjour et opérations chirurgicales (circoncision) sans autre indication
+OBJ7279029,Produits,28171989,DEPENSES EXCEPTIONNELLES DE CHIRURGIE DENTAIRE
+OBJ7279029,Produits,28171999,Dépenses exceptionnelles de chirurgie dentaire dans un établissement public
+OBJ7279029,Produits,28172009,Dépenses exceptionnelles de chirurgie dentaire dans un établissement privé
+OBJ7279029,Produits,28172019,Dépenses exceptionnelles de chirurgie dentaire sans autre indication
+OBJ7279029,Produits,28172029,DEPENSES EXCEPTIONNELLES DE RADIO
+OBJ7279029,Produits,28172039,"Frais de radio, scanner, IRM, échographie, fibro dans un établissement public"
+OBJ7279029,Produits,28172049,"Frais de radio, scanner, IRM, échographie, fibro dans un établissement privé"
+OBJ7279029,Produits,28172059,"Frais de radio, scanner, IRM, échographie, fibro sans autre indication"
+OBJ7279029,Produits,28172069,ACCOUCHEMENT
+OBJ7279029,Produits,28172079,Frais d’accouchement dans un établissement public
+OBJ7279029,Produits,28172089,Frais d’accouchement dans un établissement privé
+OBJ7279029,Produits,28172099,Frais d’accouchement IRM sans autre indication
+OBJ7279029,Produits,28172109,SOINS MEDICAUX A L’ETRANGER
+OBJ7279029,Produits,28172119,Frais de séjour et de traitement à l’étranger
+OBJ7279029,Produits,28172169,FRAIS DE CHIRURGIE ESTHETIQUE
+OBJ7279029,Produits,28172179,"Frais de chirurgie esthétique, lifting, liposuccion et autres opérations esthétiques"
+OBJ7279029,Produits,28172129,TRAITEMENT DE MALADIE LONGUE DUREE
+OBJ7279029,Produits,28172139,Consultation de maladie longue durée
+OBJ7279029,Produits,28172149,Médicament de maladie longue durée
+OBJ7279029,Produits,28172159,Dépense de maladie longue durée sans indication
+OBJ7279029,Produits,28172189,PRODUITS PHARMCEUTIQUES
+OBJ7279029,Produits,28172199,MEDICAMENTS
+OBJ7279029,Produits,28172209,Médicaments
+OBJ7279029,Produits,28172219,AUTRES PRODUITS PHARMACEUTIQUES
+OBJ7279029,Produits,28172229,"Produit pour bébé (talc, couche bébé, savon, biberon, tétine…)"
+OBJ7279029,Produits,28172239,"Autres produits pharmaceutiques non indiqués ailleurs (thermomètre, coton, batonnet, serviettes périodiques hygièniques, pansement adhésif, seringues, préservatifs…)"
+OBJ7279029,Produits,28172249,APPAREILS  MEDICAUX
+OBJ7279029,Produits,28172259,"Lunettes de vue, lentilles de contact"
+OBJ7279029,Produits,28172269,Appareil acoustique
+OBJ7279029,Produits,28172279,"Appareil de mesure (de tension d’artère, de diabète…)"
+OBJ7279029,Produits,28172289,"Autres appareils (fauteuil roulant, béquille, prothèse, chaussures et ceintures orthopédiques…)"
+OBJ7279029,Produits,28172299,Frais de réparation et d’entretien d’appareils médicaux
+OBJ7279029,Produits,28172309,SOINS PERSONNELS
+OBJ7279029,Produits,28172319,PRODUITS DE BEAUTE
+OBJ7279029,Produits,28172329,"Produits de maquillage (rouge à lèvre, fond de teint, acétone, manucure, démaquillant…)"
+OBJ7279029,Produits,28172339,"Eau de Cologne, eau de toilette, parfum, after shave…"
+OBJ7279029,Produits,28172349,"Autres produits de beauté (teinture pour cheveux, henna, souak, produit solaire…)"
+OBJ7279029,Produits,28172359,"Accessoires de beauté (brosse, peigne, perruque, pince, coupe ongle, rouleaux…)"
+OBJ7279029,Produits,28172369,PRODUITS DE TOILETTE ET AUTRES FRAIS DE SOINS PERSONNELS
+OBJ7279029,Produits,28172379,"Bain, douche"
+OBJ7279029,Produits,28172389,Coiffure (abonnement chez le coiffeur)
+OBJ7279029,Produits,28172399,Savon de toilette
+OBJ7279029,Produits,28172409,"Shampooing, Tfal"
+OBJ7279029,Produits,28172419,"Gel douche, après shampoing,,,"
+OBJ7279029,Produits,28172429,Dentifrice
+OBJ7279029,Produits,28172439,Crème à raser
+OBJ7279029,Produits,28172449,"Accessoires de toilette (brosse à dent, brosse à ongle, épingle à cheveux, rasoir, blaireau, lame, gant de toilette …)"
+OBJ7279029,Produits,28172459,"Autres articles et frais de soins  corporels, service de toilette et santé (frais d'épilation, frais de pédicure, frais de sauna …)"
+OBJ7279029,Produits,28172469,TRANSPORT
+OBJ7279029,Produits,28172479,ACHAT DE MOYEN DE TRANSPORT PRIVE CHARGES ET ENTRETIEN
+OBJ7279029,Produits,28172489,ACHAT DE MOYEN DE TRANSPORT PRIVE
+OBJ7279029,Produits,28172499,Achat de voiture
+OBJ7279029,Produits,28172509,Achat de cyclomoteur - motocyclette
+OBJ7279029,Produits,28172519,Achat de bicyclette
+OBJ7279029,Produits,28172529,"Achat d’autre moyen de transport (véhicule à traction animale, cheval, âne…)"
+OBJ7279029,Produits,28172539,CHARGE DE MOYEN DE TRANSORT PRIVE
+OBJ7279029,Produits,28172549,Vignette et taxe
+OBJ7279029,Produits,28172559,Assurance auto
+OBJ7279029,Produits,28172569,Assurance de cyclomoteur
+OBJ7279029,Produits,28172579,Frais de visite technique
+OBJ7279029,Produits,28172589,Autres charges (frais de remorquage…)
+OBJ7279029,Produits,28172599,CARBURANT ET FONCTIONNEMENT DE MOYEN DE TRANSPORT PRIVE
+OBJ7279029,Produits,28172609,Essence pour véhicule
+OBJ7279029,Produits,28172619,Gasoil pour véhicule
+OBJ7279029,Produits,28172629,Gaz pour véhicule
+OBJ7279029,Produits,28172639,Carburant pour véhicule sans indications
+OBJ7279029,Produits,28172649,Essence mélangée pour cyclomoteur
+OBJ7279029,Produits,28172659,"Fourrage pour monture animale (foin, orge…)"
+OBJ7279029,Produits,28172669,ENTRETIEN DE MOYEN DE TRANSPORT PRIVE
+OBJ7279029,Produits,28172679,"Vidange, lavage et graissage de voiture"
+OBJ7279029,Produits,28172689,Lavage et entretien de cyclomoteur
+OBJ7279029,Produits,28172699,Dépense d’entretien de monture animale
+OBJ7279029,Produits,28172709,Autre dépense d’entretien (charge de batterie)
+OBJ7279029,Produits,28172719,Dépense journalier de gardiennage et de parking
+OBJ7279029,Produits,28172729,dépenses totales pour l'entretien d'un moyen de transport
+OBJ7279029,Produits,28172739,Autres dépenses d'entretien (housse…)
+OBJ7279029,Produits,28172749,REPARATION DE MOYEN DE TRANSPORT PRIVE
+OBJ7279029,Produits,28172759,Achat de pièce de rechange
+OBJ7279029,Produits,28172769,Main d’œuvre
+OBJ7279029,Produits,28172779,Frais de réparation non ventilés (frais de dépannage…)
+OBJ7279029,Produits,28172789,Frais total de réparation de moyen de transport
+OBJ7279029,Produits,28172799,AUTRES DEPENSES LIEES AU MOYEN  DE TRANSPORT PRIVE
+OBJ7279029,Produits,28172809,Location de voiture
+OBJ7279029,Produits,28172819,Location de motocyclette
+OBJ7279029,Produits,28172829,"Achat d’accessoires de cyclomoteur (casque, pompe…)"
+OBJ7279029,Produits,28172839,Accessoires pour animaux de traction
+OBJ7279029,Produits,28172849,Abonnement prking
+OBJ7279029,Produits,28172859,"Frais journalier de péage ""autoroute"""
+OBJ7279029,Produits,28172869,"Abonnement pour ""autoroute"""
+OBJ7279029,Produits,28172879,Accessoires pour véhicule
+OBJ7279029,Produits,28172889,DEPENSES DE TRANSPORT EN COMMUN
+OBJ7279029,Produits,28172899,ABONNEMENT SCOLAIRES
+OBJ7279029,Produits,28172909,Abonnement bus
+OBJ7279029,Produits,28172919,Abonnement scolaire train
+OBJ7279029,Produits,28172929,Abonnement scolaire métro
+OBJ7279029,Produits,28172939,Abonnement scolaire bus et métro
+OBJ7279029,Produits,28172949,Transport rural scolaire régulier
+OBJ7279029,Produits,28172959,ABONNEMENT NON SCOLAIRES
+OBJ7279029,Produits,28172969,Abonnement bus
+OBJ7279029,Produits,28172979,Abonnement train
+OBJ7279029,Produits,28172989,Abonnement métro
+OBJ7279029,Produits,28172999,Abonnement bus et métro
+OBJ7279029,Produits,28173009,Transport rural régulier
+OBJ7279029,Produits,28173019,Abonnement moyen du transport privé
+OBJ7279029,Produits,28173029,DEPENSES DE TRANSPORT NON REGULIERS
+OBJ7279029,Produits,28173039,"Bus, autobus (urbain), public (TRANSTU)"
+OBJ7279029,Produits,28173049,"Bus, autobus (urbain), privé (TUS, TUT, TCV,,,)"
+OBJ7279029,Produits,28173059,"Louage, car (interurbain)"
+OBJ7279029,Produits,28173069,Taxi
+OBJ7279029,Produits,28173079,Train
+OBJ7279029,Produits,28173089,Métro - bus + métro
+OBJ7279029,Produits,28173099,Transport rural
+OBJ7279029,Produits,28173109,Frais de transport de bagage et de porte faix déménagement
+OBJ7279029,Produits,28173119,Transport maritime (par bac…)
+OBJ7279029,Produits,28173129,DEPENSES EXCEPTIONNELLES DE TRANSPORT POUR VOYAGE A L’ETRANGER  ET  VACANCES
+OBJ7279029,Produits,28173139,Avion
+OBJ7279029,Produits,28173149,Bateau
+OBJ7279029,Produits,28173159,Car
+OBJ7279029,Produits,28173169,Train
+OBJ7279029,Produits,28173179,Dépense de transport pour voyage et vacances en Tunisie (voiture personnelle)
+OBJ7279029,Produits,28173189,Dépenses exceptionnelles de transport non ventilées
+OBJ7279029,Produits,28173199,TELECOMMUNICATIONS
+OBJ7279029,Produits,28173209,ACHAT D'APPAREIL DE TELEPHONE (FIXE ET MOBILE)
+OBJ7279029,Produits,28173219,Achat d'appareil téléphone fixe
+OBJ7279029,Produits,28173229,Achat d'appareil téléphone portable
+OBJ7279029,Produits,28173239,Achat d’accessoires pour téléphone portable
+OBJ7279029,Produits,28173249,Frais d'installation téléphone fixe (abonnement et équipement)
+OBJ7279029,Produits,28173259,Achat carte SIM pour téléphone portable
+OBJ7279029,Produits,28173269,FACTURE ET CARTE DE RECHARGE POUR TELEPHONE FIXE ET PORTABLE
+OBJ7279029,Produits,28173279,Facture téléphone fixe
+OBJ7279029,Produits,28173289,Facture téléphone portable
+OBJ7279029,Produits,28173299,Dépense Forfait pour télépohone fixe
+OBJ7279029,Produits,28173309,Dépense Forfait pour télépohone Portable
+OBJ7279029,Produits,28173319,Carte de recharge pour téléphone fixe
+OBJ7279029,Produits,28173329,Carte de recharge pour téléphone portable
+OBJ7279029,Produits,28173339,"Recharge téléphone fixe (TTcach,,,)"
+OBJ7279029,Produits,28173349,"Recharge téléphone portable (Tunisiana light, TTcach,,,)"
+OBJ7279029,Produits,28173359,FRAIS DE REPARATION DE TELEPHONE
+OBJ7279029,Produits,28173369,DEPENSES DE TELEPHONE PUBLIC
+OBJ7279029,Produits,28173379,DEPENSE INTERNET
+OBJ7279029,Produits,28173389,Dépenses abonnement Internet
+OBJ7279029,Produits,28173399,Achat carte Internet
+OBJ7279029,Produits,28173409,Frais de publinet (Internet…)
+OBJ7279029,Produits,28173419,DEPENSES POSTALES ET TELEGRAPHIQUES
+OBJ7279029,Produits,28173429,"Timbre postal, lettre recommandée, lettre express…"
+OBJ7279029,Produits,28173439,Dépense de télégramme
+OBJ7279029,Produits,28173449,"Autres frais (frais de mandat, envoi de colis postaux…)"
+OBJ7279029,Produits,28173459,"FRAIS DE FAX, EMAIL"
+OBJ7279029,Produits,28173469,"Fax, émail"
+OBJ7279029,Produits,28173479,LOISIRS ET CULTURE
+OBJ7279029,Produits,28173489,Loisirs
+OBJ7279029,Produits,28173499,ACHAT D’ARTICLE DE LOISIRS
+OBJ7279029,Produits,28173509,Radio transistor – radio réveil
+OBJ7279029,Produits,28173519,Téléviseur
+OBJ7279029,Produits,28173529,"Magnétophone cassette, Video, lecteur DVD, VCD, lecture de disque compact , chaine stério"
+OBJ7279029,Produits,28173539,Appareil de photo
+OBJ7279029,Produits,28173549,Caméra vidéo
+OBJ7279029,Produits,28173559,Ordinateur personnel
+OBJ7279029,Produits,28173569,"Instrument de musique (violon, flûte, guitare, orgue, darbouka, bendir…)"
+OBJ7279029,Produits,28173579,"Articles de sport, de pêche de chasse et articles de plage  (ballon, ligne, hameçon, fusil de chasse, tente, parasol, chambre à air...)"
+OBJ7279029,Produits,28173589,Jouet pour enfant de tout type (console de jeux de vidéo …)
+OBJ7279029,Produits,28173599,"Autres articles de loisirs (jumelle, boussole…)"
+OBJ7279029,Produits,28173609,ACCESSOIRES  ENTRETIEN  ET REPARATION D’ARTICLES DE LOISIRS
+OBJ7279029,Produits,28173619,Tablette
+OBJ7279029,Produits,28173629,Parabole
+OBJ7279029,Produits,28173639,Récepteur
+OBJ7279029,Produits,28173649,Imprimante
+OBJ7279029,Produits,28173659,"Achat de CD, DVD,,,"
+OBJ7279029,Produits,28173669,"Achat d'accessoires d’articles de loisirs (pile, cassette de magnétophone de vidéo, antenne de télévision, retors, pellicule, cartouche, imprimante, cassette…)"
+OBJ7279029,Produits,28173679,Dépenses de réparation et d’entretien d’articles de loisirs
+OBJ7279029,Produits,28173689,Autres de dépenses liées aux articles de loisirs
+OBJ7279029,Produits,28173699,Abonnement chaînes cryptées
+OBJ7279029,Produits,28173709,Abonnement chaînes sportives
+OBJ7279029,Produits,28173719,Abonnement Dream-Box
+OBJ7279029,Produits,28173729,Abonnement chaîne cryptée
+OBJ7279029,Produits,28173739,culture
+OBJ7279029,Produits,28173749,SPECTACLES
+OBJ7279029,Produits,28173759,Cinéma
+OBJ7279029,Produits,28173769,"Spectacle sportif (stade, champ de course, piscine…)"
+OBJ7279029,Produits,28173779,Théâtre
+OBJ7279029,Produits,28173789,"Autres spectacles (cirque, foire, manège,  parc de zoo, festival…)"
+OBJ7279029,Produits,28173799,JEUX DE LOISIRS
+OBJ7279029,Produits,28173809,Jeux de cartes
+OBJ7279029,Produits,28173819,"Achat de jeux d’échec, de scrabble et autre jeux similaires"
+OBJ7279029,Produits,28173829,"Jeux de loisirs (ping-pong, billard, flipper,…) dans les salles de jeux, jeux de carte à café"
+OBJ7279029,Produits,28173839,"Jeux de hasard (promo sport, tiercé, lotterie…)"
+OBJ7279029,Produits,28173849,Autres dépenses de loisirs
+OBJ7279029,Produits,28173859,Argent de poche
+OBJ7279029,Produits,28173869,"Prise de photo, développement de péllicule"
+OBJ7279029,Produits,28173879,"Autres dépenses de loisirs (achat de fleurs, jasmin, œillet…)"
+OBJ7279029,Produits,28173889,"Journaux, livres et excursions"
+OBJ7279029,Produits,28173899,LIVRES NON SCOLAIRES
+OBJ7279029,Produits,28173909,Revues et journaux
+OBJ7279029,Produits,28173919,Livres non scolaires
+OBJ7279029,Produits,28173929,DEPENSE D’EXCURSION
+OBJ7279029,Produits,28173939,COTISATION DANS UNE ASSOCIATION CULTURELLE SPORTIVE SYNDICALE POLITIQUE OU CLUB DE LOISIRS
+OBJ7279029,Produits,28173949,Association culturelle
+OBJ7279029,Produits,28173959,Association sportive
+OBJ7279029,Produits,28173969,Centre syndicale
+OBJ7279029,Produits,28173979,Club de  loisirs
+OBJ7279029,Produits,28173989,Association politique
+OBJ7279029,Produits,28173999,Autre Association
+OBJ7279029,Produits,28174009,AUTRES DEPENSES CULTURELLES
+OBJ7279029,Produits,28174019,"Dépense de correspondance (carte postale, carte de vœux , enveloppe…)"
+OBJ7279029,Produits,28174029,"Droit d’entrée aux monuments culturels (musée, monument…)"
+OBJ7279029,Produits,28174039,"Autres dépenses culturelles (achat de bloc note, calendrier, annonce dans le journal, photocopie, album, agenda…)"
+OBJ7279029,Produits,28174049,FRAIS POUR CEREMONIES FAMILIALES
+OBJ7279029,Produits,28174059,FRAIS POUR CEREMONIES FAMILIALES
+OBJ7279029,Produits,28174069,Frais de location de salle
+OBJ7279029,Produits,28174079,"Frais de troupe musicale, orchestre troupe soulamia"
+OBJ7279029,Produits,28174089,"Frais de location d’articles pour cérémonie, caméra vidéo…."
+OBJ7279029,Produits,28174099,"Autres frais liés à la cérémonie (coiffure, robe mariée, location de robe pour cérémonie…)"
+OBJ7279029,Produits,28174109,Frais de cérémonie funèbre
+OBJ7279029,Produits,28174119,FRAIS LIES AU CULTES
+OBJ7279029,Produits,28174129,Allocation pour pèlerinage
+OBJ7279029,Produits,28174139,Allocation pour « omra »
+OBJ7279029,Produits,28174149,Autres frais
+OBJ7279029,Produits,28174159,Frais liés au culte et au recueillement
+OBJ7279029,Produits,28174169,ENSEIGNEMENT
+OBJ7279029,Produits,28174179,ENSEIGNEMENT PRESCOLAIRE
+OBJ7279029,Produits,28174189,Frais de jardin d’enfant
+OBJ7279029,Produits,28174199,Frais d’école coranique (kottab)
+OBJ7279029,Produits,28174209,Frais de crèche
+OBJ7279029,Produits,28174219,Frais garderie scolaire
+OBJ7279029,Produits,28174229,Autres frais d’enseignement préscolaire
+OBJ7279029,Produits,28174239,ENSEIGNEMENT SCOLAIRE
+OBJ7279029,Produits,28174249,Cartable pour rentrée scolaire
+OBJ7279029,Produits,28174259,Livres pour rentrée scolaire
+OBJ7279029,Produits,28174269,Cahier et autres fournitures scolaires pour rentrée scolaire
+OBJ7279029,Produits,28174279,Dépenses de rentrée scolaire non ventilées
+OBJ7279029,Produits,28174289,"Achats courants de fournitures scolaires et frais de photocopie de documents scolaires, stylo …"
+OBJ7279029,Produits,28174299,Frais pour  leçon particulières et études
+OBJ7279029,Produits,28174309,Frais de scolarité (pour les écoles et les facultés privés)
+OBJ7279029,Produits,28174319,Frais de pension (pour les élèves internes ou demi pensionnaires)
+OBJ7279029,Produits,28174329,"Autres frais d’enseignement scolaire (droit d’inscription, assurance scolaire  et universitaire…)"
+OBJ7279029,Produits,28174339,AUTRES ENSEIGNEMENTS
+OBJ7279029,Produits,28174349,Frais d’Auto Ecole (ou camion école)
+OBJ7279029,Produits,28174359,Frais de formation en couture
+OBJ7279029,Produits,28174369,Frais de formation en coiffure
+OBJ7279029,Produits,28174379,Frais de formation en informatique (bureautique)
+OBJ7279029,Produits,28174389,"Autres frais d’enseignement (enseignement par correspondance, de langue, musique, danse …)"
+OBJ7279029,Produits,28174399,FRAIS  DE FORMATION PROFESSIONNELLE
+OBJ7279029,Produits,28174409,Frais de formation professionnelle
+OBJ7279029,Produits,28174419,Frais d’internat
+OBJ7279029,Produits,28174429,"VACANCES, RESTAURANTS, HÔTELS ET CAFES"
+OBJ7279029,Produits,28174439,VACANCES  DANS UN HOTEL EN TUNISIE
+OBJ7279029,Produits,28174449,"Frais d’hôtel (hébergement, restauration, loisirs…)"
+OBJ7279029,Produits,28174459,VACANCES EN TUNISIE DANS UNE RESIDENCE AUTRE QU’HOTEL
+OBJ7279029,Produits,28174469,Montant de loyer
+OBJ7279029,Produits,28174479,Autres frais de vacances
+OBJ7279029,Produits,28174489,Frais de vacances non ventilés
+OBJ7279029,Produits,28174499,ALLOCATION TOURISTIQUE POUR VOYAGE A L’ETRANGER
+OBJ7279029,Produits,28174509,Allocation touristique
+OBJ7279029,Produits,28174519,Autres frais
+OBJ7279029,Produits,28174529,REPAS DANS UN RESTAURANT
+OBJ7279029,Produits,28174539,"Casse-croûte  au thon, à la sardine"
+OBJ7279029,Produits,28174549,Casse-croûte  harissa
+OBJ7279029,Produits,28174559,"Casse-croûte  à la confiture, beurre, fromage"
+OBJ7279029,Produits,28174569,"Hamburger, viande, escalope, poulet, salami"
+OBJ7279029,Produits,28174579,Plat tunisien
+OBJ7279029,Produits,28174589,Plat ou casse croûte kaftegi
+OBJ7279029,Produits,28174599,Casse-croûte  ou bol de lablebi
+OBJ7279029,Produits,28174609,Repas dans un restaurant
+OBJ7279029,Produits,28174619,BOISSONS CHAUDES
+OBJ7279029,Produits,28174629,Thé préparé
+OBJ7279029,Produits,28174639,Café préparé
+OBJ7279029,Produits,28174649,Thé et Café préparés non ventilés
+OBJ7279029,Produits,28174659,Tisane
+OBJ7279029,Produits,28174669,Autres boissons chaudes
+OBJ7279029,Produits,28174679,BOISSONS FRAICHES CONSOMMEES  HORS DOMICILE
+OBJ7279029,Produits,28174689,Boisson gazeuse
+OBJ7279029,Produits,28174699,Boisson non gazeuse sucré
+OBJ7279029,Produits,28174709,Eau minérale
+OBJ7279029,Produits,28174719,Jus de fruits
+OBJ7279029,Produits,28174729,Autres boissons
+OBJ7279029,Produits,28174739,CHICHE  AU CAFE
+OBJ7279029,Produits,28174749,Chiche au café
+OBJ7279029,Produits,28174759,AUTRES DEPENSES
+OBJ7279029,Produits,28174769,DEPENSES ADMINISTRATIVES
+OBJ7279029,Produits,28174779,"Timbres fiscaux (carte d’identité, passeport, imprimé timbre, timbre de voyage, plastification…)"
+OBJ7279029,Produits,28174789,"Droit et frais de formalités administratives (bulletin ou extrait de naissance, livret familial, légalisation de signature…)"
+OBJ7279029,Produits,28174799,Droit d’enregistrement
+OBJ7279029,Produits,28174809,Frais d’autorisation (permi de construire)
+OBJ7279029,Produits,28174819,Frais de parution d'annonce et de publicité dans la presse
+OBJ7279029,Produits,28174829,FRAIS DE NOTAIRE ET DEPENSES DE TRIBUNAUX
+OBJ7279029,Produits,28174839,"Frais de notaire (frais pour contrat de mariage, contrat de vente…)"
+OBJ7279029,Produits,28174849,"Frais d’avocat, huissier notaire, écrivain public"
+OBJ7279029,Produits,28174859,Autres frais de tribunaux
+OBJ7279029,Produits,28174869,ASSURANCE (AUTRE QUE MOYENS DE TRANSPORT)
+OBJ7279029,Produits,28174879,"Frais d’assurance (assurance vie, contre l'incendie, le vol…)"
+OBJ7279029,Produits,28174889,ACHAT DE BIJOUX PRECIEUX
+OBJ7279029,Produits,28174899,Réparation de bijoux
+OBJ7279029,Produits,28174909,Achat de bijoux
+OBJ7279029,Produits,28174919,AUTRES DEPENSES NON ALIMENTAIRES
+OBJ7279029,Produits,28174929,Transfert en espèces à l’intérieur de pays
+OBJ7279029,Produits,28174939,Zaket el fitr
+OBJ7279029,Produits,28174949,Petit dons et charité
+OBJ7279029,Produits,28174959,Dons en espèces de montant important à l’occasion d’un événement familial ou d’une fête religieuse
+OBJ7279029,Produits,28174969,Amendes et pénalités
+OBJ7279029,Produits,28174979,Transfert en espèces à l’étranger
+OBJ7279029,Produits,28174989,Autres dépenses non alimentaires
+OBJ7279029,Produits,28174999,Total

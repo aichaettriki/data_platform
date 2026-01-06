@@ -1,0 +1,7 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6960229,28024459,Nombre ménages,,Nombre,,Nombre total de ménages,,Institut National de la Statistique,25/08/2016 06:55:14,"1, 2",,
+OBJ6960229,28024469,Voiture,,Nombre,,Nombre de ménages possédant une voiture,,Institut National de la Statistique,25/08/2016 06:55:14,"1, 2",,
+OBJ6960229,28024479,Radio/ cassette,,Nombre,,Nombre de ménages possédant un lecteur de cassette ou Radio,,Institut National de la Statistique,25/08/2016 06:55:14,"1, 2",,
+OBJ6960229,28024489,TV,,Nombre,,Nombre de ménages possédant un téléviseur,,Institut National de la Statistique,25/08/2016 06:55:14,"1, 2",,
+OBJ6960229,28024499,Parabole,,Nombre,,Nombre de ménages possédant un Parabole,,Institut National de la Statistique,25/08/2016 06:55:14,"1, 2",,
+OBJ6960229,28024509,Bibliothèque,,Nombre,,Nombre de ménages possédant une bibliothèque,,Institut National de la Statistique,25/08/2016 06:55:14,"1, 2",,

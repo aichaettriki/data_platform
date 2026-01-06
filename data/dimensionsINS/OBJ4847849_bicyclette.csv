@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODER,C_NOMENCLATURE,ISCALCULATED
+OBJ4847849,27741089,Total,,,,,
+OBJ4847849,27741059,Possède une bicyclette,,,,,
+OBJ4847849,27741069,Ne possède pas une bicyclette,,,,,
+OBJ4847849,27741079,Possession d'un moyen de transport non déclaré : bicyclette,,,,,

@@ -1,0 +1,12 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6959659,28013319,Migration internationale,,Nombre,,Migration internationale,,Institut National de la Statistique,25/08/2016 02:11:51,"1, 2",,
+OBJ6959659,28013329,Immigrants,28013319,Nombre,,Nombre des Immigrants venant en Tunisie entre 2009 et 2014,,Institut National de la Statistique,25/08/2016 02:11:51,"1, 2",,
+OBJ6959659,28013339,émigrants,28013319,Nombre,,Nombre des émigrants sortant de la Tunisie entre 2009 et 2014,,Institut National de la Statistique,25/08/2016 02:11:51,"1, 2",,
+OBJ6959659,28013349,Solde migratoire,28013319,Nombre,,Migration internationale\Solde migratoire,,Institut National de la Statistique,25/08/2016 02:11:51,"1, 2",,
+OBJ6959659,28013359,Raisons d'émigration,,Nombre,,Emigration vers ou de la Tunisie par raison de sortie,,Institut National de la Statistique,25/08/2016 02:11:51,"1, 2",,
+OBJ6959659,28013369,Emploi,28013359,Nombre,,Nombre des emigrants venant ou quittant la Tunisie pour l'emploi,,Institut National de la Statistique,25/08/2016 02:11:51,"1, 2",,
+OBJ6959659,28013379,Acquisition de logement ou meilleur condition de vie,28013359,Nombre,,Nombre des emigrants venant ou quittant la Tunisie pour l'acquisition de logement ou meilleur condition de vie,,Institut National de la Statistique,25/08/2016 02:11:51,"1, 2",,
+OBJ6959659,28013389,Mariage,28013359,Nombre,,Nombre des emigrants venant ou quittant la Tunisie pour le mariage,,Institut National de la Statistique,25/08/2016 02:11:51,"1, 2",,
+OBJ6959659,28013399,Accompagnement de la famille,28013359,Nombre,,Nombre des emigrants venant ou quittant la Tunisie pour l'accompagnement de la famille,,Institut National de la Statistique,25/08/2016 02:11:51,"1, 2",,
+OBJ6959659,28013409,Etudes,28013359,Nombre,,Nombre des emigrants venant ou quittant la Tunisie pour les etudes,,Institut National de la Statistique,25/08/2016 02:11:51,"1, 2",,
+OBJ6959659,28013419,Autres,28013359,Nombre,,Nombre des emigrants venant ou quittant la Tunisie pour d'autres raisons,,Institut National de la Statistique,25/08/2016 02:11:51,"1, 2",,

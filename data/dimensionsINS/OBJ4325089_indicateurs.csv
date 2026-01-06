@@ -1,0 +1,6 @@
+dimension_id,KEY,NAME,parent_key,FULLNAME,DESCRIPTION,ISCALCULATED,C_DATE_OF_UPADTES,C_VISIBILITY,C_SOURCE,C_COMMENTAIRE
+OBJ4325089,27667479,Nombre de la population,,Nombre de la population,,,28/10/2014 16:01:00,True,,
+OBJ4325089,27667489,Masculin,27667479,Nombre de la population masculine,,,28/10/2014 16:02:00,True,,
+OBJ4325089,27667499,Féminin,27667479,Nombre de la population féminine,,,28/10/2014 16:02:00,True,,
+OBJ4325089,27667509,Nombre de ménages,,Nombre de ménages,,,28/10/2014 16:03:00,True,,
+OBJ4325089,27667519,Nombre de logements,,Nombre de logements,,,,True,,

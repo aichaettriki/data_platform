@@ -1,0 +1,5 @@
+dimension_id,dimension_name,element_key,element_name
+OBJ4847869,Voiture,27741169,Total
+OBJ4847869,Voiture,27741139,Possède une voiture
+OBJ4847869,Voiture,27741149,Ne possède pas une voiture
+OBJ4847869,Voiture,27741159,Possession d'un moyen de transport non déclaré : Voiture

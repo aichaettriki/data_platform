@@ -1,0 +1,8 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE
+OBJ6959889,28017969,Nombre ménages,,Nombre,,Nombre ménages,,Institut National de la Statistique,25/08/2016 03:15:30,"1, 2",
+OBJ6959889,28017979,Ménages selon les source d'approvisionnement en eau potable,,Nombre,,Ménages selon les source d'approvisionnement en eau potable,,Institut National de la Statistique,25/08/2016 03:15:30,"1, 2",
+OBJ6959889,28017989,Eau robinet,28017979,Nombre,,Nombre des ménages se ressourçant de l'eau potable depuis l'eau de robinet,,Institut National de la Statistique,25/08/2016 03:15:30,"1, 2",
+OBJ6959889,28017999,Source publique ou association,28017979,Nombre,,Nombre des ménages se ressourçant de l'eau potable depuis une Source publique ou association,,Institut National de la Statistique,25/08/2016 03:15:30,"1, 2",
+OBJ6959889,28018009,Autre source privée ou publique,28017979,Nombre,,Nombre des ménages se ressourçant de l'eau potable depuis une autre source privée ou publique,,Institut National de la Statistique,25/08/2016 03:15:30,"1, 2",
+OBJ6959889,28018019,Source non controlée,28017979,Nombre,,Nombre des ménages se ressourçant de l'eau potable depuis une source non controlée,,Institut National de la Statistique,25/08/2016 03:15:30,"1, 2",
+OBJ6959889,28018029,Ménages loin  plus que 1 km de la plus proche source d'eau liée au SONEDE ou GR,,Nombre,,Nombre des ménages loin  plus que 1 km de la plus proche source d'eau liée au SONEDE ou GR,,Institut National de la Statistique,25/08/2016 03:15:30,"1, 2",

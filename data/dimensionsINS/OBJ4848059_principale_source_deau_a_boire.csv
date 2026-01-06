@@ -1,0 +1,6 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODER,C_NOMENCLATURE,ISCALCULATED
+OBJ4848059,27741509,Total,,,var 306,,
+OBJ4848059,27741469,Eau du robinet,,,var 306,,
+OBJ4848059,27741479,Eau minérale,,,var 306,,
+OBJ4848059,27741489,Autre type d'eau,,,var 306,,
+OBJ4848059,27741499,Source d'eau à boire non déclaré,,,var 306,,

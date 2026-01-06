@@ -1,0 +1,336 @@
+dimension_id,dimension_name,element_key,element_name
+OBJ7280819,Produits  alimentaires,28177439,Total Blé (en équivalent grains)
+OBJ7280819,Produits  alimentaires,28177449,Blé dur (en équivalent grains)
+OBJ7280819,Produits  alimentaires,28177489,Borghol
+OBJ7280819,Produits  alimentaires,28177499,Semoule blanche
+OBJ7280819,Produits  alimentaires,28177509,Semoule asmar
+OBJ7280819,Produits  alimentaires,28177519,Couscous sec à base de Semoule blanche
+OBJ7280819,Produits  alimentaires,28177529,Couscous sec asmar
+OBJ7280819,Produits  alimentaires,28177539,M’hames
+OBJ7280819,Produits  alimentaires,28177549,Pâte  alimentaire industrielle
+OBJ7280819,Produits  alimentaires,28177559,"Autres produits à base de blé dur (soupe, nouasser, ravioli préparé avec de la viande - des légumes - du fromage)"
+OBJ7280819,Produits  alimentaires,28177569,Blé tendre (en équivalent grains)
+OBJ7280819,Produits  alimentaires,28177579,Farine de blé tendre
+OBJ7280819,Produits  alimentaires,28177589,Grand pain de boulangerie
+OBJ7280819,Produits  alimentaires,28177599,Baguette de boulangerie
+OBJ7280819,Produits  alimentaires,28177609,"Autre pain à base de boulangerie (mbasses, brioche…)"
+OBJ7280819,Produits  alimentaires,28177619,Produits à base d'orge (en équivalent grains)
+OBJ7280819,Produits  alimentaires,28177629,Malthouth sec
+OBJ7280819,Produits  alimentaires,28177639,Orge en frik
+OBJ7280819,Produits  alimentaires,28177649,Semoule d’orge pour pain
+OBJ7280819,Produits  alimentaires,28177659,Pain d’orge cuit
+OBJ7280819,Produits  alimentaires,28177669,Autres produits à base d’orge
+OBJ7280819,Produits  alimentaires,28177679,autres céréales (en équivalent grains)
+OBJ7280819,Produits  alimentaires,28177689,Riz en grain ; en vrac
+OBJ7280819,Produits  alimentaires,28177699,Sorgho en grain
+OBJ7280819,Produits  alimentaires,28177709,Maïs en grains
+OBJ7280819,Produits  alimentaires,28177719,Farine de sorgho
+OBJ7280819,Produits  alimentaires,28177729,Amidon
+OBJ7280819,Produits  alimentaires,28177739,Autres céréales transformées
+OBJ7280819,Produits  alimentaires,28177749,autres produits à base de céréales
+OBJ7280819,Produits  alimentaires,28177759,Levure industrielle
+OBJ7280819,Produits  alimentaires,28177769,Levure  de maison
+OBJ7280819,Produits  alimentaires,28177779,Biscuit simple
+OBJ7280819,Produits  alimentaires,28177789,Pâtisserie de souk
+OBJ7280819,Produits  alimentaires,28177799,Pâtisserie de maison
+OBJ7280819,Produits  alimentaires,28177809,Beignet souk
+OBJ7280819,Produits  alimentaires,28177819,Bsissa à l’état farine
+OBJ7280819,Produits  alimentaires,28177829,Bsissa huilée et sucrée
+OBJ7280819,Produits  alimentaires,28177839,Bsissa huilée et non sucrée
+OBJ7280819,Produits  alimentaires,28177849,Bsissa sucrée et non huilée
+OBJ7280819,Produits  alimentaires,28177859,Farine lactée (Céréale ; Saha ; Sinlac …)
+OBJ7280819,Produits  alimentaires,28177869,Malsouka (brik)
+OBJ7280819,Produits  alimentaires,28177879,"Autres produits à base de céréales (biscottes, grains d'or…)"
+OBJ7280819,Produits  alimentaires,28177889,Couscous mélangé sec
+OBJ7280819,Produits  alimentaires,28177899,Farine mélangée
+OBJ7280819,Produits  alimentaires,28177909,légumineuses sèchées
+OBJ7280819,Produits  alimentaires,28177919,Fève sèche non  décortiquée
+OBJ7280819,Produits  alimentaires,28177929,Petit fève séchée (masri)
+OBJ7280819,Produits  alimentaires,28177939,Pois chiche sec
+OBJ7280819,Produits  alimentaires,28177949,Pois chiche moulu
+OBJ7280819,Produits  alimentaires,28177959,Petit pois sec
+OBJ7280819,Produits  alimentaires,28177969,Haricot sec
+OBJ7280819,Produits  alimentaires,28177979,Lentilles séchées
+OBJ7280819,Produits  alimentaires,28177989,Autres légumineuses séchées
+OBJ7280819,Produits  alimentaires,28177999,Mélange de  légumineuses séchées
+OBJ7280819,Produits  alimentaires,28178009,légumineuses vertes
+OBJ7280819,Produits  alimentaires,28178019,Fève vert avec gousse
+OBJ7280819,Produits  alimentaires,28178029,Pois chiche vert avec gousse
+OBJ7280819,Produits  alimentaires,28178039,Petit pois vert avec gousse
+OBJ7280819,Produits  alimentaires,28178049,Haricot vert avec gousse
+OBJ7280819,Produits  alimentaires,28178059,Autres légumineuses avec gousse
+OBJ7280819,Produits  alimentaires,28178069,légumineuses en conserve
+OBJ7280819,Produits  alimentaires,28178079,Petit pois en conserve
+OBJ7280819,Produits  alimentaires,28178089,Haricot en conserve
+OBJ7280819,Produits  alimentaires,28178099,Autres légumineuses en conserve
+OBJ7280819,Produits  alimentaires,28178109,sel et condiments secs
+OBJ7280819,Produits  alimentaires,28178119,Sel
+OBJ7280819,Produits  alimentaires,28178129,Poivre en grain ou moulu
+OBJ7280819,Produits  alimentaires,28178139,Tabel  non nettoyé
+OBJ7280819,Produits  alimentaires,28178149,Carouia non nettoyé
+OBJ7280819,Produits  alimentaires,28178159,Mélange de tabel et  carouia  nettoyé
+OBJ7280819,Produits  alimentaires,28178169,Cumin non nettoyé
+OBJ7280819,Produits  alimentaires,28178179,Korkom non nettoyé
+OBJ7280819,Produits  alimentaires,28178189,Naânaâ sec ou moulu
+OBJ7280819,Produits  alimentaires,28178199,Mloukhia en poudre
+OBJ7280819,Produits  alimentaires,28178209,Autres condiments sec
+OBJ7280819,Produits  alimentaires,28178219,condiments verts
+OBJ7280819,Produits  alimentaires,28178229,Naânaâ vert
+OBJ7280819,Produits  alimentaires,28178239,Feuilles de coriandre (rand)
+OBJ7280819,Produits  alimentaires,28178249,Autres condiments verts
+OBJ7280819,Produits  alimentaires,28178259,vinaigre et autres condiments
+OBJ7280819,Produits  alimentaires,28178269,Vinaigre
+OBJ7280819,Produits  alimentaires,28178279,Condiments sans autres indications
+OBJ7280819,Produits  alimentaires,28178289,total légumes (en équivalent légumes frais)
+OBJ7280819,Produits  alimentaires,28178299,légumes frais
+OBJ7280819,Produits  alimentaires,28178309,Piments frais
+OBJ7280819,Produits  alimentaires,28178319,Tomates fraîches
+OBJ7280819,Produits  alimentaires,28178329,Salade mechwia de maison
+OBJ7280819,Produits  alimentaires,28178339,Oignon vert avec fanes
+OBJ7280819,Produits  alimentaires,28178349,Feuille de oignon
+OBJ7280819,Produits  alimentaires,28178359,Oignon sec
+OBJ7280819,Produits  alimentaires,28178369,Ail sec
+OBJ7280819,Produits  alimentaires,28178379,Ail vert
+OBJ7280819,Produits  alimentaires,28178389,Navet avec fanes
+OBJ7280819,Produits  alimentaires,28178399,carotte  avec fanes
+OBJ7280819,Produits  alimentaires,28178409,Radis avec fanes
+OBJ7280819,Produits  alimentaires,28178419,Betterave avec fanes
+OBJ7280819,Produits  alimentaires,28178429,Poireaux avec fanes
+OBJ7280819,Produits  alimentaires,28178439,Autres légumes à bulbe et tubercules
+OBJ7280819,Produits  alimentaires,28178449,Blette
+OBJ7280819,Produits  alimentaires,28178459,Epinard
+OBJ7280819,Produits  alimentaires,28178469,Choux
+OBJ7280819,Produits  alimentaires,28178479,Salade verte
+OBJ7280819,Produits  alimentaires,28178489,Persil
+OBJ7280819,Produits  alimentaires,28178499,Cèleri
+OBJ7280819,Produits  alimentaires,28178509,Choux fleur
+OBJ7280819,Produits  alimentaires,28178519,Autres légumes à feuilles vertes
+OBJ7280819,Produits  alimentaires,28178529,Pomme de terre
+OBJ7280819,Produits  alimentaires,28178539,Aubergine
+OBJ7280819,Produits  alimentaires,28178549,Courge
+OBJ7280819,Produits  alimentaires,28178559,Courgette
+OBJ7280819,Produits  alimentaires,28178569,Artichaut avec fanes
+OBJ7280819,Produits  alimentaires,28178579,Concombre
+OBJ7280819,Produits  alimentaires,28178589,Cardon
+OBJ7280819,Produits  alimentaires,28178599,Fenouil avec fanes
+OBJ7280819,Produits  alimentaires,28178609,Gombo
+OBJ7280819,Produits  alimentaires,28178619,Autres légumes
+OBJ7280819,Produits  alimentaires,28178629,"Garniture de ""brik"""
+OBJ7280819,Produits  alimentaires,28178639,légumes en conserve (en équivalent légumes frais)
+OBJ7280819,Produits  alimentaires,28178649,Tomate en conserve industrielle
+OBJ7280819,Produits  alimentaires,28178659,Harissa industrielle
+OBJ7280819,Produits  alimentaires,28178669,Piment sec moulu
+OBJ7280819,Produits  alimentaires,28178679,Piment sec en gousse
+OBJ7280819,Produits  alimentaires,28178689,Salade mechwia en boite (en conserve)
+OBJ7280819,Produits  alimentaires,28178699,Olive en conserve
+OBJ7280819,Produits  alimentaires,28178709,Variantes
+OBJ7280819,Produits  alimentaires,28178719,Câpre en conserve
+OBJ7280819,Produits  alimentaires,28178729,Piment frais en conserve
+OBJ7280819,Produits  alimentaires,28178739,Autres légumes en conserve
+OBJ7280819,Produits  alimentaires,28178749,Autres produits à base de légumes
+OBJ7280819,Produits  alimentaires,28178759,total fruits
+OBJ7280819,Produits  alimentaires,28178769,Figue
+OBJ7280819,Produits  alimentaires,28178779,Grenade
+OBJ7280819,Produits  alimentaires,28178789,Raisin de table
+OBJ7280819,Produits  alimentaires,28178799,Pomme
+OBJ7280819,Produits  alimentaires,28178809,Poire
+OBJ7280819,Produits  alimentaires,28178819,Melon
+OBJ7280819,Produits  alimentaires,28178829,Pastèque
+OBJ7280819,Produits  alimentaires,28178839,Fraise
+OBJ7280819,Produits  alimentaires,28178849,Figue de barbarie
+OBJ7280819,Produits  alimentaires,28178859,Autres fruits à pépins
+OBJ7280819,Produits  alimentaires,28178869,Abricot
+OBJ7280819,Produits  alimentaires,28178879,Nèfle
+OBJ7280819,Produits  alimentaires,28178889,Pèche
+OBJ7280819,Produits  alimentaires,28178899,Prune
+OBJ7280819,Produits  alimentaires,28178909,Dattes vertes
+OBJ7280819,Produits  alimentaires,28178919,Autres fruits à noyaux
+OBJ7280819,Produits  alimentaires,28178929,Dattes degla
+OBJ7280819,Produits  alimentaires,28178939,Dattes aligh
+OBJ7280819,Produits  alimentaires,28178949,Kenta
+OBJ7280819,Produits  alimentaires,28178959,Dattes communes
+OBJ7280819,Produits  alimentaires,28178969,Raisin sec
+OBJ7280819,Produits  alimentaires,28178979,Amande sèche avec coque
+OBJ7280819,Produits  alimentaires,28178989,Figue sèche
+OBJ7280819,Produits  alimentaires,28178999,Autres  fruits sec
+OBJ7280819,Produits  alimentaires,28179009,Amande verte
+OBJ7280819,Produits  alimentaires,28179019,Banane
+OBJ7280819,Produits  alimentaires,28179029,Fruits de cueillette
+OBJ7280819,Produits  alimentaires,28179039,Autres fruits non ventilés ailleurs
+OBJ7280819,Produits  alimentaires,28179049,fruits secs
+OBJ7280819,Produits  alimentaires,28179059,Arachide sèche décortiquée
+OBJ7280819,Produits  alimentaires,28179069,"Pignon, pistache, noisette, noix non décortiqué"
+OBJ7280819,Produits  alimentaires,28179079,Graine de courge et de tournesol
+OBJ7280819,Produits  alimentaires,28179089,Graines de maïs grillé
+OBJ7280819,Produits  alimentaires,28179099,Jeljlan (grain de sésame)
+OBJ7280819,Produits  alimentaires,28179109,Zgougou
+OBJ7280819,Produits  alimentaires,28179119,Autres graines et noix
+OBJ7280819,Produits  alimentaires,28179129,Fruits en conserve
+OBJ7280819,Produits  alimentaires,28179139,total viandes
+OBJ7280819,Produits  alimentaires,28179149,viande ovine
+OBJ7280819,Produits  alimentaires,28179159,Viande de mouton
+OBJ7280819,Produits  alimentaires,28179169,Tête et pattes  de mouton
+OBJ7280819,Produits  alimentaires,28179179,viande bovine
+OBJ7280819,Produits  alimentaires,28179189,Viande de bœuf avec os
+OBJ7280819,Produits  alimentaires,28179199,Viande de tête et pattes de  bœuf
+OBJ7280819,Produits  alimentaires,28179209,Os de bœuf
+OBJ7280819,Produits  alimentaires,28179219,Merguez frais
+OBJ7280819,Produits  alimentaires,28179229,Salami de bœuf
+OBJ7280819,Produits  alimentaires,28179239,Légumes farcies à la viande hachée
+OBJ7280819,Produits  alimentaires,28179249,volailles et gibier
+OBJ7280819,Produits  alimentaires,28179259,Poulet plumé vidé sans tête et pattes (viande de poulet)
+OBJ7280819,Produits  alimentaires,28179269,Foie de poulet
+OBJ7280819,Produits  alimentaires,28179279,Escalope de dindon
+OBJ7280819,Produits  alimentaires,28179289,Viande de dindon
+OBJ7280819,Produits  alimentaires,28179299,Salami de dindon
+OBJ7280819,Produits  alimentaires,28179309,Viande de lapin vidé
+OBJ7280819,Produits  alimentaires,28179319,Autres volailles vidées
+OBJ7280819,Produits  alimentaires,28179329,autres viandes
+OBJ7280819,Produits  alimentaires,28179339,Viande de caprin
+OBJ7280819,Produits  alimentaires,28179349,Tête et pattes de caprin
+OBJ7280819,Produits  alimentaires,28179359,Viande de chameau
+OBJ7280819,Produits  alimentaires,28179369,Viande de tête de chameau
+OBJ7280819,Produits  alimentaires,28179379,Viande  chevaline
+OBJ7280819,Produits  alimentaires,28179389,Viande de porc
+OBJ7280819,Produits  alimentaires,28179399,Jambon et charcuterie
+OBJ7280819,Produits  alimentaires,28179409,« knor » viandes
+OBJ7280819,Produits  alimentaires,28179419,tripes
+OBJ7280819,Produits  alimentaires,28179429,Tripes de mouton
+OBJ7280819,Produits  alimentaires,28179439,Tripes de bœuf
+OBJ7280819,Produits  alimentaires,28179449,Tripes de caprin
+OBJ7280819,Produits  alimentaires,28179459,Tripes de chameau
+OBJ7280819,Produits  alimentaires,28179469,Daouara de mouton
+OBJ7280819,Produits  alimentaires,28179479,Osbène de mouton
+OBJ7280819,Produits  alimentaires,28179489,Daouara de caprin
+OBJ7280819,Produits  alimentaires,28179499,Osbène de caprin
+OBJ7280819,Produits  alimentaires,28179509,Osbène sans indications
+OBJ7280819,Produits  alimentaires,28179519,"Langue, poumons"
+OBJ7280819,Produits  alimentaires,28179529,Foie de mouton
+OBJ7280819,Produits  alimentaires,28179539,Foie de bœuf
+OBJ7280819,Produits  alimentaires,28179549,Foie de caprin
+OBJ7280819,Produits  alimentaires,28179559,"Rognon, rognon blanc, cervelle"
+OBJ7280819,Produits  alimentaires,28179569,total poissons
+OBJ7280819,Produits  alimentaires,28179579,poissons frais
+OBJ7280819,Produits  alimentaires,28179589,Sardine non vidée
+OBJ7280819,Produits  alimentaires,28179599,Maquereau non vidé
+OBJ7280819,Produits  alimentaires,28179609,Rouget non vidé
+OBJ7280819,Produits  alimentaires,28179619,Pageau non vidé
+OBJ7280819,Produits  alimentaires,28179629,Mulet non vidé
+OBJ7280819,Produits  alimentaires,28179639,« sbares »
+OBJ7280819,Produits  alimentaires,28179649,Loup de mer non  vidés
+OBJ7280819,Produits  alimentaires,28179659,Loup de mer vidés
+OBJ7280819,Produits  alimentaires,28179669,daurade non  vidés
+OBJ7280819,Produits  alimentaires,28179679,daurade vidés
+OBJ7280819,Produits  alimentaires,28179689,Autres poissons frais  non vidés
+OBJ7280819,Produits  alimentaires,28179699,Poisons farcis (sauf calamar)
+OBJ7280819,Produits  alimentaires,28179709,Poulpe frais non nettoyé
+OBJ7280819,Produits  alimentaires,28179719,Seiche non nettoyé
+OBJ7280819,Produits  alimentaires,28179729,Calamar non nettoyé
+OBJ7280819,Produits  alimentaires,28179739,Escargot
+OBJ7280819,Produits  alimentaires,28179749,Fruits de mer
+OBJ7280819,Produits  alimentaires,28179759,Crustacés
+OBJ7280819,Produits  alimentaires,28179769,Poissons congelés
+OBJ7280819,Produits  alimentaires,28179779,poissons en conserve
+OBJ7280819,Produits  alimentaires,28179789,Poissons salés séchés
+OBJ7280819,Produits  alimentaires,28179799,Poulpe séché
+OBJ7280819,Produits  alimentaires,28179809,Thon en conserve
+OBJ7280819,Produits  alimentaires,28179819,Sardine en conserve
+OBJ7280819,Produits  alimentaires,28179829,Onchoua
+OBJ7280819,Produits  alimentaires,28179839,Autres poisons en conserve
+OBJ7280819,Produits  alimentaires,28179849,Total Lait ( équivalent  lait frais)
+OBJ7280819,Produits  alimentaires,28179859,Lait frais
+OBJ7280819,Produits  alimentaires,28179869,Lait de vache frais
+OBJ7280819,Produits  alimentaires,28179879,Lait de chèvre frais
+OBJ7280819,Produits  alimentaires,28179889,Lait de brebis frais
+OBJ7280819,Produits  alimentaires,28179899,Lait frais sans indications
+OBJ7280819,Produits  alimentaires,28179909,lait industriel
+OBJ7280819,Produits  alimentaires,28179919,"Lait naturel entier stérilisé (en bouteille plastique ou en carton tetrabrik) exemple : (Délice, Beldi, Vitalait…)"
+OBJ7280819,Produits  alimentaires,28179929,Lait naturel demi-écrémé stérilisé
+OBJ7280819,Produits  alimentaires,28179939,Lait naturel écrémé stérilisé (0% matière grace)
+OBJ7280819,Produits  alimentaires,28179949,Lait naturel stérilisé sans indications
+OBJ7280819,Produits  alimentaires,28179959,Lait pasteurisé
+OBJ7280819,Produits  alimentaires,28179969,Autre lait industriel  et lait industriel sans indications
+OBJ7280819,Produits  alimentaires,28179979,produits laitiers (en équivalent lait frais)
+OBJ7280819,Produits  alimentaires,28179989,lait concentré
+OBJ7280819,Produits  alimentaires,28179999,Lait concentré sucré
+OBJ7280819,Produits  alimentaires,28180009,Lait concentré non sucré
+OBJ7280819,Produits  alimentaires,28180019,Lait concentré sans autres indications
+OBJ7280819,Produits  alimentaires,28180029,lait en poudre
+OBJ7280819,Produits  alimentaires,28180039,Lait en poudre sucré
+OBJ7280819,Produits  alimentaires,28180049,Lait en poudre non  sucré
+OBJ7280819,Produits  alimentaires,28180059,Lait en poudre sans autres indications
+OBJ7280819,Produits  alimentaires,28180069,yaourt (en nbre de pots)
+OBJ7280819,Produits  alimentaires,28180079,Yaourt naturel
+OBJ7280819,Produits  alimentaires,28180089,Yaourt aromatisé
+OBJ7280819,Produits  alimentaires,28180099,Yaourt aux fruits
+OBJ7280819,Produits  alimentaires,28180109,"Yaourt crème-dessert ( flan, liégoise…)"
+OBJ7280819,Produits  alimentaires,28180119,"Yaourt à boire (DAN-UP, NOV-UP, YOGO…)"
+OBJ7280819,Produits  alimentaires,28180129,"Autres types de Yaourt (petit suisse, jockey…)"
+OBJ7280819,Produits  alimentaires,28180139,fromage
+OBJ7280819,Produits  alimentaires,28180149,Fromage type nestlé (morceau)
+OBJ7280819,Produits  alimentaires,28180159,Fromage type gruyère
+OBJ7280819,Produits  alimentaires,28180169,Fromage type rouge
+OBJ7280819,Produits  alimentaires,28180179,Fromage «  gervais »
+OBJ7280819,Produits  alimentaires,28180189,Rigouta
+OBJ7280819,Produits  alimentaires,28180199,Jebna frais
+OBJ7280819,Produits  alimentaires,28180209,Fromage râpé
+OBJ7280819,Produits  alimentaires,28180219,Fromage sans indications
+OBJ7280819,Produits  alimentaires,28180229,beurre
+OBJ7280819,Produits  alimentaires,28180239,Beurre animal
+OBJ7280819,Produits  alimentaires,28180249,"Beurre végétale (goldina, jedida…)"
+OBJ7280819,Produits  alimentaires,28180259,Smen
+OBJ7280819,Produits  alimentaires,28180269,Crème légère
+OBJ7280819,Produits  alimentaires,28180279,Crème chantilly
+OBJ7280819,Produits  alimentaires,28180289,Autres produits laitiers
+OBJ7280819,Produits  alimentaires,28180299,œufs (en nbre de pièces)
+OBJ7280819,Produits  alimentaires,28180309,Œufs
+OBJ7280819,Produits  alimentaires,28180319,"Produits à base d’œufs (mayonnaise, moutarde…)"
+OBJ7280819,Produits  alimentaires,28180329,sucre et sucreries
+OBJ7280819,Produits  alimentaires,28180339,Sucre cristallisé ou en poudre
+OBJ7280819,Produits  alimentaires,28180349,Sucre vanillé
+OBJ7280819,Produits  alimentaires,28180359,Sucre glace
+OBJ7280819,Produits  alimentaires,28180369,Bonbon
+OBJ7280819,Produits  alimentaires,28180379,Halwa chamia
+OBJ7280819,Produits  alimentaires,28180389,Halkoum
+OBJ7280819,Produits  alimentaires,28180399,Confiture et compôte de fruits industrielle
+OBJ7280819,Produits  alimentaires,28180409,Miel d’abeilles
+OBJ7280819,Produits  alimentaires,28180419,"Chocolat, noisella"
+OBJ7280819,Produits  alimentaires,28180429,"Glace, granite"
+OBJ7280819,Produits  alimentaires,28180439,"Thelja, gervais"
+OBJ7280819,Produits  alimentaires,28180449,Crème en poudre pour glace
+OBJ7280819,Produits  alimentaires,28180459,Crème en poudre pour fabrication de pâtisserie
+OBJ7280819,Produits  alimentaires,28180469,Autres produits sucrés non indiqués ailleurs (fruits confis)
+OBJ7280819,Produits  alimentaires,28180479,Huiles
+OBJ7280819,Produits  alimentaires,28180489,huile d'olive
+OBJ7280819,Produits  alimentaires,28180499,Huile de graine végétale subventionné
+OBJ7280819,Produits  alimentaires,28180509,"huiles de graines végétales (maïs, tournesol…)"
+OBJ7280819,Produits  alimentaires,28180519,thé
+OBJ7280819,Produits  alimentaires,28180529,Thé noir
+OBJ7280819,Produits  alimentaires,28180539,Thé vert
+OBJ7280819,Produits  alimentaires,28180549,café
+OBJ7280819,Produits  alimentaires,28180559,Café nature pur
+OBJ7280819,Produits  alimentaires,28180569,Café nature mélangé
+OBJ7280819,Produits  alimentaires,28180579,Café (nescafé)
+OBJ7280819,Produits  alimentaires,28180589,Tisane
+OBJ7280819,Produits  alimentaires,28180759,Tisane
+OBJ7280819,Produits  alimentaires,28180599,Eau minérale
+OBJ7280819,Produits  alimentaires,28180789,Eau minérale
+OBJ7280819,Produits  alimentaires,28180609,Boisson gazeuse
+OBJ7280819,Produits  alimentaires,28180769,Boisson gazeuse
+OBJ7280819,Produits  alimentaires,28180619,"Boisson non gazeuse sucré (sirop, essence pour sirop…)"
+OBJ7280819,Produits  alimentaires,28180629,Jus de fruits (en bouteille tetrabrik…)
+OBJ7280819,Produits  alimentaires,28180639,Jus de légumes
+OBJ7280819,Produits  alimentaires,28180649,Boisson infusion
+OBJ7280819,Produits  alimentaires,28180659,Legmi doux
+OBJ7280819,Produits  alimentaires,28180799,Legmi doux
+OBJ7280819,Produits  alimentaires,28180669,Autres boissons
+OBJ7280819,Produits  alimentaires,28180679,Bière
+OBJ7280819,Produits  alimentaires,28180689,Vin
+OBJ7280819,Produits  alimentaires,28180699,Liqueur
+OBJ7280819,Produits  alimentaires,28180709,Legmi fermenté
+OBJ7280819,Produits  alimentaires,28180719,Boissons alcoolisées sans indications
+OBJ7280819,Produits  alimentaires,28180729,Thé préparé
+OBJ7280819,Produits  alimentaires,28180739,Café préparé
+OBJ7280819,Produits  alimentaires,28180749,Thé et Café préparés non ventilés
+OBJ7280819,Produits  alimentaires,28180779,Boisson non gazeuse sucré
+OBJ7280819,Produits  alimentaires,28180809,Jus de fruits

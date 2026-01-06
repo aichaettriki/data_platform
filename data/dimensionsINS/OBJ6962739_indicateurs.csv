@@ -1,0 +1,10 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6962739,28050359,Nombre de Logements,,Nombre,,Nombre total des Logements,,Institut National de la Statistique,31/08/2016 04:53:59,"1, 2",,
+OBJ6962739,28050369,Distance séparant le Logement  du plus proche centre des jeunes,,Nombre,,Distance séparant le logement  du plus proche centre des jeunes,,Institut National de la Statistique,31/08/2016 04:53:59,"1, 2",,
+OBJ6962739,28050379,Moins de 1 Km,28050369,Nombre,,Nombre des logements distant moins de 1 Km depuis le plus proche centre des jeunes,,Institut National de la Statistique,31/08/2016 04:53:59,"1, 2",,
+OBJ6962739,28050389,Entre 1 et 2 Km,28050369,Nombre,,Nombre des logements distant entre 1 et 2 Km depuis le plus proche centre des jeunes,,Institut National de la Statistique,31/08/2016 04:53:59,"1, 2",,
+OBJ6962739,28050399,Plus de 2 Km,28050369,Nombre,,Nombre des logements distant plus de 2 Km depuis le plus proche centre des jeunes,,Institut National de la Statistique,31/08/2016 04:53:59,"1, 2",,
+OBJ6962739,28050409,Distance séparant le logement de plus proche centre sportif,,Nombre,,Distance séparant le logement de plus proche centre sportif,,Institut National de la Statistique,31/08/2016 04:53:59,"1, 2",,
+OBJ6962739,28050419,Moins de 1 Km,28050409,Nombre,,Nombre des logements distant moins de 1 Km depuis leplus proche centre sportif,,Institut National de la Statistique,31/08/2016 04:53:59,"1, 2",,
+OBJ6962739,28050429,Entre 1 et 2 Km,28050409,Nombre,,Nombre des logements distant entre 1 et 2 Km depuis le plus proche centre sportif,,Institut National de la Statistique,31/08/2016 04:53:59,"1, 2",,
+OBJ6962739,28050439,Plus de 2 Km,28050409,Nombre,,Nombre des logements distant plus de 2 Km depuisle plus proche centre sportif,,Institut National de la Statistique,31/08/2016 04:53:59,"1, 2",,

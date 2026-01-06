@@ -1,0 +1,6 @@
+dimension_id,KEY,NAME,parent_key,ISCALCULATED,C_CODE
+OBJ6958639,27998369,Population occupée agée de  15 ans et plus,,,1
+OBJ6958639,27998379,Néant,,,2
+OBJ6958639,27998389,Primaire,,,3
+OBJ6958639,27998399,Secondaire,,,4
+OBJ6958639,27998409,Supérieur,,,5

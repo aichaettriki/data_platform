@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODE,C_NOMENCLATURE,ISCALCULATED
+OBJ5049529,27747849,Total,,,,,
+OBJ5049529,27747819,Possède une cuisinière à four,,,,,
+OBJ5049529,27747829,Ne possède pas une cuisinière à four,,,,,
+OBJ5049529,27747839,Possession des équipement en électroménager non déclaré : Cuisinière à four,,,,,

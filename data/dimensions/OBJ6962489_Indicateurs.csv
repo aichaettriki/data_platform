@@ -1,0 +1,10 @@
+dimension_id,dimension_name,element_key,element_name
+OBJ6962489,Indicateurs,28045949,Nombre de Logements
+OBJ6962489,Indicateurs,28045959,Distance séparant le Logement  du plus proche collége
+OBJ6962489,Indicateurs,28045969,Moins de 1 Km
+OBJ6962489,Indicateurs,28045979,Entre 1 et 2 Km
+OBJ6962489,Indicateurs,28045989,Plus de 2 Km
+OBJ6962489,Indicateurs,28045999,Distance séparant le logement de plus proche lycée
+OBJ6962489,Indicateurs,28046009,Moins de 1 Km
+OBJ6962489,Indicateurs,28046019,Entre 1 et 2 Km
+OBJ6962489,Indicateurs,28046029,Plus de 2 Km

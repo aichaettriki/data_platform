@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODE,C_NOMENCLATURE,ISCALCULATED
+OBJ4847969,27740689,Total,,,,,
+OBJ4847969,27740659,Possède une antenne terrestre,,,,,
+OBJ4847969,27740669,Ne possède pas une antenne terrestre,,,,,
+OBJ4847969,27740679,Possession d'un moyen de confort ou de loisir non décalré : Antenne Terrestre,,,,,

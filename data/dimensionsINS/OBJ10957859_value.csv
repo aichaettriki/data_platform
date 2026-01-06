@@ -1,0 +1,9 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,ISCALCULATED
+OBJ10957859,28741739,Aux prix courants en million de dinars,,,
+OBJ10957859,28741749,Glissement annuels (T/T-4) aux prix courants,,,
+OBJ10957859,28741759,Variations trimestrielles (T/T-1) aux prix courants,,,
+OBJ10957859,28741769,Aux prix de l'année 2015 en million de dinars,,,
+OBJ10957859,28741779,Glissement annuels (T/T-4) aux prix de l'année 2015,,,
+OBJ10957859,28741789,Variations trimestrielles (T/T-1) aux prix de l'année 2015,,,
+OBJ10957859,28741799,Glissement annuel (T/T-4) aux prix de l'année précédente,,,
+OBJ10957859,28741809,Variations trimestrielles (T/T-1) aux prix de l'année précédente,,,

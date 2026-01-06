@@ -1,0 +1,37 @@
+dimension_id,KEY,NAME,parent_key,ISCALCULATED,C_CODE,C_VISIBILIT_
+OBJ10027479,28529289,Agriculture et pêche,,,A,False
+OBJ10027479,28529299,Industries,,,I,False
+OBJ10027479,28529309,Mines et Energies,28529299,,ME,False
+OBJ10027479,28529319,Industries manufacturières,28529299,,IM,False
+OBJ10027479,28529329,Industrie alimentaires,28529319,,IA,False
+OBJ10027479,28529339,"Industrie textile, habillement et chaussures",28529319,,IT,False
+OBJ10027479,28529349,Industries chimiques,28529319,,IC,False
+OBJ10027479,28529359,Industries mécaniques et électriques,28529319,,IME,False
+OBJ10027479,28729599,Travail du bois et fabrication d’articles en bois,28529319,,TB,False
+OBJ10027479,28729609,Métallurgie et travail des métaux,28529319,,MT,False
+OBJ10027479,28529369,Autre Industries manufacturieres,28529319,,AI,False
+OBJ10027479,28629589,Industries non manufacturières,28529299,,INM,False
+OBJ10027479,28629529,Industries de laboratoire,28529299,,IL,False
+OBJ10027479,28629539,Autres industries de laboratoires,28629529,,AIL,False
+OBJ10027479,28629549,Industries hors laboratoires,28529299,,IHL,False
+OBJ10027479,28629599,Construction,,,C,False
+OBJ10027479,28529379,Bâtiments et travaux Publics,28629599,,BAT,False
+OBJ10027479,28529389,Commerce,,,C,False
+OBJ10027479,28529399,"Matériaux de construction, céramiques et cristal",28529389,,MC,False
+OBJ10027479,28729569,"Commerce, réparation d'automobiles et de motocycles",,,TRM,False
+OBJ10027479,28529439,Services,,,S,False
+OBJ10027479,28529419,Hébergement et restauration,28529439,,HR,False
+OBJ10027479,28529409,Transport et communication,28529439,,T,False
+OBJ10027479,28529429,Banque et assurance,28529439,,BA,False
+OBJ10027479,28529449,Réparations et services immobiliers,28529439,,RS,False
+OBJ10027479,28729639,Communication,28529439,,CO,False
+OBJ10027479,28529459,Services sociaux et culturels,28529439,,SSC,False
+OBJ10027479,28529469,"Services d'éducation, de santé et administratifs",28529439,,SE,False
+OBJ10027479,28729619,Services personnels,28529439,,SP,False
+OBJ10027479,28729649,Enseignement,28529439,,E,False
+OBJ10027479,28729659,Activité pour la santé humaine,28529439,,HH,False
+OBJ10027479,28729679,Services domestiques,28529439,,SD,False
+OBJ10027479,28729629,Autres services,28529439,,AS,False
+OBJ10027479,28529479,Non déclaré,,,_X,False
+OBJ10027479,28529489,Non applicable,,,_Z,False
+OBJ10027479,28529499,Total,,,_T,False

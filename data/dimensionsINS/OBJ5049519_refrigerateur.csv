@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODE,C_NOMENCLATURE,ISCALCULATED
+OBJ5049519,27747809,Total,,,,,
+OBJ5049519,27747779,Possède un réfrigérateur,,,,,
+OBJ5049519,27747789,Ne possède pas un réfrigérateur,,,,,
+OBJ5049519,27747799,Possession des équipement en électroménager non déclaré : réfrigérateur,,,,,

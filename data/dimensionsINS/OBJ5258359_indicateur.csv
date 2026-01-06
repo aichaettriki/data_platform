@@ -1,0 +1,4 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,FULLNAME,C_SOURCE,C_COMMENTAIRE,DESCRIPTION,C_DATE_DE_MISE___JOUR,C_M_THODOLOGIE,ISCALCULATED,VISIBILITY
+OBJ5258359,27876019,Population âgée de 10 ans et plus,,,Population âgée de 10 ans et plus,,,,23/04/2015 03:27:49,,,"1, 2"
+OBJ5258359,27876029,Population analphabète âgée de 10 ans et plus,,,Population analphabète âgée de 10 ans et plus,,,,23/04/2015 03:27:49,,,"1, 2"
+OBJ5258359,27876039,Population alphabète âgée de 10 ans et plus,,,Population alphabète âgée de 10 ans et plus,,,,23/04/2015 03:27:49,,,"1, 2"

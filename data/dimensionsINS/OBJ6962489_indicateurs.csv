@@ -1,0 +1,10 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6962489,28045949,Nombre de Logements,,Nombre,,Nombre total des Logements,,Institut National de la Statistique,31/08/2016 03:23:11,"1, 2",,
+OBJ6962489,28045959,Distance séparant le Logement  du plus proche collége,,Nombre,,Distance séparant le logement  du plus proche collége,,Institut National de la Statistique,31/08/2016 03:23:11,"1, 2",,
+OBJ6962489,28045969,Moins de 1 Km,28045959,Nombre,,Nombre des logements distant moins de 1 Km depuis le plus proche collége,,Institut National de la Statistique,31/08/2016 03:23:11,"1, 2",,
+OBJ6962489,28045979,Entre 1 et 2 Km,28045959,Nombre,,Nombre des logements distant entre 1 et 2 Km depuis le plus proche collége,,Institut National de la Statistique,31/08/2016 03:23:11,"1, 2",,
+OBJ6962489,28045989,Plus de 2 Km,28045959,Nombre,,Nombre des logements distant plus de 2 Km depuis le plus proche collége,,Institut National de la Statistique,31/08/2016 03:23:11,"1, 2",,
+OBJ6962489,28045999,Distance séparant le logement de plus proche lycée,,Nombre,,Distance séparant le logement de plus proche lycée,,Institut National de la Statistique,31/08/2016 03:23:11,"1, 2",,
+OBJ6962489,28046009,Moins de 1 Km,28045999,Nombre,,Nombre des logements distant moins de 1 Km depuis le lycée le plus proche,,Institut National de la Statistique,31/08/2016 03:23:11,"1, 2",,
+OBJ6962489,28046019,Entre 1 et 2 Km,28045999,Nombre,,Nombre des logements distant entre 1 et 2 Km depuis le lycée le plus proche,,Institut National de la Statistique,31/08/2016 03:23:11,"1, 2",,
+OBJ6962489,28046029,Plus de 2 Km,28045999,Nombre,,Nombre des logements distant plus de 2 Km depuis le lycée le plus proche,,Institut National de la Statistique,31/08/2016 03:23:11,"1, 2",,

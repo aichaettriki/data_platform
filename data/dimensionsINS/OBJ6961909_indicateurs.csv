@@ -1,0 +1,7 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMERNTAIRE,C_M_THODOLOGIE
+OBJ6961909,28037289,Nombre de Logements,,Nombre,,Nombre de Logements,,Institut National de la Statistique,30/08/2016 01:22:02,"1, 2",,
+OBJ6961909,28037299,Logement Occupé,,Nombre,,Nombre des Logements Occupés,,Institut National de la Statistique,30/08/2016 01:22:02,"1, 2",,
+OBJ6961909,28037309,Logement Secondaire ou logement des ménages à l'étranger,,Nombre,,Nombre des Logements Secondaires ou logements des ménages à l'étranger,,Institut National de la Statistique,30/08/2016 01:22:02,"1, 2",,
+OBJ6961909,28037319,Logement Vacant,,Nombre,,Nombre des Logements Vacants,,Institut National de la Statistique,30/08/2016 01:22:02,"1, 2",,
+OBJ6961909,28037329,Logement abandonné,,Nombre,,Nombre des Logements abandonnés,,Institut National de la Statistique,30/08/2016 01:22:02,"1, 2",,
+OBJ6961909,28037339,Logement à la dernière phase de  construction,,Nombre,,Nombre des Logements à la dernière phase de  construction,,Institut National de la Statistique,30/08/2016 01:22:02,"1, 2",,

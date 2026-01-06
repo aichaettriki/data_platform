@@ -1,0 +1,5 @@
+dimension_id,dimension_name,element_key,element_name
+OBJ5049539,Machine à laver,27747889,Total
+OBJ5049539,Machine à laver,27747859,Possède une lave linge
+OBJ5049539,Machine à laver,27747869,Ne possède pas une lave linge
+OBJ5049539,Machine à laver,27747879,Possession des équipement en électroménager non déclaré : Lave linge

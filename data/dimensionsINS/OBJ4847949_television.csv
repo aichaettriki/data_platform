@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODE,C_NOMENCLATURE,ISCALCULATED
+OBJ4847949,27740609,Total,,,,,
+OBJ4847949,27740579,Possède une télévision,,,,,
+OBJ4847949,27740589,Ne possède pas une télévision,,,,,
+OBJ4847949,27740599,Possession d'un moyen de confort ou de loisir non déclaré :  Télévision,,,,,

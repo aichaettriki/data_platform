@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODER,C_NOMENCLATURE,ISCALCULATED
+OBJ4848159,27741329,Total,,,,,
+OBJ4848159,27741299,Possède une connexion Internet,,,,,
+OBJ4848159,27741309,Ne possède une connexion Internet,,,,,
+OBJ4848159,27741319,Possession des TIC non déclaré : Connexion Internet,,,,,

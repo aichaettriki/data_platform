@@ -1,0 +1,8 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODER,C_NOMENCLATURE,ISCALCULATED
+OBJ4847779,27741759,Total,,,var 312,,
+OBJ4847779,27741709,Une pièce,,,var 312,,
+OBJ4847779,27741719,Deux pièces,,,var 312,,
+OBJ4847779,27741729,Trois pièces,,,var 312,,
+OBJ4847779,27741739,Quatre pièces,,,var 312,,
+OBJ4847779,27741749,Cinq pièces ou plus,,,var 312,,
+OBJ4847779,27741769,Non déclaré,,,,,

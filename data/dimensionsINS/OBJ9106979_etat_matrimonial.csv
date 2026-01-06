@@ -1,0 +1,8 @@
+dimension_id,KEY,NAME,parent_key,ISCALCULATED,C_CODE,C_VISIBILIT_
+OBJ9106979,28316759,Total,,,T,True
+OBJ9106979,28518579,Célibataire ayant un(e) fiancé(e) / un(e) ami(e),,,CF,True
+OBJ9106979,28518589,Fiancé(e),,,F,True
+OBJ9106979,28316789,Marié(e),,,M,True
+OBJ9106979,28316799,Divorcé(e),,,D,True
+OBJ9106979,28316809,Veuf(ve),,,W,True
+OBJ9106979,28518599,Ayant une relation intime,,,R,True

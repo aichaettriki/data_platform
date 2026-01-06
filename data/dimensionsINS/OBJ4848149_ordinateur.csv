@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODER,C_NOMENCLATURE,ISCALCULATED
+OBJ4848149,27741289,Total,,,,,
+OBJ4848149,27741259,Possède un ordinateur,,,,,
+OBJ4848149,27741269,Ne possède pas un ordinateur,,,,,
+OBJ4848149,27741279,Possession des TIC non déclaré : Ordinateur,,,,,

@@ -17,4 +17,3 @@ ADD https://jdbc.postgresql.org/download/postgresql-42.7.3.jar /opt/spark/jars/
 
 # USER 1001
 WORKDIR /opt/spark
-

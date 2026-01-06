@@ -97,14 +97,14 @@ if __name__ == "__main__":
     spark = create_spark_session()
 
     if action == "read_raw_csv":
-        df = read_raw_csv(spark, "s3a://raw/")
+        df = read_raw_csv(spark, "s3a://raw/equipe1.py")
 
     elif action == "clean_and_transformed":
-        df = read_raw_csv(spark, "s3a://raw/")
+        df = read_raw_csv(spark, "s3a://raw/equipe1.py")
         clean_and_write(df, "s3a://transformed/equipe_spark")
 
     elif action == "add_timestamp_refined":
-        df = read_raw_csv(spark, "s3a://raw/equipe.csv")
+        df = read_raw_csv(spark, "s3a://raw/equipe1s.csv")
         df_clean = clean_and_write(df, "s3a://transformed/equipe_spark")
         add_timestamp_and_write(df_clean, "s3a://refined/equipe_spark")
 

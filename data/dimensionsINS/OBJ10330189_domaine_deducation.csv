@@ -1,0 +1,25 @@
+dimension_id,KEY,NAME,parent_key,ISCALCULATED,C_CODE,C_VISIBILIT_
+OBJ10330189,28736209,Formation des formateurs et sciences de l’éducation,,,DOM1,Yes
+OBJ10330189,28736219,Arts,,,DOM2,Yes
+OBJ10330189,28736229,Lettres,,,DOM3,Yes
+OBJ10330189,28736239,Affaires commerciales et administratives,,,DOM4,Yes
+OBJ10330189,28736249,Droit,,,DOM5,Yes
+OBJ10330189,28736259,Journalisme et sciences de l’information,,,DOM6,Yes
+OBJ10330189,28736269,Sciences sociales et du comportement,,,DOM7,Yes
+OBJ10330189,28736279,Mathématiques et statistiques,,,DOM8,Yes
+OBJ10330189,28736289,Sciences informatique et multimédia,,,DOM9,Yes
+OBJ10330189,28736299,Sciences de la vie,,,DOM10,Yes
+OBJ10330189,28736309,Sciences physiques,,,DOM11,Yes
+OBJ10330189,28736319,Industrie de transformation et de traitement,,,DOM12,Yes
+OBJ10330189,28736329,Architecture et bâtiment,,,DOM13,Yes
+OBJ10330189,28736339,Ingénierie et techniques apparentées,,,DOM14,Yes
+OBJ10330189,28736349,Sciences vétérinaires,,,DOM15,Yes
+OBJ10330189,28736359,Agriculture sylviculture et halieutique,,,DOM16,Yes
+OBJ10330189,28736369,Santé,,,DOM17,Yes
+OBJ10330189,28736379,Protection de l’environnement,,,DOM18,Yes
+OBJ10330189,28736389,Services,,,DOM19,Yes
+OBJ10330189,28736399,Services sociaux,,,DOM20,Yes
+OBJ10330189,28736409,Services de transport,,,DOM21,Yes
+OBJ10330189,28736419,Services aux particuliers,,,DOM22,Yes
+OBJ10330189,28736429,Total,,,DOM23,Yes
+OBJ10330189,28736439,Non applicable,,,DOM24,Yes

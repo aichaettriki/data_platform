@@ -9,7 +9,7 @@ $entries = @(
 "127.0.0.1 prometheus.itceq.tn",
 "127.0.0.1 metabase.itceq.tn",
 "127.0.0.1 pgadmin.itceq.tn",
-"127.0.0.1 .park.itceq.tn"
+"127.0.0.1 spark.itceq.tn"
 )
 
 foreach ($entry in $entries) {

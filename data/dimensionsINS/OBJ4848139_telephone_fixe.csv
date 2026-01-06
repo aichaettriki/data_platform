@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODER,C_NOMENCLATURE,ISCALCULATED
+OBJ4848139,27741249,Total,,,,,
+OBJ4848139,27741219,Possède un téléphone fixe,,,,,
+OBJ4848139,27741229,Ne possède pas un téléphone fixe,,,,,
+OBJ4848139,27741239,Possession des TIC non déclaré : Téléphone fixe,,,,,

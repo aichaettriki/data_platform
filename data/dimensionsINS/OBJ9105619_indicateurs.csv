@@ -1,0 +1,35 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_VISIBILIT_,C_CODE,C_DATE_DE_MISE___JOUR,C_P_RIODICIT_,C_SOURCE,C_M_THODOLOGIE,C_CAT_GORIE,C_COMMENTAIRE,C_ORGANISATION_CHEF_DE_FILE
+OBJ9105619,28316839,Naissances,,,,Naissances,,True,,06/07/2020 22:32:00,,,,1,,Institut National de la Statistique
+OBJ9105619,28317879,Accouchement assisté,28316839,Pourcentage,,Accouchement assisté,,True,,04/09/2020 12:23:00,Annuelle,Institut National de la statistique,Etat civil,,,Institut National de la Statistique
+OBJ9105619,28317889,Rapport de masculinité,28316839,Pourcentage,,Rapport de masculinité,,True,,04/09/2020 12:27:00,Annuelle,Institut National de la Statistique,Etat civil,1,,Institut National de la Statistique
+OBJ9105619,28316859,Taux brut de natalité,28316839,En miliiers,,Taux brut de natalité,,True,,07/06/2020 21:32:00,Annuelle,Etat civil,Civil status,1,,Institut National de la Statistique
+OBJ9105619,28316869,Indice synthétique de fécondité,28316839,Indice,,Indice synthétique de fécondité,,True,,07/06/2020 21:32:00,Annuelle,Etat civil,Civil status,1,,Institut National de la Statistique
+OBJ9105619,28318039,Décès,,,,Décès,,True,,07/09/2020 12:08:00,,,,1,,Institut National de la Statistique
+OBJ9105619,28316879,Nombre de décès,28318039,Nombre,,Nombre de décès,,True,,07/06/2020 21:32:05,Annuelle,Etat civil,Civil status,1,,Institut National de la Statistique
+OBJ9105619,28316889,Taux brut de mortalité,28316879,Par mille,,Taux brut de mortalité,,True,,07/06/2020 22:32:00,Annuelle,Etat civil,Civil status,1,,Institut National de la Statistique
+OBJ9105619,28316899,Mortalité infantile,28318039,Nombre,,Mortalité infantile,,True,,06/07/2020 21:32:00,Annuelle,Etat civil,Civil status,1,,Institut National de la Statistique
+OBJ9105619,28316909,Mariages,,Nombre,,Mariages,,False,,06/07/2020 22:32:00,Annuelle,Etat civil,Civil status,1,,Institut National de la Statistique
+OBJ9105619,28317899,Groupe d'âge de l'époux,28316909,Nombre,,Nombre de mariages par groupe d'âge de l'époux,,False,,09/04/2020 19:34:00,,Institut National de la Statistique,,,,
+OBJ9105619,28317909,Groupe d'age de l'épouse,28316909,Nombre,,Nombre de mariages par groupe d'age de l'épouse,,False,,04/09/2020 19:37:00,,Institut National de la Statistique,,,,
+OBJ9105619,28316919,Taux brut de nuptialité,28316909,Nombre,,Nombre de mariages\Taux brut de nuptialité,,False,,07/06/2020 21:32:05,Annuelle,Etat civil,Civil status,1,,Institut National de la Statistique
+OBJ9105619,28316929,Type de propriété dans le contrat de mariage,28316909,Nombre,,Nombre de mariages\Type de propriété dans le contrat de mariage,,False,,07/06/2020 21:32:05,Annuelle,Etat civil,Civil status,1,,Institut National de la Statistique
+OBJ9105619,28317949,Système de propriété commun,28316929,Pourcentage,,Nombre de mariages\Type de propriété dans le contrat de mariage\Système de propriété commun,,False,,09/04/2020 20:44:00,,Institut National de la Statistique,,,,
+OBJ9105619,28317959,Système de propriété non commun,28316929,Pourcentage,,Type de propriété dans le contrat de mariage\Système de propriété non commun,,False,,09/04/2020 20:46:00,,Institut National de la Statistique,,,,
+OBJ9105619,28316939,Divorces,,Nombre,,Divorces,,False,,06/07/2020 22:32:00,Annuelle,Ministère de la justice,Ministère de la justice,1,,Institut National de la Statistique
+OBJ9105619,28316949,Taux brut de divortialité,28316939,Nombre,,Divorces\Taux brut de divortialité,,False,,07/06/2020 21:32:05,Annuelle,Ministère de la justice,Justice Ministry,1,,Institut National de la Statistique
+OBJ9105619,28318049,Migration,,,,Migration,,False,,09/07/2020 12:18:00,,Institut National de la Statistique,RGPH,,,Institut National de la Statistique
+OBJ9105619,28316959,Migration interne,28318049,Nombre,,Migration\Migration interne,,False,,07/06/2020 21:32:05,10 ans,RGPH,RGPH,1,,Institut National de la Statistique
+OBJ9105619,28317969,La migration intra-gouvernorats pour la population (Avril 2004 - Avril 2014),28316959,Pourcentage,,La migration intra-gouvernorats pour la population (Avril 2004 - Avril 2014),,False,,04/09/2020 23:04:00,,Institut National de la Statistique,,,,
+OBJ9105619,28317979,Communal vers communal,28316959,Nombre,,Migration interne\Communal vers communal,,False,,09/04/2020 23:21:00,,Institut National de la Statistique,,,,
+OBJ9105619,28317989,Communal vers non communal,28316959,Nombre,,Migration interne\Communal vers non communal,,False,,09/04/2020 23:27:00,,Nombre,,,,
+OBJ9105619,28317999,Non communal vers communal,28316959,Nombre,,Migration interne\Non communal vers communal,,False,,09/04/2020 23:31:00,,Institut National de la Statistique,,,,
+OBJ9105619,28318009,Non communal vers non communal,28316959,Nombre,,Migration interne\Non communal vers non communal,,False,,09/04/2020 23:35:00,,Institut National de la Statistique,,,,
+OBJ9105619,28316969,Migration externe,28318049,Nombre,,Migration\Migration externe,,False,,07/06/2020 21:32:05,10 ans,RGPH,RGPH,1,,Institut National de la Statistique
+OBJ9105619,28318019,Les entrants tunisiens de l'étranger âgés de 15 ans et plus (Avril 2004 - Avril 2014),28316969,Pourcentage,,Migration\Migration externe\Les entrants tunisiens de l'étranger âgés de 15 ans et plus (Avril 2004 - Avril 2014),,False,,09/04/2020 23:40:00,,Institut National de la Statistique,,,,
+OBJ9105619,28318029,Les entrants non tunisiens de l'étranger (Avril 2004 - Avril 2014),28316969,Pourcentage,,Migration externe\Les entrants non tunisiens de l'étranger (Avril 2004 - Avril 2014),,False,,09/04/2020 23:46:00,,Institut National de la Statistique,,,,
+OBJ9105619,28316829,Population,,,,Population,,True,,06/07/2020 21:32:00,,,,,,
+OBJ9105619,28317789,Proportion de la population par milieu,28316829,Pourcentage,,Population's proportion by area,,True,,03/09/2020 09:36:00,Décennal,Institut National de la Statistique,Enquêtes sociales,1,,Division de statistique des Nations Unies
+OBJ9105619,28317799,Répartition des ménages selon le sexe du chef de ménage,28316829,Pourcentage,,Répartition des ménages selon le sexe du chef de ménage,,True,,09/03/2020 10:31:00,Décennal,Institut National de la Statistique,RGPH,1,,Institut National de la Statistique
+OBJ9105619,28317819,Répartition de la population,28316829,Pourcentage,,Répartition de la population,,True,,09/03/2020 11:24:00,Annuelle,Institut National de la Statistique,Etat civil,1,,Institut National de la Statistique
+OBJ9105619,28317839,Répartition de la population handicapée,28316829,Pour mille,,Répartition de la population handicapée,,True,,09/03/2020 12:14:00,Décennal,Institut National de la Statistique,RGPH,1,,Institut National de la Statistique
+OBJ9105619,28317869,Nombre de population handicapée,28316829,Nombre,,Nombre de population handicapée,,True,,03/09/2020 16:30:00,Déccennal,Institut National de la Statisitique,RGPH,,,Institut National de la Statistique

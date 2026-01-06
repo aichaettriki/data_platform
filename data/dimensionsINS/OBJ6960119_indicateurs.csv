@@ -1,0 +1,8 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6960119,28022289,Nombre ménages,,Nombre,,Nombre total des ménages,,Institut National de la Statistique,25/08/2016 06:13:13,"1, 2",,
+OBJ6960119,28022299,Propriétaire,,Nombre,,Propriétaire,,Institut National de la Statistique,25/08/2016 06:13:13,"1, 2",,
+OBJ6960119,28022309,Auto-construction,28022299,Nombre,,Nombre de ménages qui ont obtenu leurs maisons de résidence à travers l'auto-construction,,Institut National de la Statistique,25/08/2016 06:13:13,"1, 2",,
+OBJ6960119,28022319,Achat,28022299,Nombre,,Nombre de ménages qui ont obtenu leurs maisons de résidence via l'achat,,Institut National de la Statistique,25/08/2016 06:13:13,"1, 2",,
+OBJ6960119,28022329,Autre,28022299,Nombre,,Nombre de ménages qui aont obtenu leurs maison de résidence via d'autres façons,,Institut National de la Statistique,25/08/2016 06:13:13,"1, 2",,
+OBJ6960119,28022339,Locataire,,Nombre,,Nombre de ménages locataires de leurs logements,,Institut National de la Statistique,25/08/2016 06:13:13,"1, 2",,
+OBJ6960119,28022349,Autre mode,,Nombre,,Nombre de ménages résidant dans leurs logements sous une autre mode d'occupation,,Institut National de la Statistique,25/08/2016 06:13:13,"1, 2",,

@@ -1,0 +1,6 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,ISCALCULATED
+OBJ5259759,27912309,Prix courants en million de dinars,,,
+OBJ5259759,27912319,Évolution en pourcentage au prix courant,,,
+OBJ5259759,27912329,Prix constants de l'année précédente en million de dinars,,,
+OBJ5259759,27912339,Évolution en pourcentage au prix constants de l'année précédente,,,
+OBJ5259759,27918779,Évolution des prix,,,

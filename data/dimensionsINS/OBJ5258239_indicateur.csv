@@ -1,0 +1,4 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,FULLNAME,C_SOURCE,C_COMMENTAIRE,DESCRIPTION,C_DATE_DE_MISE___JOUR,C_M_THODOLOGIE,VISIBILITY,ISCALCULATED
+OBJ5258239,27871999,Population agée de 6 à 14 ans,,,Population agée de 6 à 14 ans,,,,23/04/2015 01:53:09,,"1, 2",
+OBJ5258239,27872009,Population scolarisée et âgée de 6 à 14 ans,,,Population scolarisée et âgée de 6 à 14 ans,,,,23/04/2015 01:53:09,,"1, 2",
+OBJ5258239,27872019,Population non scolarisée et âgée de 6 à 14 ans,,,Population non scolarisée et âgée de 6 à 14 ans,,,,23/04/2015 01:53:09,,"1, 2",

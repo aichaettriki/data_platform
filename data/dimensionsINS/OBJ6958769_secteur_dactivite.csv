@@ -1,0 +1,11 @@
+dimension_id,KEY,NAME,parent_key,ISCALCULATED,C_CODE
+OBJ6958769,28001589,Population occupée agée de 15 ans et plus,,,1
+OBJ6958769,28001599,Agriculture et peche,,,2
+OBJ6958769,28001609,Mines  et énergie,,,3
+OBJ6958769,28001619,Industrie manufacturière,,,4
+OBJ6958769,28001629,Batiment et travaux publiques,,,5
+OBJ6958769,28001639,Commerce,,,6
+OBJ6958769,28001649,Transport,,,7
+OBJ6958769,28001659,"Education, Santé et services administratifs",,,8
+OBJ6958769,28001669,Autres services,,,9
+OBJ6958769,28001679,Non Declaré,,,10

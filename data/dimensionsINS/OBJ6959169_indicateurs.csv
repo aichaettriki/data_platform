@@ -1,0 +1,13 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6959169,28010579,Mobilité générale des migrants,,Nombre,,Mobilité générale des migrants entre 2009 et 2014,,Institut National de la Statistique,23/08/2016 08:03:13,"1, 2",,
+OBJ6959169,28010589,Migration au niveau des délégations,,Nombre,,Migration au niveau des délégations entre 2009 et 2014,,Institut National de la Statistique,23/08/2016 08:03:13,"1, 2",,
+OBJ6959169,28010599,Migrants entrants,28010589,Nombre,,Migration au niveau des délégations\Migrants entrants,,Institut National de la Statistique,23/08/2016 08:03:13,"1, 2",,
+OBJ6959169,28010609,Migrants sortants,28010589,Nombre,,Migration au niveau des délégations\Migrants sortants,,Institut National de la Statistique,23/08/2016 08:03:13,"1, 2",,
+OBJ6959169,28010619,Solde migratoire,28010589,Nombre,,Migration au niveau des délégations\Solde migratoire,,Institut National de la Statistique,23/08/2016 08:03:13,"1, 2",,
+OBJ6959169,28010629,Raisons de sortie,,Nombre,,La migration entre 2009 et 2014 selon les raisons de sortie,,Institut National de la Statistique,23/08/2016 08:03:13,"1, 2",,
+OBJ6959169,28010639,Emploi,28010629,Nombre,,Nombre des migrants quittant pour l'emploi,,Institut National de la Statistique,23/08/2016 08:03:13,"1, 2",,
+OBJ6959169,28010649,Acquisition de logement ou meilleur condition de vie,28010629,Nombre,,Nombre des migrants quittant pour l'acquisition de logement ou meilleur condition de vie,,Institut National de la Statistique,23/08/2016 08:03:13,"1, 2",,
+OBJ6959169,28010659,Mariage,28010629,Nombre,,Nombre de migrants quittant pour le mariage,,Institut National de la Statistique,23/08/2016 08:03:13,"1, 2",,
+OBJ6959169,28010669,Accompagnement de la famille,28010629,Nombre,,Nombre de migrants quittant pour l'accompagnement de la famille,,Institut National de la Statistique,23/08/2016 08:03:13,"1, 2",,
+OBJ6959169,28010679,Etudes,28010629,Nombre,,Nombre de migrants quittant pour les etudes,,Institut National de la Statistique,23/08/2016 08:03:13,"1, 2",,
+OBJ6959169,28010689,Autres,28010629,Nombre,,Nombre des migrants quittants pour d'autres raisons,,Institut National de la Statistique,23/08/2016 08:03:13,"1, 2",,

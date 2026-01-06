@@ -1,0 +1,4 @@
+dimension_id,KEY,NAME,parent_key,ISCALCULATED,C_CODE,C_VISIBILIT_
+OBJ10027469,28528719,Total,,,T,False
+OBJ10027469,28528729,Milieu Communal,,,C,False
+OBJ10027469,28528739,Milieu non communal,,,N,False

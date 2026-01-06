@@ -1,0 +1,7 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODER,C_NOMENCLATURE,ISCALCULATED
+OBJ4847679,27740569,Total,,,,,
+OBJ4847679,27740519,Gaz et électricité comme source d'énergie pour chuaffer de l'eau,,,,,
+OBJ4847679,27740529,Pétrole bleu comme source d'énergie pour chauffer de l'eau,,,,,
+OBJ4847679,27740539,Charbon et bois comme source d'énergie pour chauffer de l'eau,,,,,
+OBJ4847679,27740549,Auncune utilisation d'une source d'énergie pour chauffer de l'eau,,,,,
+OBJ4847679,27740559,Source d'énergie pour chauffer l'eau non déclaré,,,,,

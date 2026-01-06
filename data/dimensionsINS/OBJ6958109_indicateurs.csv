@@ -1,0 +1,7 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6958109,27995029,Population agée 15 ans et plus en 2014,,العدد,,Nombre des personnes agées 15 ans et plus en 2014,,المعهد الوطني للإحصاء,22/08/2016 04:13:16,"1, 2",,
+OBJ6958109,27995039,Population active Occupée,,العدد,,Nombre des personnes actives Occupées,,المعهد الوطني للإحصاء,22/08/2016 04:13:16,"1, 2",,
+OBJ6958109,27995049,Population active non occupée (Chômeurs),,العدد,,Nombre des personnes  actives non occupées (Chômeurs),,المعهد الوطني للإحصاء,22/08/2016 04:13:16,"1, 2",,
+OBJ6958109,27995059,Population Inactive,,العدد,,Nombre des personnes Inactives,,المعهد الوطني للإحصاء,22/08/2016 04:13:16,"1, 2",,
+OBJ6958109,27995069,Taux d'activité,,النسبة,,Taux d'activité de la population en 2014,,المعهد الوطني للإحصاء,22/08/2016 04:13:16,"1, 2",,
+OBJ6958109,27995079,Taux de chômage,,النسبة,,Taux de chômage de la population en 2014,,المعهد الوطني للإحصاء,22/08/2016 04:13:16,"1, 2",,

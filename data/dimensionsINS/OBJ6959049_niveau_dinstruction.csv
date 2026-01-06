@@ -1,0 +1,6 @@
+dimension_id,KEY,NAME,parent_key,ISCALCULATED,C_CODE
+OBJ6959049,28007889,Population au  chomage agée 15 ans et plus,,,1
+OBJ6959049,28007899,Néant,,,2
+OBJ6959049,28007909,Primaire,,,3
+OBJ6959049,28007919,Secondaire,,,4
+OBJ6959049,28007929,Supérieur,,,5

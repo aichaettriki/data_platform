@@ -1,0 +1,52 @@
+dimension_id,dimension_name,element_key,element_name
+OBJ5260049,Indicateur,27914049,Revenus primaires
+OBJ5260049,Indicateur,27914059,Sociétés non financières
+OBJ5260049,Indicateur,27914069,Revenus d'entreprises (snf)
+OBJ5260049,Indicateur,27914079,Revenus distribués (en moins) (snf)
+OBJ5260049,Indicateur,27914089,Institutions financières
+OBJ5260049,Indicateur,27914099,Revenus d'entreprises (sf)
+OBJ5260049,Indicateur,27914109,Revenus distribués (en moins) (sf)
+OBJ5260049,Indicateur,27914119,Administration publique
+OBJ5260049,Indicateur,27914129,Revenu d'exploitation
+OBJ5260049,Indicateur,27914139,Intérêts dividendes revenus reçus nets
+OBJ5260049,Indicateur,27914149,Impôts indirects nets de subvention d'exploitation
+OBJ5260049,Indicateur,27914159,Ménages
+OBJ5260049,Indicateur,27914169,Revenus bruts d'activités
+OBJ5260049,Indicateur,27914179,Revenus du travail des salariés
+OBJ5260049,Indicateur,27914189,Revenus de la production d'entreprises individuelles
+OBJ5260049,Indicateur,27914199,Revenus de la production hors entreprises individuelles
+OBJ5260049,Indicateur,27914209,Revenus de la propriété
+OBJ5260049,Indicateur,27914219,Total des revenus primaires (PNB)
+OBJ5260049,Indicateur,27914229,Autres transferts courants reçus de l'extérieur nets
+OBJ5260049,Indicateur,27914239,Revenu national disponible brut
+OBJ5260049,Indicateur,27914429,Revenus disponibles Bruts
+OBJ5260049,Indicateur,27914439,Sociétés non financières
+OBJ5260049,Indicateur,27914449,Primary income
+OBJ5260049,Indicateur,27914459,Redistribution et autres transferts nets
+OBJ5260049,Indicateur,27914469,Impôts directs versés (-)
+OBJ5260049,Indicateur,27914479,Autres transferts reçus nets (+)
+OBJ5260049,Indicateur,27914489,Institutions financières
+OBJ5260049,Indicateur,27914499,Revenu primaire
+OBJ5260049,Indicateur,27914509,Redistribution et autres transferts nets
+OBJ5260049,Indicateur,27914519,Impôts directs versés (-)
+OBJ5260049,Indicateur,27914529,Cotisations sociales reçues (+)
+OBJ5260049,Indicateur,27914539,Prestations sociales versées (-)
+OBJ5260049,Indicateur,27914549,Autres transferts reçus nets (+)
+OBJ5260049,Indicateur,27914559,Administration publique
+OBJ5260049,Indicateur,27914569,Revenu primaire
+OBJ5260049,Indicateur,27914579,Redistribution et autres transferts nets
+OBJ5260049,Indicateur,27914589,Impôts directs reçus (+)
+OBJ5260049,Indicateur,27914599,Cotisations sociales reçues (+)
+OBJ5260049,Indicateur,27914609,Prestations sociales versées (-)
+OBJ5260049,Indicateur,27914619,Autres transferts reçus nets (+)
+OBJ5260049,Indicateur,27914629,Ménages
+OBJ5260049,Indicateur,27914639,Revenu primaire
+OBJ5260049,Indicateur,27914649,Redistribution et autres transferts nets
+OBJ5260049,Indicateur,27914659,Impôts directs versés (-)
+OBJ5260049,Indicateur,27914669,Cotisations sociales versées (-)
+OBJ5260049,Indicateur,27914679,Prestations sociales reçues  (+)
+OBJ5260049,Indicateur,27914689,Autres transferts reçus nets (+)
+OBJ5260049,Indicateur,27914699,Dont économie sur salaires reçus de l'extérieur
+OBJ5260049,Indicateur,27914709,Revenu national disponible brut
+OBJ5260049,Indicateur,27914719,Consommation finale
+OBJ5260049,Indicateur,27914729,Épargne nationale brute

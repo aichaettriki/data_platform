@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODE,C_NOMENCLATURE,ISCALCULATED
+OBJ5049559,27747969,Total,,,,,
+OBJ5049559,27747939,Possède un chauffage central,,,,,
+OBJ5049559,27747949,Ne possède pas un chauffage central,,,,,
+OBJ5049559,27747959,Possession des équipement en électroménager non déclaré : Chauffage central,,,,,

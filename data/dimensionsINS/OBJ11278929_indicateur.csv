@@ -1,0 +1,11 @@
+dimension_id,KEY,NAME,parent_key,FULLNAME,C_COMMENTAIRE,DESCRIPTION,C_DATE_DE_MISE___JOUR,C_M_THODOLOGIE,ISCALCULATED,VISIBILITY
+OBJ11278929,28749379,Produit Intérieur Brut,,Produit Intérieur Brut,,,,,,"1, 2"
+OBJ11278929,28749389,Importations,,Importations,,,,,,"1, 2"
+OBJ11278929,28749399,Total Ressources -Emplois,,Total Ressources -Emplois,,,,,,"1, 2"
+OBJ11278929,28749409,Consommation finale globale,,Consommation finale globale,,,,,,"1, 2"
+OBJ11278929,28749419,Consommation Publique,28749409,Consommation finale globale\Consommation Publique,,,,,,"1, 2"
+OBJ11278929,28749429,Consommation privée,28749409,Consommation finale globale\Consommation privée,,,,,,"1, 2"
+OBJ11278929,28749439,Formation Brute de Capital Fixe,,Formation Brute de Capital Fixe,,,,,,"1, 2"
+OBJ11278929,28749449,Variations de stocks,,Variations de stocks,,,,,,"1, 2"
+OBJ11278929,28749459,Demande Intérieure,,Demande Intérieure,,,,,,"1, 2"
+OBJ11278929,28749469,Exportations,,Exportations,,,,,,"1, 2"

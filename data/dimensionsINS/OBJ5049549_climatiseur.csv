@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODE,C_NOMENCLATURE,ISCALCULATED
+OBJ5049549,27747929,Total,,,,,
+OBJ5049549,27747899,Possède un climatiseur,,,,,
+OBJ5049549,27747909,Ne possède pas une climatiseur,,,,,
+OBJ5049549,27747919,Possession des équipements en électroménager non déclaré : Climatiseur,,,,,

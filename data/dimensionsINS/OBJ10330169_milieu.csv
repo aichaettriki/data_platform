@@ -1,0 +1,4 @@
+dimension_id,KEY,NAME,parent_key,ISCALCULATED,C_CODE,C_VISIBILIT_
+OBJ10330169,28736169,Total,,,T,Yes
+OBJ10330169,28736179,Milieu Communal,,,C,Yes
+OBJ10330169,28736189,Milieu non communal,,,N,Yes

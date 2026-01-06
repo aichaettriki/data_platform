@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODER,C_NOMENCLATURE,ISCALCULATED
+OBJ4848069,27741569,Total,,,var 307,,
+OBJ4848069,27741529,Réseau électrique,,,var 307,,
+OBJ4848069,27741539,Autre source d'éclairage,,,var 307,,
+OBJ4848069,27741549,Source d'éclairage non déclaré,,,var 307,,

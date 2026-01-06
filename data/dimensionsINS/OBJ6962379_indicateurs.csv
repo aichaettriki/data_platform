@@ -1,0 +1,10 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6962379,28043789,Nombre de Logements,,Nombre,,Nombre de Logements,,Institut National de la Statistique,,"1, 2",,
+OBJ6962379,28043799,Distance séparant le Logement  du plus proche jardin d'enfant ou koutteb,,Nombre,,Distance séparant le Logement  du plus proche jardin d'enfant ou koutteb,,Institut National de la Statistique,,"1, 2",,
+OBJ6962379,28043809,Moins de 1 Km,28043799,Nombre,,Nombre des logements distant moins de 1 Km depuis le plus proche jardin d'enfant ou kottab,,Institut National de la Statistique,,"1, 2",,
+OBJ6962379,28043819,Entre 1 et 2 Km,28043799,Nombre,,Nombre des logements distant entre 1 et 2 Km depuis le plus proche jardin d'enfant ou kottab,,Institut National de la Statistique,,"1, 2",,
+OBJ6962379,28043829,Plus de 2 Km,28043799,Nombre,,Nombre des logements distant plus de 2 Km depuis le plus proche jardin d'enfant ou kottab,,Institut National de la Statistique,,"1, 2",,
+OBJ6962379,28043839,Distance séparant le logement de l'école primaire la plus proche,,Nombre,,Distance séparant le logement de l'école primaire la plus proche,,Institut National de la Statistique,,"1, 2",,
+OBJ6962379,28043849,Moins de 1 Km,28043839,Nombre,,Nombre des logements distant moins de 1 Km depuis la plus proche école primaire,,Institut National de la Statistique,,"1, 2",,
+OBJ6962379,28043859,Entre 1 et 2 Km,28043839,Nombre,,Nombre des logements distant entre 1 et 2 Km depuis la plus proche école primaire,,Institut National de la Statistique,,"1, 2",,
+OBJ6962379,28043869,Plus de 2 Km,28043839,Nombre,,Nombre des logements distant plus de 2 Km depuis la plus proche école primaire,,Institut National de la Statistique,,"1, 2",,

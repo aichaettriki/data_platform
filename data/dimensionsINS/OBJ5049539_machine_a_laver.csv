@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODE,C_NOMENCLATURE,ISCALCULATED
+OBJ5049539,27747889,Total,,,,,
+OBJ5049539,27747859,Possède une lave linge,,,,,
+OBJ5049539,27747869,Ne possède pas une lave linge,,,,,
+OBJ5049539,27747879,Possession des équipement en électroménager non déclaré : Lave linge,,,,,

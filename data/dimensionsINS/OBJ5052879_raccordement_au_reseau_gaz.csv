@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,ISCALCULATED,C_DESCRIPTION,C_CODER,C_NOMENCLATURE
+OBJ5052879,27798359,Total,,,,Var 209,
+OBJ5052879,27798369,Raccordé au réseau du GAZ,,,,Var 209,
+OBJ5052879,27798379,Non Raccordé au réseau du GAZ,,,,Var 209,
+OBJ5052879,27798389,Raccordement au réseau du GAZ non déclaré,,,,Var 209,

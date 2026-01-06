@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_DESCRIPTION,C_CODE,C_NOMENCLATURE,ISCALCULATED
+OBJ4847979,27740729,Total,,,,,
+OBJ4847979,27740699,Possède une bibliothèque,,,,,
+OBJ4847979,27740709,Ne possède pas une bibliothèque,,,,,
+OBJ4847979,27740719,Possession d'un moyen de confort ou de loisir non déclaré : Bibliothèque,,,,,

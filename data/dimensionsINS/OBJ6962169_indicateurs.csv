@@ -1,0 +1,5 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6962169,28041649,Nombre de Logements,,Nombre,,Nombre total des Logements,,Intitut National de la Statistique,30/08/2016 04:49:02,"1, 2",,
+OBJ6962169,28041659,Salle de bain ou douches,,Nombre,,Nombre des Logements équipés par une ou plusieurs salle de bain ou douches,,Intitut National de la Statistique,30/08/2016 04:49:02,"1, 2",,
+OBJ6962169,28041669,Toilettes,,Nombre,,Nombre des Logements équipés par une ou plusieurs toilettes,,Intitut National de la Statistique,30/08/2016 04:49:02,"1, 2",,
+OBJ6962169,28041679,Cuisines,,Nombre,,Nombre des Logements équipés par une ou plusieurs cuisines,,Intitut National de la Statistique,30/08/2016 04:49:02,"1, 2",,

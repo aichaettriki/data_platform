@@ -1,0 +1,6 @@
+dimension_id,KEY,NAME,parent_key,C_UNIT_,ISCALCULATED,FULLNAME,DESCRIPTION,C_SOURCE,C_DATE_DE_MISE___JOUR,VISIBILITY,C_COMMENTAIRE,C_M_THODOLOGIE
+OBJ6962049,28039449,Nombre de Logements,,Nombre,,Nombre de Logements,,Institut National de la Statistique,30/08/2016 03:41:29,"1, 2",,
+OBJ6962049,28039459,Réseau publique d'électricité (STEG),,Nombre,,Nombre de logement connectés au réseau publique d'électricité (STEG),,Institut National de la Statistique,30/08/2016 03:41:29,"1, 2",,
+OBJ6962049,28039469,Réseau de Gaz naturel,,Nombre,,Nombre de logement connectés au réseau de Gaz naturel,,Institut National de la Statistique,30/08/2016 03:41:29,"1, 2",,
+OBJ6962049,28039479,Réseau publique de distribution d'eau potable (SONEDE),,Nombre,,Nombre de logement connectés au réseau publique de distribution d'eau potable (SONEDE),,Institut National de la Statistique,30/08/2016 03:41:29,"1, 2",,
+OBJ6962049,28039489,Réseau publique d'assainissement (ONAS),,Nombre,,Nombre de logement connectés au réseau publique d'assainissement (ONAS),,Institut National de la Statistique,30/08/2016 03:41:29,"1, 2",,
