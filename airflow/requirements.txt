@@ -49,4 +49,5 @@ apache-airflow-providers-celery==3.6.0
 celery
 redis
 
-#apache-airflow-providers-openlineage
+apache-airflow-providers-openlineage
+openlineage-airflow==1.10.0
