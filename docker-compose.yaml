@@ -334,14 +334,16 @@ services:
         AIRFLOW_USER: "${AIRFLOW_ADMIN_USER}"
         AIRFLOW_PASSWORD: "${AIRFLOW_ADMIN_PASSWORD}"
         AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
-        LOKI_URL: "http://loki:3100"
-        LOGS_PATH: "/opt/airflow/logs"
+        LOKI_URL: "${LOKI_URL}"
+        LOGS_PATH: "${AIRFLOW_CONTAINER_LOGS}"
         METRICS_TIME_WINDOW_DAYS: "30"  # Période de filtrage des métriques (peut être modifiée)
+      env_file:
+        - .env
       ports:
         - "9112:9112"
       volumes:
-        - ./airflow/logs:/opt/airflow/logs:ro
-        - ./airflow/dags:/opt/airflow/dags:ro
+        - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs:ro
+        - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags:ro
       depends_on:
         - airflow-webserver
         - loki

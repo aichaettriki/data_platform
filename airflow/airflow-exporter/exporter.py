@@ -1,33 +1,82 @@
-from flask import Flask, Response, jsonify
-from prometheus_client import Gauge, Counter, Summary, generate_latest, CONTENT_TYPE_LATEST
-import psutil
-import requests
+
+"""
+Exporter Airflow vers Prometheus/Loki
+-------------------------------------
+Ce module expose des métriques Airflow via Flask pour Prometheus et collecte les erreurs via Loki.
+"""
+
+# === Imports === #
 import os
+import sys
+import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
-from dateutil import parser
-import logging
-import sys
+from flask import Flask, Response, jsonify
+from prometheus_client import Gauge, Summary, generate_latest, CONTENT_TYPE_LATEST
+import requests
 import psutil
+from dateutil import parser
+# Ajout pour charger le .env
+from dotenv import load_dotenv
 
 app = Flask(__name__)
 
-# Logging configuration
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    stream=sys.stdout,
-    force=True
-)
-logger = logging.getLogger(__name__)
 
-# Configuration
-AIRFLOW_WEBSERVER = os.getenv("AIRFLOW_WEBSERVER", "http://data_platform-airflow-webserver-1:8080/api/v1")
-AIRFLOW_USER = os.getenv("AIRFLOW_USER", "admin")
-AIRFLOW_PASSWORD = os.getenv("AIRFLOW_PASSWORD", "admin123")
-LOKI_URL = os.getenv("LOKI_URL", "http://loki:3100")
-LOGS_PATH = os.getenv("LOGS_PATH", "/opt/airflow/logs")
-METRICS_TIME_WINDOW_DAYS = int(os.getenv("METRICS_TIME_WINDOW_DAYS", "30"))  # Filtre les métriques sur X jours
+# === Configuration & Constantes === #
+LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LOG_LEVEL = logging.INFO
+
+
+
+# Chargement .env uniquement si une variable critique est absente (mode local/dev)
+def ensure_env_vars():
+    needed = ["AIRFLOW_WEBSERVER", "AIRFLOW_ADMIN_USER", "AIRFLOW_ADMIN_PASSWORD"]
+    missing = [v for v in needed if not os.getenv(v)]
+    if missing:
+        from pathlib import Path
+        dotenv_candidates = [
+            Path(__file__).resolve().parent.parent.parent / '.env',
+            Path('/data_platform/.env'),
+        ]
+        for dotenv_path in dotenv_candidates:
+            if dotenv_path.exists():
+                load_dotenv(dotenv_path, override=True)
+                print(f"[exporter] .env chargé depuis : {dotenv_path}")
+                break
+        # Après tentative, vérifier à nouveau
+        still_missing = [v for v in needed if not os.getenv(v)]
+        if still_missing:
+            raise RuntimeError(f"Variables d'environnement manquantes : {', '.join(still_missing)}")
+
+ensure_env_vars()
+
+# --- Configuration robuste --- #
+AIRFLOW_WEBSERVER = os.getenv("AIRFLOW_WEBSERVER")
+AIRFLOW_USER = os.getenv("AIRFLOW_ADMIN_USER")
+AIRFLOW_PASSWORD = os.getenv("AIRFLOW_ADMIN_PASSWORD")
+
+# LOKI_URL : priorité à la variable, sinon construit à partir du port
+LOKI_URL = os.getenv("LOKI_URL")
+if not LOKI_URL:
+    loki_host = os.getenv("LOKI_HOST", "loki")
+    loki_port = os.getenv("LOKI_PORT", "3100")
+    LOKI_URL = f"http://{loki_host}:{loki_port}"
+
+# LOGS_PATH : priorité à AIRFLOW_CONTAINER_LOGS, fallback sur AIRFLOW_LOGS_PATH, sinon défaut
+LOGS_PATH = os.getenv("AIRFLOW_CONTAINER_LOGS") or os.getenv("AIRFLOW_LOGS_PATH") or "/opt/airflow/logs"
+
+METRICS_TIME_WINDOW_DAYS = int(os.getenv("METRICS_TIME_WINDOW_DAYS", "30"))
+
+# États de DAG courants
+DAG_STATES = ["success", "failed", "running", "queued", "upstream_failed"]
+ERROR_TYPES = [
+    "AirflowException", "Py4JJavaError", "AWSS3IOException",
+    "XMinioStorageFull", "ImportError"
+]
+
+# === Logging === #
+logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT, stream=sys.stdout, force=True)
+logger = logging.getLogger(__name__)
 
  # ---------------- Metrics ---------------- #
 airflow_up_gauge = Gauge(
@@ -177,11 +226,55 @@ airflow_traceback_count = Gauge(
     ["dag_id", "task_id", "run_id"]
 )
 
-# ---------------- Functions ---------------- #
+
+# ---------------- Fonctions utilitaires API ---------------- #
+def airflow_api_get(endpoint, params=None, timeout=10):
+    """
+    Effectue un GET sur l'API Airflow avec authentification et gestion d'erreur basique.
+    Args:
+        endpoint (str): Chemin relatif de l'API (ex: '/dags').
+        params (dict): Paramètres de requête optionnels.
+        timeout (int): Timeout en secondes.
+    Returns:
+        dict | None: Réponse JSON ou None en cas d'erreur.
+    """
+    url = f"{AIRFLOW_WEBSERVER}{endpoint if endpoint.startswith('/') else '/' + endpoint}"
+    try:
+        resp = requests.get(url, auth=(AIRFLOW_USER, AIRFLOW_PASSWORD), params=params, timeout=timeout)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        logger.error(f"Erreur API Airflow GET {url}: {e}")
+        return None
+
+def loki_api_query(query, start, end, limit=5000, timeout=10):
+    """
+    Effectue une requête sur l'API Loki pour récupérer des logs.
+    Args:
+        query (str): Requête Loki.
+        start (int): Timestamp de début (ns).
+        end (int): Timestamp de fin (ns).
+        limit (int): Nombre max de résultats.
+        timeout (int): Timeout en secondes.
+    Returns:
+        dict | None: Résultat JSON ou None en cas d'erreur.
+    """
+    url = f"{LOKI_URL}/loki/api/v1/query_range"
+    params = {"query": query, "start": start, "end": end, "limit": limit}
+    try:
+        resp = requests.get(url, params=params, timeout=timeout)
+        resp.raise_for_status()
+        return resp.json()
+    except Exception as e:
+        logger.error(f"Erreur API Loki GET {url}: {e}")
+        return None
 
 # ----------- RAM/CPU Usage Function ----------- #
 def get_airflow_resource_usage():
-    """Retourne l'utilisation RAM (MB) et CPU (%) du process Airflow principal"""
+    """
+    Retourne l'utilisation RAM (MB) et CPU (%) du process Airflow principal.
+    Cherche le process Airflow (webserver, scheduler, etc.) dans la liste des processus.
+    """
     ram = None
     cpu = None
     for proc in psutil.process_iter(['name', 'pid', 'cmdline']):
@@ -203,25 +296,24 @@ def get_airflow_resource_usage():
     return ram, cpu
 
 # ----------- Utilitaire pour compter les tâches d'un DAG ----------- #
+
 def get_task_count_for_dag(dag_id):
-    """Retourne le nombre de tâches pour un DAG donné via l'API Airflow"""
-    try:
-        resp = requests.get(
-            f"{AIRFLOW_WEBSERVER}/dags/{dag_id}/tasks",
-            auth=(AIRFLOW_USER, AIRFLOW_PASSWORD),
-            timeout=10
-        )
-        resp.raise_for_status()
-        tasks = resp.json().get("tasks", [])
-        logger.info(f"Nombre de tâches dans le DAG {dag_id} : {len(tasks)}")
-        return len(tasks)
-    except Exception as e:
-        logger.error(f"Erreur lors de la récupération des tâches pour {dag_id}: {e}")
-        return None
+    """
+    Retourne le nombre de tâches pour un DAG donné via l'API Airflow.
+    """
+    data = airflow_api_get(f"/dags/{dag_id}/tasks")
+    if data and "tasks" in data:
+        logger.info(f"Nombre de tâches dans le DAG {dag_id} : {len(data['tasks'])}")
+        return len(data["tasks"])
+    logger.error(f"Impossible de récupérer les tâches pour {dag_id}")
+    return None
+
 
 
 def parse_scheduler_logs():
-    """Parse scheduler logs to extract metrics"""
+    """
+    Parse les logs du scheduler Airflow pour extraire des métriques sur le nombre de lignes et d'erreurs par DAG et date.
+    """
     dag_log_lines_gauge.clear()
     dag_log_errors_gauge.clear()
 
@@ -258,46 +350,33 @@ def parse_scheduler_logs():
 
 
 def query_loki_errors(hours=24, level="ERROR"):
-    """Query Loki for error logs"""
+    """
+    Interroge Loki pour récupérer les logs d'erreur d'un certain niveau sur une période donnée.
+    """
     now = datetime.utcnow()
     start_dt = now - timedelta(hours=hours)
-    
     start = int(start_dt.timestamp() * 1_000_000_000)
     end = int(now.timestamp() * 1_000_000_000)
-    
     if not (1_000_000_000_000_000_000 < end < 2_000_000_000_000_000_000):
         logger.error(f"Invalid end timestamp: {end}")
         return []
-    
     if not (1_000_000_000_000_000_000 < start < end):
         logger.error(f"Invalid start timestamp: {start}")
         return []
-    
     query = f'{{job="airflow"}} |= "{level}"'
-    
-    try:
-        url = f"{LOKI_URL}/loki/api/v1/query_range"
-        params = {
-            "query": query,
-            "start": start,
-            "end": end,
-            "limit": 5000
-        }
-        
-        response = requests.get(url, params=params, timeout=10)
-        response.raise_for_status()
-        data = response.json()
+    data = loki_api_query(query, start, end)
+    if data:
         results = data.get("data", {}).get("result", [])
-        
         logger.info(f"Loki query returned {len(results)} streams for {level}")
         return results
-    except Exception as e:
-        logger.error(f"Error querying Loki: {e}")
-        return []
+    return []
 
 
 def extract_error_metrics():
-    """Extract error metrics from Loki logs"""
+    """
+    Extrait les métriques d'erreurs à partir des logs Loki.
+    Retourne des compteurs d'erreurs, de critiques, de timeouts, d'import errors et des détails d'erreur.
+    """
     error_counts = defaultdict(int)
     critical_counts = defaultdict(int)
     timeout_counts = defaultdict(int)
@@ -355,6 +434,9 @@ def extract_error_metrics():
 
 
 def get_scheduler_health():
+    """
+    Vérifie la santé du scheduler Airflow via l'API /health et met à jour les métriques associées.
+    """
     try:
         health_resp = requests.get(
             f"{AIRFLOW_WEBSERVER}/health",
@@ -383,7 +465,9 @@ def get_scheduler_health():
 
 
 def get_pool_metrics():
-    """Fetch pool metrics"""
+    """
+    Récupère les métriques des pools Airflow (slots ouverts, utilisés, en attente).
+    """
     try:
         pools_resp = requests.get(
             f"{AIRFLOW_WEBSERVER}/pools",
@@ -408,7 +492,9 @@ def get_pool_metrics():
 
 
 def get_import_errors():
-    """Fetch DAG import errors"""
+    """
+    Récupère les erreurs d'import de DAG via l'API Airflow.
+    """
     try:
         import_errors_resp = requests.get(
             f"{AIRFLOW_WEBSERVER}/importErrors",
@@ -425,7 +511,9 @@ def get_import_errors():
 
 
 def collect_dag_metrics():
-    """Collecte et persiste les métriques de tous les DAG runs historiques"""
+    """
+    Collecte et persiste les métriques de tous les DAG runs historiques (non utilisé dans les routes principales).
+    """
     try:
         # Récupérer TOUS les DAG runs (pas seulement les actifs)
         response = requests.get(
@@ -781,16 +869,18 @@ def health():
 if __name__ == "__main__":
     logger.info("="*60)
     logger.info("Starting Airflow Exporter")
-    logger.info(f"Port: {os.getenv('EXPORTER_PORT', 9112)}")
+    logger.info(f"Port: {os.getenv('EXPORTER_PORT')}")
     logger.info(f"Airflow Webserver: {AIRFLOW_WEBSERVER}")
     logger.info(f"Airflow User: {AIRFLOW_USER}")
     logger.info(f"Loki URL: {LOKI_URL}")
+    logger.info(f"Logs Path: {LOGS_PATH}")
+    logger.info(f"Metrics Time Window (days): {METRICS_TIME_WINDOW_DAYS}")
     logger.info("="*60)
-    
+
     # Initialiser la métrique airflow_up à 0 au démarrage
     airflow_up_gauge.set(0)
     scheduler_heartbeat_gauge.set(0)
-    
+
     # Tester la connexion au démarrage
     try:
         logger.info("Test de connexion à Airflow au démarrage...")
@@ -798,5 +888,5 @@ if __name__ == "__main__":
     except Exception as e:
         logger.warning(f"Impossible de se connecter à Airflow au démarrage: {e}")
         logger.info("L'exporter continuera à fonctionner et réessayera lors des prochains scrapes")
-    
+
     app.run(host="0.0.0.0", port=int(os.getenv("EXPORTER_PORT", 9112)))
