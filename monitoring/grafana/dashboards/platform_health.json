@@ -174,7 +174,12 @@
       "pluginVersion": "10.0.3",
       "targets": [
         {
-          "expr": "sum_over_time((minio_cluster_health_status == 1)[24h:])",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum_over_time(minio_cluster_health_status[24h])* 15",
           "instant": true,
           "refId": "A"
         }
@@ -492,7 +497,12 @@
       "pluginVersion": "10.0.3",
       "targets": [
         {
-          "expr": "sum_over_time((metabase_up == 1)[24h:])",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum_over_time(metabase_up[24h]) * 15\r\n",
           "instant": true,
           "refId": "A"
         }
@@ -808,7 +818,12 @@
       "pluginVersion": "10.0.3",
       "targets": [
         {
-          "expr": "sum_over_time((pg_up == 1)[24h:])",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "PBFA97CFB590B2093"
+          },
+          "editorMode": "code",
+          "expr": "sum_over_time(pg_up[24h]) * 15\r\n",
           "instant": true,
           "refId": "A"
         }
@@ -1128,7 +1143,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum_over_time((airflow_up{job=\"airflow-global\"} == 1)[24h:])",
+          "expr": "sum_over_time(\r\n  airflow_up{job=\"airflow-global\", instance=\"airflow-exporter:9112\"}[24h]\r\n) * 15\r\n",
           "instant": true,
           "refId": "A"
         }
@@ -1451,7 +1466,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum_over_time((spark_exporter_up == 1)[24h:])",
+          "expr": "sum_over_time(spark_exporter_up[24h]) *15",
           "instant": true,
           "refId": "A"
         }
@@ -1632,7 +1647,7 @@
     "list": []
   },
   "time": {
-    "from": "now-24h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},

@@ -365,7 +365,7 @@
             "uid": "PBFA97CFB590B2093"
           },
           "editorMode": "code",
-          "expr": "sum(airflow_dag_run_status{state=\"success\", job=\"airflow-global\", dag_id=~\"${dag_filter}\"})",
+          "expr": "sum(airflow_dag_run_status{job=\"airflow-global\", dag_id=~\"${dag_filter}\"})",
           "instant": true,
           "legendFormat": "Successfull run ",
           "range": false,
@@ -616,6 +616,11 @@
                   "color": "blue",
                   "index": 2,
                   "text": "Ingest api to minio"
+                },
+                "spark-marquez": {
+                  "color": "orange",
+                  "index": 3,
+                  "text": "Spark marquez"
                 }
               },
               "type": "value"
@@ -757,6 +762,11 @@
                   "color": "blue",
                   "index": 2,
                   "text": "Ingest api to minio"
+                },
+                "spark-marquez": {
+                  "color": "orange",
+                  "index": 3,
+                  "text": "Spark marquez"
                 }
               },
               "type": "value"
@@ -884,6 +894,11 @@
                   "color": "blue",
                   "index": 2,
                   "text": "Ingest api to minio"
+                },
+                "spark-marquez": {
+                  "color": "orange",
+                  "index": 3,
+                  "text": "Spark marquez"
                 }
               },
               "type": "value"
@@ -1272,7 +1287,7 @@
       "type": "logs"
     }
   ],
-  "refresh": false,
+  "refresh": "",
   "schemaVersion": 38,
   "style": "dark",
   "tags": [

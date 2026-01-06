@@ -75,7 +75,7 @@ def create_spark_session(app_name="ETL_Equipe_Production"):
 def task_1_ingest(spark):
     print("🚀 Task 1: Ingesting...")
     src = "s3a://raw/equipe.csv"
-    dest = "s3a://transformed/raw_data.parquet"
+    dest = "s3a://transformed/raw_data"
     
     df = spark.read.csv(src, header=True, sep=";", inferSchema=True)
     df.write.mode("overwrite").parquet(dest)
@@ -85,7 +85,7 @@ def task_1_ingest(spark):
 
 def task_2_clean(spark, input_path):
     print("🧹 Task 2: Cleaning...")
-    dest = "s3a://transformed/cleaned_data.parquet"
+    dest = "s3a://transformed/cleaned_data"
     
     df = spark.read.parquet(input_path)
     df_clean = df.dropDuplicates()
@@ -96,7 +96,7 @@ def task_2_clean(spark, input_path):
 
 def task_3_refine(spark, input_path):
     print("📦 Task 3: Refining...")
-    dest = "s3a://refined/final_output.parquet"
+    dest = "s3a://refined/final_output"
     
     df = spark.read.parquet(input_path)
     df_final = (df.withColumn("fullname", concat_ws(" ", col("nom"), col("prenom")))
@@ -126,10 +126,10 @@ if __name__ == "__main__":
         if args.step == "ingest":
             task_1_ingest(spark)
         elif args.step == "clean":
-            path_1 = "s3a://transformed/raw_data.parquet"
+            path_1 = "s3a://transformed/raw_data"
             task_2_clean(spark, path_1)
         elif args.step == "refine":
-            path_2 = "s3a://transformed/cleaned_data.parquet"
+            path_2 = "s3a://transformed/cleaned_data"
             task_3_refine(spark, path_2)
         else:
             print(f"⚠️ Unknown step {args.step}")

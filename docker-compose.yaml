@@ -222,6 +222,8 @@ services:
       - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
+      - ${AIRFLOW_PLUGINS_PATH}:/opt/airflow/plugins
+ 
     command: >
       bash -c "airflow db upgrade &&
                airflow db init &&
@@ -245,6 +247,7 @@ services:
       OPENLINEAGE_URL: http://marquez:5000
       OPENLINEAGE_NAMESPACE: itceq_prod
       AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
+      AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
 
     ports:
       - "${AIRFLOW_WEBSERVER_PORT}:8080"
@@ -332,6 +335,7 @@ services:
         AIRFLOW_PASSWORD: "${AIRFLOW_ADMIN_PASSWORD}"
         AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
         LOKI_URL: "http://loki:3100"
+        LOGS_PATH: "/opt/airflow/logs"
         METRICS_TIME_WINDOW_DAYS: "30"  # Période de filtrage des métriques (peut être modifiée)
       ports:
         - "9112:9112"
@@ -364,7 +368,8 @@ services:
       - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
-      - ./data:/opt/airflow/data
+      - ${AIRFLOW_PLUGINS_PATH}:/opt/airflow/plugins
+      - ${DATA_PATH}:/opt/airflow/data
     command: airflow celery worker
     restart: always
 
@@ -374,12 +379,12 @@ services:
     container_name: marquez-postgres
     networks: [traefik-public]
     environment:
-      POSTGRES_DB: marquez
-      POSTGRES_USER: marquez
-      POSTGRES_PASSWORD: marquez
+      POSTGRES_DB: ${MARQUEZ_POSTGRES_DB}
+      POSTGRES_USER: ${MARQUEZ_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${MARQUEZ_POSTGRES_PASSWORD}
       POSTGRES_HOST_AUTH_METHOD: trust
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U marquez -d marquez"]
+      test: ["CMD-SHELL", "pg_isready -U ${MARQUEZ_POSTGRES_USER} -d ${MARQUEZ_POSTGRES_DB}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -396,12 +401,12 @@ services:
       # Indique à l'appli où trouver le fichier qu'on vient de créer
       MARQUEZ_CONFIG: /etc/marquez/marquez.yml
       # Vos variables de connexion
-      MARQUEZ_DB_URL: jdbc:postgresql://marquez-postgres:5432/marquez
-      MARQUEZ_DB_USER: marquez
-      MARQUEZ_DB_PASSWORD: marquez
+      MARQUEZ_DB_URL: ${MARQUEZ_DB_URL}
+      MARQUEZ_DB_USER: ${MARQUEZ_DB_USER}
+      MARQUEZ_DB_PASSWORD: ${MARQUEZ_DB_PASSWORD}
     volumes:
       # On injecte le fichier local dans le conteneur
-      - ./marquez.yml:/etc/marquez/marquez.yml
+      - ${MARQUEZ_CONFIG_PATH}:/etc/marquez/marquez.yml
     ports:
       - "5000:5000"
       - "5001:5001"
@@ -414,7 +419,7 @@ services:
     depends_on:
       - marquez
     environment:
-      - MARQUEZ_URL=http://marquez:5000
+      - MARQUEZ_URL=${MARQUEZ_URL}
     ports:
       - "3050:3000"
  
@@ -428,7 +433,7 @@ services:
     ports:
       - "3002:80"
     volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${NGINX_CONFIG_PATH}:/etc/nginx/nginx.conf:ro
     restart: always
     labels:
       - "traefik.enable=true"
@@ -451,8 +456,8 @@ services:
       - '--web.console.libraries=/usr/share/prometheus/console_libraries'
       - '--web.console.templates=/usr/share/prometheus/consoles'
     volumes:
-      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-      - prometheus_data:/prometheus
+      - ${PROMETHEUS_CONFIG_PATH}:/etc/prometheus/prometheus.yml
+      - ${PROMETHEUS_DATA_PATH}:/prometheus
     ports:
       - "9090:9090"
     labels:
@@ -502,7 +507,7 @@ services:
       - "3001:3000"
       - "9191:9191"
     env_file:
-      - ./metabase/env/metabase.env
+      - ${METABASE_ENV_FILE}
     depends_on:
       metabase_db_internal:
         condition: service_healthy
@@ -521,9 +526,9 @@ services:
       - traefik-public
     container_name: metabase_db_internal
     environment:
-      POSTGRES_DB: metabase_internal
-      POSTGRES_USER: mb_internal_user
-      POSTGRES_PASSWORD: mb_internal_pass
+      POSTGRES_DB: ${METABASE_POSTGRES_DB}
+      POSTGRES_USER: ${METABASE_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${METABASE_POSTGRES_PASSWORD}
     volumes:
       - mb_internal_data:/var/lib/postgresql/data
     healthcheck:
@@ -540,11 +545,11 @@ services:
     networks:
       - traefik-public
     environment:
-      METABASE_URL: "http://metabase:3000"
-      METABASE_USERNAME: "admin@example.com"
-      METABASE_PASSWORD: "AdminPass123"
-      EXPORTER_PORT: "9101"
-      SCRAPE_INTERVAL: "30"
+      METABASE_URL: "${METABASE_URL}"
+      METABASE_USERNAME: "${METABASE_USERNAME}"
+      METABASE_PASSWORD: "${METABASE_PASSWORD}"
+      EXPORTER_PORT: "${METABASE_EXPORTER_PORT}"
+      SCRAPE_INTERVAL: "${METABASE_SCRAPE_INTERVAL}"
     ports:
       - "9101:9101"
     depends_on:
@@ -560,11 +565,11 @@ services:
     depends_on:
       - metabase
     volumes:
-      - ./metabase/scripts:/scripts
-      - ./metabase/saved_states:/saved_states # Mounts the JSONs
+      - ${METABASE_SCRIPTS_PATH}:/scripts
+      - ${METABASE_SAVED_STATES_PATH}:/saved_states # Mounts the JSONs
     working_dir: /scripts
     env_file:
-      - ./metabase/env/metabase.env
+      - ${METABASE_ENV_FILE}
     # Install libs -> Run Setup -> Run Import -> Exit
     command: >
       sh -c "pip install requests metabase-api && python deploy_solution.py"
@@ -608,10 +613,10 @@ services:
       - "3100:3100"
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
-      - ./loki-data/index:/loki/index
-      - ./loki-data/chunks:/loki/chunks
-      - ./loki-data/wal:/loki/wal
-      - ./loki-config.yaml:/etc/loki/local-config.yaml
+      - ${LOKI_DATA_INDEX_PATH}:/loki/index
+      - ${LOKI_DATA_CHUNKS_PATH}:/loki/chunks
+      - ${LOKI_DATA_WAL_PATH}:/loki/wal
+      - ${LOKI_CONFIG_PATH}:/etc/loki/local-config.yaml
       
     restart: always
  
@@ -623,8 +628,8 @@ services:
     networks:
       - traefik-public
     volumes:
-      - ./promtail-config.yaml:/etc/promtail/config.yaml:ro
-      - ./airflow/logs:/opt/airflow/logs:ro
+      - ${PROMTAIL_CONFIG_PATH}:/etc/promtail/config.yaml:ro
+      - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs:ro
       # Pas de volume persistant pour positions - force la relecture à chaque restart
     ports:
       - "9080:9080"
@@ -642,4 +647,4 @@ volumes:
 # ------------------------ Networks ------------------------
 networks:
   traefik-public:
-    external: true
+    driver: bridge

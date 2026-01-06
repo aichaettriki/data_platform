@@ -355,7 +355,6 @@ def extract_error_metrics():
 
 
 def get_scheduler_health():
-    """Check scheduler health"""
     try:
         health_resp = requests.get(
             f"{AIRFLOW_WEBSERVER}/health",
@@ -364,16 +363,23 @@ def get_scheduler_health():
         )
         health_resp.raise_for_status()
         health_data = health_resp.json()
+
         scheduler_status = health_data.get("scheduler", {}).get("status")
-        webserver_status = health_data.get("metadatabase", {}).get("status")
-        # On considère Airflow up si le scheduler ET la metadatabase sont healthy
-        is_up = (scheduler_status == "healthy") and (webserver_status == "healthy")
-        airflow_up_gauge.set(1 if is_up else 0)
-        scheduler_heartbeat_gauge.set(1 if scheduler_status == "healthy" else 0)
+
+        if scheduler_status == "healthy":
+            airflow_up_gauge.set(1)
+            scheduler_heartbeat_gauge.set(1)
+        else:
+            airflow_up_gauge.set(0)
+            scheduler_heartbeat_gauge.set(0)
+
+        logger.info(f"Scheduler status: {scheduler_status}")
+
     except Exception as e:
-        logger.error(f"Error fetching scheduler health: {e}")
+        logger.error(f"Health check failed: {e}")
         airflow_up_gauge.set(0)
         scheduler_heartbeat_gauge.set(0)
+
 
 
 def get_pool_metrics():
@@ -480,6 +486,14 @@ def airflow_metrics():
     print("🎯 ENDPOINT: /airflow_metrics appelé")
     print("="*60)
     logger.info("=== Appel /airflow_metrics ===")
+    
+    # Vérifier la santé d'Airflow en premier pour définir airflow_up
+    try:
+        get_scheduler_health()
+    except Exception as e:
+        logger.error(f"Erreur lors de la vérification de santé d'Airflow: {e}")
+        airflow_up_gauge.set(0)
+        scheduler_heartbeat_gauge.set(0)
     
     try:
         # Récupérer TOUS les DAGs (limite augmentée)
@@ -638,8 +652,16 @@ def airflow_metrics():
 
         logger.info("Airflow metrics generated successfully")
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Erreur de connexion à Airflow API: {e}")
+        airflow_up_gauge.set(0)
+        scheduler_heartbeat_gauge.set(0)
+        # Retourner quand même les métriques pour que Prometheus puisse scraper
+        return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
     except Exception as e:
         logger.error(f"Error in /airflow_metrics: {e}", exc_info=True)
+        airflow_up_gauge.set(0)
+        scheduler_heartbeat_gauge.set(0)
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
@@ -647,6 +669,15 @@ def airflow_metrics():
 def metrics():
     """Main endpoint for Prometheus (Loki errors)"""
     logger.info("[DEBUG] Entrée dans la route /metrics")
+    
+    # Vérifier la santé d'Airflow en premier
+    try:
+        get_scheduler_health()
+    except Exception as e:
+        logger.error(f"Erreur lors de la vérification de santé d'Airflow dans /metrics: {e}")
+        airflow_up_gauge.set(0)
+        scheduler_heartbeat_gauge.set(0)
+    
     try:
         # --- RAM/CPU Usage --- #
         ram, cpu = get_airflow_resource_usage()
@@ -731,8 +762,13 @@ def metrics():
         
         logger.info("Metrics generated successfully")
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Erreur de connexion dans /metrics: {e}")
+        airflow_up_gauge.set(0)
+        return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
     except Exception as e:
         logger.error(f"Error in /metrics: {e}", exc_info=True)
+        airflow_up_gauge.set(0)
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
@@ -743,5 +779,24 @@ def health():
 
 # ---------------- Main ---------------- #
 if __name__ == "__main__":
-    logger.info("Starting Airflow Exporter on 0.0.0.0:9112")
+    logger.info("="*60)
+    logger.info("Starting Airflow Exporter")
+    logger.info(f"Port: {os.getenv('EXPORTER_PORT', 9112)}")
+    logger.info(f"Airflow Webserver: {AIRFLOW_WEBSERVER}")
+    logger.info(f"Airflow User: {AIRFLOW_USER}")
+    logger.info(f"Loki URL: {LOKI_URL}")
+    logger.info("="*60)
+    
+    # Initialiser la métrique airflow_up à 0 au démarrage
+    airflow_up_gauge.set(0)
+    scheduler_heartbeat_gauge.set(0)
+    
+    # Tester la connexion au démarrage
+    try:
+        logger.info("Test de connexion à Airflow au démarrage...")
+        get_scheduler_health()
+    except Exception as e:
+        logger.warning(f"Impossible de se connecter à Airflow au démarrage: {e}")
+        logger.info("L'exporter continuera à fonctionner et réessayera lors des prochains scrapes")
+    
     app.run(host="0.0.0.0", port=int(os.getenv("EXPORTER_PORT", 9112)))
