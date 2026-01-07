@@ -97,7 +97,6 @@ services:
         mc mb -p myminio/transformed;
         mc mb -p myminio/refined;
         mc mb -p myminio/sandbox;
-        mc mb -p myminio/spark-logs; 
         mc ls myminio;
       "
     restart: "no"
@@ -218,6 +217,8 @@ services:
       OPENLINEAGE_NAMESPACE: itceq_prod
       AIRFLOW_ADMIN_USER: ${AIRFLOW_ADMIN_USER}
       AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
+    env_file:
+        - .env
     volumes:
       - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
@@ -248,7 +249,8 @@ services:
       OPENLINEAGE_NAMESPACE: itceq_prod
       AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
       AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
-
+    env_file:
+        - .env
     ports:
       - "${AIRFLOW_WEBSERVER_PORT}:8080"
     volumes:
@@ -281,6 +283,8 @@ services:
       OPENLINEAGE_URL: http://marquez:5000
       OPENLINEAGE_NAMESPACE: itceq_prod
       AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
+    env_file:
+        - .env
     volumes:
       - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
@@ -311,6 +315,8 @@ services:
       AIRFLOW__CORE__HIDE_SENSITIVE_VAR_CONN_FIELDS: 'False'
       OPENLINEAGE_URL: http://marquez:5000
       OPENLINEAGE_NAMESPACE: itceq_prod
+    env_file:
+      - .env
     volumes:
       - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
@@ -365,7 +371,8 @@ services:
       OPENLINEAGE_URL: http://marquez:5000
       OPENLINEAGE_NAMESPACE: itceq_prod
       AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
- 
+    env_file:
+        - .env
     volumes:
       - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs

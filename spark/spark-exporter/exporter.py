@@ -4,19 +4,30 @@ Spark REST API Exporter for Prometheus
 Exposes Spark cluster metrics from Spark Master REST API
 """
 
+
 import time
 import logging
 import requests
 from threading import Thread
 from flask import Flask, Response
 from prometheus_client import generate_latest, Gauge
+import os
+from dotenv import load_dotenv
 
 # ======================
-# Configuration
+# Configuration (via .env)
 # ======================
-SPARK_MASTER_URL = "http://spark-master:8080"
-SCRAPE_INTERVAL = 15  # seconds
-EXPORTER_PORT = 9091
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env'))
+
+def get_env_var(name, default=None, required=False):
+    value = os.getenv(name, default)
+    if required and value is None:
+        raise ValueError(f"Missing required environment variable: {name}")
+    return value
+
+SPARK_MASTER_URL = get_env_var("SPARK_MASTER_URL")
+EXPORTER_PORT = get_env_var("SPARK_EXPORTER_PORT")
+SCRAPE_INTERVAL = 15
 
 # ======================
 # Logging

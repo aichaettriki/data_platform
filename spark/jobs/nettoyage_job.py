@@ -1,9 +1,19 @@
+
 from pyspark.sql import SparkSession
+import os
+from dotenv import load_dotenv
 
-MINIO_ENDPOINT = "http://minio:9000"
-MINIO_ACCESS_KEY = "minio"
-MINIO_SECRET_KEY = "minio123"
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env'))
 
+def get_env_var(name, default=None, required=False):
+	value = os.getenv(name, default)
+	if required and value is None:
+		raise ValueError(f"Missing required environment variable: {name}")
+	return value
+
+MINIO_ENDPOINT = get_env_var("MINIO_ENDPOINT")
+MINIO_ACCESS_KEY = get_env_var("MINIO_ROOT_USER")
+MINIO_SECRET_KEY = get_env_var("MINIO_ROOT_PASSWORD")
 BUCKET_RAW = "raw"
 BUCKET_TRANSFORMED = "transformed"
 RAW_OBJECT = "clients.csv"

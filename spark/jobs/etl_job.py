@@ -1,3 +1,4 @@
+
 import sys
 import time
 import uuid
@@ -5,10 +6,26 @@ import argparse
 from datetime import datetime
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, concat_ws, current_timestamp
+import os
+from dotenv import load_dotenv
 
 # --- LINEAGE IMPORTS ---
 from openlineage.client import OpenLineageClient
 from openlineage.client.run import Job, Run, RunEvent, Dataset, RunState
+
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env'))
+
+def get_env_var(name, default=None, required=False):
+    value = os.getenv(name, default)
+    if required and value is None:
+        raise ValueError(f"Missing required environment variable: {name}")
+    return value
+
+
+MARQUEZ_URL = get_env_var("MARQUEZ_URL")
+MINIO_ENDPOINT = get_env_var("MINIO_ENDPOINT")
+MINIO_ACCESS_KEY = get_env_var("MINIO_ROOT_USER")
+MINIO_SECRET_KEY = get_env_var("MINIO_ROOT_PASSWORD")
 
 def emit_marquez_step(spark_df, step_name, description, trans_type, inputs, outputs):
     """ 
@@ -16,7 +33,7 @@ def emit_marquez_step(spark_df, step_name, description, trans_type, inputs, outp
     Fixed to avoid 422 Unprocessable Entity error.
     """
     try:
-        client = OpenLineageClient(url="http://marquez:5000")
+        client = OpenLineageClient(url=MARQUEZ_URL)
         
         # 1. Convert Spark Schema to OpenLineage Schema Facet format
         fields = []
@@ -116,9 +133,9 @@ if __name__ == "__main__":
 
     # MinIO configuration
     h = spark._jsc.hadoopConfiguration()
-    h.set("fs.s3a.access.key", "minio")
-    h.set("fs.s3a.secret.key", "minio123")
-    h.set("fs.s3a.endpoint", "http://minio:9000")
+    h.set("fs.s3a.access.key", MINIO_ACCESS_KEY)
+    h.set("fs.s3a.secret.key", MINIO_SECRET_KEY)
+    h.set("fs.s3a.endpoint", MINIO_ENDPOINT)
     h.set("fs.s3a.path.style.access", "true")
     h.set("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
 

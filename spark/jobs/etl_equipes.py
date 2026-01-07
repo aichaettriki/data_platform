@@ -1,8 +1,27 @@
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, concat_ws, current_timestamp
 from pyspark.sql.functions import year, month, dayofmonth, current_timestamp
 from datetime import datetime
+import os
+from dotenv import load_dotenv
 
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env'))
+
+def get_env_var(name, default=None, required=False):
+    value = os.getenv(name, default)
+    if required and value is None:
+        raise ValueError(f"Missing required environment variable: {name}")
+    return value
+
+
+
+MINIO_ENDPOINT = get_env_var("MINIO_ENDPOINT")
+MINIO_ACCESS_KEY = get_env_var("MINIO_ROOT_USER")
+MINIO_SECRET_KEY = get_env_var("MINIO_ROOT_PASSWORD")
+POSTGRES_URL = get_env_var("POSTGRES_URL")
+POSTGRES_USER = get_env_var("POSTGRES_USER")
+POSTGRES_PASSWORD = get_env_var("POSTGRES_PASSWORD")
 
 def create_spark_session(app_name="ETL Equipe via Spark + MinIO"):
     spark = (
@@ -10,11 +29,10 @@ def create_spark_session(app_name="ETL Equipe via Spark + MinIO"):
         .appName(app_name)
         .getOrCreate()
     )
-
     hadoopConf = spark._jsc.hadoopConfiguration()
-    hadoopConf.set("fs.s3a.access.key", "minio")
-    hadoopConf.set("fs.s3a.secret.key", "minio123")
-    hadoopConf.set("fs.s3a.endpoint", "http://minio:9000")
+    hadoopConf.set("fs.s3a.access.key", MINIO_ACCESS_KEY)
+    hadoopConf.set("fs.s3a.secret.key", MINIO_SECRET_KEY)
+    hadoopConf.set("fs.s3a.endpoint", MINIO_ENDPOINT)
     hadoopConf.set("fs.s3a.path.style.access", "true")
     return spark
 
@@ -79,15 +97,14 @@ def add_timestamp_and_write(df_clean, refined_root_path="s3a://refined", dataset
     return output_path
 
 
-def write_to_postgres(df_refined, jdbc_url):
-    
+def write_to_postgres(df_refined, jdbc_url=POSTGRES_URL):
     df_refined.write \
         .format("jdbc") \
         .option("url", jdbc_url) \
         .option("driver", "org.postgresql.Driver") \
         .option("dbtable", "equipe") \
-        .option("user", "airflow") \
-        .option("password", "airflow") \
+        .option("user", POSTGRES_USER) \
+        .option("password", POSTGRES_PASSWORD) \
         .mode("overwrite") \
         .save()
 import sys
@@ -109,12 +126,11 @@ if __name__ == "__main__":
         df_clean = clean_and_write(df, "s3a://transformed/equipe_spark")
         add_timestamp_and_write(df_clean, "s3a://refined/equipe_spark")
 
+
     elif action == "write_postgres":
         today = datetime.today()
         df = spark.read.csv(f"s3a://refined/equipe_spark/{today.year}/{today.month}/{today.day}/", header=True, inferSchema=True)
-        write_to_postgres(df, "jdbc:postgresql://postgres-airflow:5432/icteq_db")
-        # df = spark.read.csv("s3a://refined/equipe", header=True, inferSchema=True)
-        # write_to_postgres(df, "jdbc:postgresql://postgres-airflow:5432/airflow")
+        write_to_postgres(df)
 
     else:
         print("Unknown action:", action)
