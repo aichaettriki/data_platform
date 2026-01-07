@@ -118,8 +118,8 @@ services:
         -Dspark.eventLog.enabled=true
         -Dspark.eventLog.dir=file:///opt/spark/events
     ports:
-      - "${SPARK_MASTER_UI_PORT}:8080"
-      - "${SPARK_MASTER_PORT}:7077"
+      - "${SPARK_MASTER_UI_PORT}:${SPARK_MASTER_UI_PORT}"
+      - "${SPARK_MASTER_PORT}:${SPARK_MASTER_PORT}"
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
       --host spark-master --port 7077
@@ -128,8 +128,8 @@ services:
       - ${MINIO_TRANSFORMED_PATH}:/data/transformed
       - ${MINIO_REFINED_PATH}:/data/refined
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
-      - ./spark/events:/opt/spark/events
-      - ./spark/conf/metrics.properties:/opt/spark/conf/metrics.properties
+      - ${SPARK_EVENT_PATH}:/opt/spark/events
+      - ${SPARK_PROPERTIES_PATH}:/opt/spark/conf/metrics.properties
     restart: always
     labels:
       - "traefik.enable=true"
@@ -155,7 +155,7 @@ services:
         -Dspark.eventLog.enabled=true
         -Dspark.eventLog.dir=file:///opt/spark/events
     ports:
-      - "${SPARK_WORKER_UI_PORT}:8081"
+      - "${SPARK_WORKER_UI_PORT}:${SPARK_WORKER_UI_PORT}"
 
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
@@ -165,8 +165,8 @@ services:
       - ${MINIO_TRANSFORMED_PATH}:/data/transformed
       - ${MINIO_REFINED_PATH}:/data/refined
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
-      - ./spark/events:/opt/spark/events
-      - ./spark/conf/metrics.properties:/opt/spark/conf/metrics.properties
+      - ${SPARK_EVENT_PATH}:/opt/spark/events
+      - ${SPARK_PROPERTIES_PATH}:/opt/spark/conf/metrics.properties
     restart: always
 
   spark-history-server:
@@ -180,7 +180,7 @@ services:
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.history.HistoryServer
     volumes:
-      - ./spark/events:/opt/spark/events
+      - ${SPARK_EVENT_PATH}:/opt/spark/events
     ports:
       - "18080:18080"
     restart: always
@@ -197,7 +197,7 @@ services:
     depends_on:
       - spark-master
     ports:
-      - "9091:9091"
+      - "${SPARK_EXPORTER_PORT}:${SPARK_EXPORTER_PORT}"
     restart: always
 
   # ------------------------
@@ -219,7 +219,7 @@ services:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
     ports:
-      - "9090:9090"
+      - "${PROMETHEUS_PORT}:${PROMETHEUS_PORT}"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.prometheus.rule=Host(`prometheus.itceq.tn`)"
@@ -287,7 +287,7 @@ services:
       - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
-      - ./data:/opt/airflow/data
+      - ${DATA_PATH}:/opt/airflow/data
     restart: always
     labels:
       - "traefik.enable=true"
@@ -320,7 +320,7 @@ services:
       - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
-      - ./data:/opt/airflow/data
+      - ${DATA_PATH}:/opt/airflow/data
     command: airflow scheduler
     restart: always
 
@@ -353,7 +353,7 @@ services:
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${MINIO_RAW_PATH}:/data/raw
       - ${MINIO_TRANSFORMED_PATH}:/data/transformed
-      - ./data:/opt/airflow/data
+      - ${DATA_PATH}:/opt/airflow/data
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
     command: triggerer
     restart: always
@@ -520,7 +520,7 @@ services:
       - traefik-public
     restart: unless-stopped
     ports:
-      - "3001:3001"
+      - "${METABASE_PORT}:${METABASE_PORT}"
       - "${METABASE_EXPORTER_PORT}:${METABASE_EXPORTER_PORT}"
     env_file:
       - ${METABASE_ENV_FILE}

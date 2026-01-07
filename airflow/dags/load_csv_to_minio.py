@@ -18,6 +18,8 @@ def get_env_var(name, default=None, required=False):
 MINIO_ENDPOINT = get_env_var("MINIO_ENDPOINT")
 MINIO_ACCESS_KEY = get_env_var("MINIO_ROOT_USER")
 MINIO_SECRET_KEY = get_env_var("MINIO_ROOT_PASSWORD")
+MINIO_HOST = get_env_var("MINIO_HOST")
+MINIO_API_PORT = get_env_var("MINIO_API_PORT")
 
 BUCKET_RAW = "raw"
 LOCAL_FILE_PATH = "/opt/airflow/data/equipe2.csv"
@@ -25,7 +27,7 @@ RAW_OBJECT = "equipe1.csv"
 
 def get_minio_client():
     return Minio(
-        endpoint="minio:9000", # juste host:port, sans http://
+        endpoint=f"{MINIO_HOST}:{MINIO_API_PORT}", # juste host:port, sans http://
         access_key=MINIO_ACCESS_KEY,
         secret_key=MINIO_SECRET_KEY,
         secure=False,
