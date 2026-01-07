@@ -25,7 +25,7 @@ RAW_OBJECT = "equipe1.csv"
 
 def get_minio_client():
     return Minio(
-        MINIO_ENDPOINT,
+        endpoint="minio:9000", # juste host:port, sans http://
         access_key=MINIO_ACCESS_KEY,
         secret_key=MINIO_SECRET_KEY,
         secure=False,

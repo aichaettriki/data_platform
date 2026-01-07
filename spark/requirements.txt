@@ -14,3 +14,4 @@ openpyxl
 xlrd                   
 lxml                   
 openlineage-python
+python-dotenv

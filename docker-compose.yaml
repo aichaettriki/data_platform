@@ -44,7 +44,7 @@ services:
       - "${POSTGRES_PORT}:5432"
     volumes:
       - ${PGDATA_PATH}:/var/lib/postgresql/data
-      - ./postgres-init:/docker-entrypoint-initdb.d
+      - ${POSTGRE_INIT}:/docker-entrypoint-initdb.d
     restart: always
 
   # ---------- PostgreSQL Exporter ----------
@@ -71,8 +71,8 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_PROMETHEUS_AUTH_TYPE: public
     ports:
-      - "${MINIO_API_PORT}:9000"
-      - "${MINIO_CONSOLE_PORT}:9001"
+      - "${MINIO_API_PORT}:${MINIO_API_PORT}"
+      - "${MINIO_CONSOLE_PORT}:${MINIO_CONSOLE_PORT}"
     command: server /data --console-address ":${MINIO_CONSOLE_PORT}"
     volumes:
       - ./minio:/data
@@ -92,7 +92,7 @@ services:
     entrypoint: >
       /bin/sh -c "
         sleep 5;
-        mc alias set myminio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+        mc alias set myminio http://minio:${MINIO_API_PORT} ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
         mc mb -p myminio/raw;
         mc mb -p myminio/transformed;
         mc mb -p myminio/refined;
@@ -113,13 +113,13 @@ services:
       SPARK_USER: root
       HADOOP_USER_NAME: root
       SPARK_METRICS_CONF: "/opt/spark/conf/metrics.properties"
+      SPARK_MASTER_OPTS: "-Dspark.metrics.conf=/opt/spark/conf/metrics.properties -DmetricsServlet.port=8090"
       SPARK_SUBMIT_OPTS: >-
         -Dspark.eventLog.enabled=true
         -Dspark.eventLog.dir=file:///opt/spark/events
     ports:
       - "${SPARK_MASTER_UI_PORT}:8080"
       - "${SPARK_MASTER_PORT}:7077"
-      - "8090:8090"
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
       --host spark-master --port 7077
@@ -129,6 +129,7 @@ services:
       - ${MINIO_REFINED_PATH}:/data/refined
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ./spark/events:/opt/spark/events
+      - ./spark/conf/metrics.properties:/opt/spark/conf/metrics.properties
     restart: always
     labels:
       - "traefik.enable=true"
@@ -149,12 +150,13 @@ services:
       HADOOP_USER_NAME: root
       SPARK_MASTER_URL: spark://spark-master:7077
       SPARK_METRICS_CONF: "/opt/spark/conf/metrics.properties"
+      SPARK_WORKER_OPTS: "-Dspark.metrics.conf=/opt/spark/conf/metrics.properties -DmetricsServlet.port=8091"
       SPARK_SUBMIT_OPTS: >-
         -Dspark.eventLog.enabled=true
         -Dspark.eventLog.dir=file:///opt/spark/events
     ports:
       - "${SPARK_WORKER_UI_PORT}:8081"
-      - "8091:8091"
+
     command: >
       /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
       spark://spark-master:7077
@@ -164,6 +166,7 @@ services:
       - ${MINIO_REFINED_PATH}:/data/refined
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ./spark/events:/opt/spark/events
+      - ./spark/conf/metrics.properties:/opt/spark/conf/metrics.properties
     restart: always
 
   spark-history-server:
@@ -197,6 +200,33 @@ services:
       - "9091:9091"
     restart: always
 
+  # ------------------------
+  # Prometheus
+  # ------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    networks:
+      - traefik-public
+    container_name: prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=365d'  # 1 an de rétention (au lieu de 90j)
+      - '--storage.tsdb.retention.size=100GB'  # 100GB max (au lieu de 50GB)
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.itceq.tn`)"
+      - "traefik.http.routers.prometheus.entrypoints=web"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+
+
   # ---------- Airflow ----------
   airflow-init:
     build: ./airflow
@@ -213,7 +243,7 @@ services:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
       AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}
-      OPENLINEAGE_URL: http://marquez:5000
+      OPENLINEAGE_URL: ${MARQUEZ_URL}
       OPENLINEAGE_NAMESPACE: itceq_prod
       AIRFLOW_ADMIN_USER: ${AIRFLOW_ADMIN_USER}
       AIRFLOW_ADMIN_PASSWORD: ${AIRFLOW_ADMIN_PASSWORD}
@@ -245,7 +275,7 @@ services:
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
       AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}
-      OPENLINEAGE_URL: http://marquez:5000
+      OPENLINEAGE_URL: ${MARQUEZ_URL}
       OPENLINEAGE_NAMESPACE: itceq_prod
       AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
       AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
@@ -277,10 +307,11 @@ services:
       - redis
     environment:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
       AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}
-      OPENLINEAGE_URL: http://marquez:5000
+      OPENLINEAGE_URL: ${MARQUEZ_URL}
       OPENLINEAGE_NAMESPACE: itceq_prod
       AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
     env_file:
@@ -313,7 +344,7 @@ services:
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}
       AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
       AIRFLOW__CORE__HIDE_SENSITIVE_VAR_CONN_FIELDS: 'False'
-      OPENLINEAGE_URL: http://marquez:5000
+      OPENLINEAGE_URL: ${MARQUEZ_URL}
       OPENLINEAGE_NAMESPACE: itceq_prod
     env_file:
       - .env
@@ -346,7 +377,7 @@ services:
       env_file:
         - .env
       ports:
-        - "9112:9112"
+        - "${AIRFLOW_EXPORTER_PORT}:${AIRFLOW_EXPORTER_PORT}"
       volumes:
         - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs:ro
         - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags:ro
@@ -365,10 +396,11 @@ services:
       - redis
     environment:
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: ${AIRFLOW_DB_CONN}
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
       AIRFLOW__CORE__EXECUTOR: CeleryExecutor
       AIRFLOW__CELERY__BROKER_URL: redis://redis:6379/0
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}
-      OPENLINEAGE_URL: http://marquez:5000
+      OPENLINEAGE_URL: ${MARQUEZ_URL}
       OPENLINEAGE_NAMESPACE: itceq_prod
       AIRFLOW__LINEAGE__BACKEND: openlineage.lineage_backend.OpenLineageBackend
     env_file:
@@ -398,7 +430,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - marquez_pg_data:/var/lib/postgresql/data
+      - ${MARQUEZ_PG_DATA_PATH}:/var/lib/postgresql/data
 
   marquez:
     image: marquezproject/marquez:0.49.0
@@ -417,8 +449,8 @@ services:
       # On injecte le fichier local dans le conteneur
       - ${MARQUEZ_CONFIG_PATH}:/etc/marquez/marquez.yml
     ports:
-      - "5000:5000"
-      - "5001:5001"
+      - "${MARQUEZ_HTTP_PORT}:${MARQUEZ_HTTP_PORT}"
+      - "${MARQUEZ_ADMIN_PORT}:${MARQUEZ_ADMIN_PORT}"
     restart: always
  
   marquez-web:
@@ -449,31 +481,6 @@ services:
       - "traefik.http.routers.marquez-ui.rule=Host(`marquez.itceq.tn`)"
       - "traefik.http.routers.marquez-ui.entrypoints=web"
       - "traefik.http.services.marquez-ui.loadbalancer.server.port=80"
-  # ------------------------
-  # Prometheus
-  # ------------------------
-  prometheus:
-    image: prom/prometheus:latest
-    networks:
-      - traefik-public
-    container_name: prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--storage.tsdb.retention.time=365d'  # 1 an de rétention (au lieu de 90j)
-      - '--storage.tsdb.retention.size=100GB'  # 100GB max (au lieu de 50GB)
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    volumes:
-      - ${PROMETHEUS_CONFIG_PATH}:/etc/prometheus/prometheus.yml
-      - ${PROMETHEUS_DATA_PATH}:/prometheus
-    ports:
-      - "9090:9090"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.prometheus.rule=Host(`prometheus.itceq.tn`)"
-      - "traefik.http.routers.prometheus.entrypoints=web"
-      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
 
 
   # ------------------------
@@ -513,8 +520,8 @@ services:
       - traefik-public
     restart: unless-stopped
     ports:
-      - "3001:3000"
-      - "9191:9191"
+      - "3001:3001"
+      - "${METABASE_EXPORTER_PORT}:${METABASE_EXPORTER_PORT}"
     env_file:
       - ${METABASE_ENV_FILE}
     depends_on:
@@ -560,7 +567,7 @@ services:
       EXPORTER_PORT: "${METABASE_EXPORTER_PORT}"
       SCRAPE_INTERVAL: "${METABASE_SCRAPE_INTERVAL}"
     ports:
-      - "9101:9101"
+      - "9102:${METABASE_EXPORTER_PORT}"
     depends_on:
       - metabase
     restart: always
@@ -619,7 +626,7 @@ services:
     networks:
       - traefik-public
     ports:
-      - "3100:3100"
+      - "${LOKI_PORT}:${LOKI_PORT}"
     command: -config.file=/etc/loki/local-config.yaml
     volumes:
       - ${LOKI_DATA_INDEX_PATH}:/loki/index
@@ -641,7 +648,7 @@ services:
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs:ro
       # Pas de volume persistant pour positions - force la relecture à chaque restart
     ports:
-      - "9080:9080"
+      - "${PROMTAIL_PORT}:${PROMTAIL_PORT}"
     command: -config.file=/etc/promtail/config.yaml
     restart: always
 

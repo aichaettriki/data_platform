@@ -51,3 +51,5 @@ redis
 
 apache-airflow-providers-openlineage
 openlineage-airflow==1.10.0
+
+python-dotenv
