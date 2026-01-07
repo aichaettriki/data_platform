@@ -50,7 +50,7 @@ def fetch_api_and_upload():
 
         # Connexion à MinIO
         client = Minio(
-            MINIO_ENDPOINT,
+            endpoint=f"{MINIO_HOST}:{MINIO_API_PORT}", # juste host:port, sans http://
             access_key=MINIO_ACCESS_KEY,
             secret_key=MINIO_SECRET_KEY,
             secure=False,
