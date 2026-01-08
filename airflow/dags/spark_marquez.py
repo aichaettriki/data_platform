@@ -50,5 +50,14 @@ with DAG(
         packages=SPARK_PACKAGES,
         application_args=["refine"]
     )
+    # 4️⃣ Task: Write to Postgres
+    task_write_postgres = SparkSubmitOperator(
+        task_id="write_to_postgres",
+        application=SPARK_JOB_PATH,
+        name="write_to_postgres",
+        conn_id=SPARK_CONN_ID,
+        packages=SPARK_PACKAGES,
+        application_args=["write_postgres"]
+    )
     # Définir l’ordre d’exécution
-    task_read_raw >> task_clean_transformed >> task_add_timestamp
+    task_read_raw >> task_clean_transformed >> task_add_timestamp >> task_write_postgres
