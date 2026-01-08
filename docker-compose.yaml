@@ -43,7 +43,7 @@ services:
     ports:
       - "${POSTGRES_PORT}:5432"
     volumes:
-      - ${PGDATA_PATH}:/var/lib/postgresql/data
+      - postgres_airflow_data:/var/lib/postgresql/data
       - ${POSTGRE_INIT}:/docker-entrypoint-initdb.d
     restart: always
 
@@ -130,6 +130,7 @@ services:
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${SPARK_EVENT_PATH}:/opt/spark/events
       - ${SPARK_PROPERTIES_PATH}:/opt/spark/conf/metrics.properties
+      - ./spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
     restart: always
     labels:
       - "traefik.enable=true"
@@ -167,6 +168,7 @@ services:
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${SPARK_EVENT_PATH}:/opt/spark/events
       - ${SPARK_PROPERTIES_PATH}:/opt/spark/conf/metrics.properties
+      - ./spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
     restart: always
 
   spark-history-server:
@@ -288,6 +290,9 @@ services:
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${DATA_PATH}:/opt/airflow/data
+      - ./openmetadata/dags:/opt/airflow/dags/openmetadata
+      - ./openmetadata/ingestion:/opt/airflow/dag_generated_configs
+
     restart: always
     labels:
       - "traefik.enable=true"
@@ -321,6 +326,8 @@ services:
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${DATA_PATH}:/opt/airflow/data
+      - ./openmetadata/dags:/opt/airflow/dags/openmetadata
+      - ./openmetadata/ingestion:/opt/airflow/dag_generated_configs
     command: airflow scheduler
     restart: always
 
@@ -411,6 +418,8 @@ services:
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${AIRFLOW_PLUGINS_PATH}:/opt/airflow/plugins
       - ${DATA_PATH}:/opt/airflow/data
+      - ./openmetadata/dags:/opt/airflow/dags/openmetadata
+      - ./openmetadata/ingestion:/opt/airflow/dag_generated_configs
     command: airflow celery worker
     restart: always
 
@@ -653,12 +662,121 @@ services:
     restart: always
 
 
+# 1. Elasticsearch (Recherche)
+
+  openmetadata-elasticsearch:
+
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.13
+    container_name: openmetadata-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms1g -Xmx1g" # Augmenté à 1g pour éviter les plantages
+    networks:
+      - traefik-public
+    ports:
+      - "9200:9200"
+    volumes:
+      - openmetadata_es_data_clean:/usr/share/elasticsearch/data
+
+    restart: always
+ 
+  # 2. PostgreSQL (Base de données - Plus stable)
+
+  openmetadata-postgres:
+    image: postgres:13
+    container_name: openmetadata-postgres
+    networks:
+      - traefik-public
+    environment:
+      POSTGRES_USER: openmetadata_user
+      POSTGRES_PASSWORD: openmetadata_password
+      POSTGRES_DB: openmetadata_db
+    volumes:
+      - openmetadata_pg_data:/var/lib/postgresql/data
+    restart: always
+ 
+  # 3. OpenMetadata Server
+
+  openmetadata-server:
+
+    image: docker.getcollate.io/openmetadata/server:1.3.1
+    container_name: openmetadata-server
+    networks:
+      - traefik-public
+    depends_on:
+      - openmetadata-elasticsearch
+      - openmetadata-postgres
+
+    # Cette commande attend 10s, crée les tables, et lance le serveur
+    entrypoint:
+      - /bin/bash
+      - -c
+      - "echo 'Waiting for Postgres...' && sleep 10 && ./bootstrap/bootstrap_storage.sh migrate-all && ./bin/openmetadata-server-start.sh conf/openmetadata.yaml"
+    environment:
+      DB_DRIVER_CLASS: org.postgresql.Driver
+      DB_SCHEME: postgresql
+      DB_USE_SSL: "false"
+      DB_USER: openmetadata_user
+      DB_PASSWORD: openmetadata_password
+      DB_HOST: openmetadata-postgres
+      DB_PORT: 5432
+      DB_DBNAME: openmetadata_db
+      ELASTICSEARCH_HOST: openmetadata-elasticsearch
+      ELASTICSEARCH_PORT: 9200
+      ELASTICSEARCH_SCHEME: http
+      SERVER_HOST: "0.0.0.0"
+      SERVER_PORT: "8585"
+      OPENMETADATA_PUBLIC_URL: "http://catalog.itceq.tn"
+      PIPELINE_SERVICE_CLIENT_TYPE: openmetadata
+      PIPELINE_SERVICE_CLIENT_CLASS_NAME: org.openmetadata.service.clients.pipeline.airflow.AirflowRESTClient
+      PIPELINE_SERVICE_CLIENT_ENDPOINT: http://airflow-webserver:8080
+      SERVER_HOST_API_URL: http://openmetadata-server:8585/api
+      AIRFLOW_USERNAME: admin
+      AIRFLOW_PASSWORD: admin
+    ports:
+      - "8585:8585"
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.catalog.rule=Host(`catalog.itceq.tn`)"
+      - "traefik.http.routers.catalog.entrypoints=web"
+      - "traefik.http.services.catalog.loadbalancer.server.port=8585"
+
+
+  # 4. OpenMetadata Ingestion CLI
+ 
+  openmetadata-ingestion:
+    image: docker.getcollate.io/openmetadata/ingestion:1.3.1
+    container_name: openmetadata-ingestion
+    networks:
+      - traefik-public
+    depends_on:
+      - openmetadata-server
+      - spark-master
+    environment:
+      OPENMETADATA_SERVER_API_URL: http://openmetadata-server:8585/api
+      OPENMETADATA_JWT_TOKEN: ${OPENMETADATA_JWT_TOKEN}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    volumes:
+      - ./openmetadata/ingestion:/ingestion
+      - ${SPARK_EVENT_PATH}:/opt/spark/events   # 👈 VERY IMPORTANT
+    command: tail -f /dev/null
+    restart: always
+
+
+
+
 
 # ------------------------ Volumes ------------------------
 volumes:
   prometheus_data:
   mb_internal_data:
   marquez_pg_data:
+  openmetadata_pg_data:
+  openmetadata_es_data_clean:
+  postgres_airflow_data:
 
 # ------------------------ Networks ------------------------
 networks:

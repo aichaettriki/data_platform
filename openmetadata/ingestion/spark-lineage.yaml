@@ -1,0 +1,51 @@
+source:
+  type: spark
+  serviceName: spark_local
+  serviceConnection:
+    config:
+      type: Spark
+      sparkConfig:
+        # Spark event logs location (inside the container)
+        sparkEventLogPath: /opt/spark/events
+
+        # Spark UI (optional but recommended)
+        sparkUi:
+          endpoint: http://spark-master:8080
+
+        # Spark master (for metadata enrichment)
+        sparkMaster: spark://spark-master:7077
+
+      # Storage config for datasets (MinIO / S3)
+      storage:
+        type: s3
+        config:
+          awsConfig:
+            awsAccessKeyId: ${MINIO_ROOT_USER}
+            awsSecretAccessKey: ${MINIO_ROOT_PASSWORD}
+            awsRegion: us-east-1
+            endPointURL: http://minio:9000
+          bucketNames:
+            - raw
+            - transformed
+            - refined
+            - sandbox
+
+  sourceConfig:
+    config:
+      type: SparkLineage
+      # Parse SQL plans and logical plans
+      enableDataFrameLineage: true
+      enableSQLLineage: true
+      includeTables: true
+      includeViews: true
+
+sink:
+  type: metadata-rest
+  config:
+    apiEndpoint: http://openmetadata-server:8585/api
+    authProvider: openmetadata
+    securityConfig:
+      jwtToken: ${OPENMETADATA_JWT_TOKEN}
+
+workflowConfig:
+  loggerLevel: INFO

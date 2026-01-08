@@ -45,11 +45,11 @@ flask
 requests
 
 # Ajout pour CeleryExecutor
-apache-airflow-providers-celery==3.6.0
+apache-airflow-providers-celery
 celery
 redis
 
-apache-airflow-providers-openlineage
-openlineage-airflow==1.10.0
 
 python-dotenv
+openlineage-airflow
+
