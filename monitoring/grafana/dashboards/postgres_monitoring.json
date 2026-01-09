@@ -659,7 +659,8 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "palette-classic"
+            "fixedColor": "red",
+            "mode": "thresholds"
           },
           "custom": {
             "axisCenteredZero": false,
@@ -681,12 +682,38 @@
               "mode": "off"
             }
           },
-          "mappings": [],
+          "mappings": [
+            {
+              "options": {
+                "airflow": {
+                  "color": "green",
+                  "index": 0,
+                  "text": "airflow"
+                },
+                "icteq_db": {
+                  "color": "yellow",
+                  "index": 1,
+                  "text": "itceq_db"
+                },
+                "metabase_db": {
+                  "color": "purple",
+                  "index": 2,
+                  "text": "metabase_db"
+                },
+                "postgres": {
+                  "color": "blue",
+                  "index": 3,
+                  "text": "postgres"
+                }
+              },
+              "type": "value"
+            }
+          ],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "#FF9830",
                 "value": null
               }
             ]
@@ -704,7 +731,8 @@
       "id": 30,
       "options": {
         "barRadius": 0,
-        "barWidth": 0.78,
+        "barWidth": 0.7,
+        "colorByField": "datname",
         "fullHighlight": false,
         "groupWidth": 0.7,
         "legend": {
@@ -720,6 +748,7 @@
           "mode": "single",
           "sort": "none"
         },
+        "xField": "datname",
         "xTickLabelRotation": 0,
         "xTickLabelSpacing": 0
       },
@@ -733,8 +762,9 @@
           "editorMode": "code",
           "exemplar": false,
           "expr": "pg_database_size_bytes",
+          "format": "table",
           "instant": true,
-          "legendFormat": "{{datname}}",
+          "legendFormat": "__auto",
           "range": false,
           "refId": "A"
         }
@@ -943,7 +973,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               },
               {
                 "color": "yellow",
@@ -1145,7 +1176,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": null
               }
             ]
           },
