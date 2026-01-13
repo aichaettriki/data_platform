@@ -1391,7 +1391,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "PostgreSQL Monitoring",
+  "title": "04-PostgreSQL Monitoring",
   "uid": "postgres-monitoring-v1",
   "version": 1,
   "weekStart": ""

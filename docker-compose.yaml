@@ -22,12 +22,10 @@ services:
 
   # ---------- Redis ----------
   redis:
-    image: redis:7.2-alpine # Version plus précise
+    image: redis:7.2.4-alpine # Version plus précise
     container_name: redis
     networks:
       - traefik-public
-    ports:
-      - "6379:6379"
     restart: always
 
   # ---------- PostgreSQL Airflow ----------
@@ -40,8 +38,6 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "${POSTGRES_PORT}:5432"
     volumes:
       - ${PGDATA_PATH}:/var/lib/postgresql/data
       - ${POSTGRE_INIT}:/docker-entrypoint-initdb.d
@@ -64,6 +60,7 @@ services:
     restart: always
 
   # ---------- MinIO ----------
+
   minio:
     image: minio/minio:RELEASE.2024-11-07T00-52-20Z # FIXÉE À UNE VERSION STABLE
     container_name: minio
@@ -104,6 +101,8 @@ services:
         mc ls myminio;
       "
     restart: "no"
+
+
 
   # ---------- Spark ----------
   spark-master:
@@ -260,12 +259,18 @@ services:
       - ${AIRFLOW_PLUGINS_PATH}:/opt/airflow/plugins
  
     command: >
-        bash -c "airflow db migrate && 
-                airflow users create --username $${AIRFLOW_ADMIN_USER} --password $${AIRFLOW_ADMIN_PASSWORD} --firstname Admin --lastname Admin --email admin@example.org --role Admin || echo 'User already exists' &&
-                python /opt/airflow/init_connections.py" command: >
-        bash -c "airflow db migrate && 
-                airflow users create --username $${AIRFLOW_ADMIN_USER} --password $${AIRFLOW_ADMIN_PASSWORD} --firstname Admin --lastname Admin --email admin@example.org --role Admin || echo 'User already exists' &&
-                python /opt/airflow/init_connections.py"
+      bash -c "
+        airflow db migrate &&
+        airflow users create \
+          --username ${AIRFLOW_ADMIN_USER} \
+          --password ${AIRFLOW_ADMIN_PASSWORD} \
+          --firstname Admin \
+          --lastname Admin \
+          --email admin@example.org \
+          --role Admin || true &&
+        python /opt/airflow/init_connections.py
+      "
+
 
   airflow-webserver:
     build: ./airflow
@@ -436,7 +441,7 @@ services:
       timeout: 5s
       retries: 5
     volumes:
-      - ${MARQUEZ_PG_DATA_PATH}:/var/lib/postgresql/data
+      - ./marquez_pg_data:/var/lib/postgresql/data
 
   marquez:
     image: marquezproject/marquez:0.49.0
@@ -493,7 +498,7 @@ services:
   # Grafana
   # ------------------------
   grafana:
-    image: grafana/grafana:10.0.3
+    image: grafana/grafana:10.4.3
     networks:
       - traefik-public
     ports:
@@ -630,7 +635,8 @@ services:
   # Loki (pour logs Airflow)
   # ------------------------
   loki:
-    image: grafana/loki:2.8.2
+    image: grafana/loki:2.9.4
+
     networks:
       - traefik-public
     ports:
@@ -648,7 +654,7 @@ services:
   # Promtail (agent qui envoie les logs à Loki)
   # ------------------------
   promtail:
-    image: grafana/promtail:2.9.0
+    image: grafana/promtail:2.9.4
     networks:
       - traefik-public
     volumes:
@@ -667,6 +673,7 @@ volumes:
   prometheus_data:
   mb_internal_data:
   marquez_pg_data:
+  minio-data:
 
 # ------------------------ Networks ------------------------
 networks:

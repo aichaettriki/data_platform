@@ -43,7 +43,7 @@
         "content": "<div style=\"text-align:center;\">\n  <a href=\"http://grafana.itceq.tn/d/minio_data_lake_dashboard/data-lake-health\"\n     target=\"_blank\"\n     style=\"font-size:24px; font-weight:bold; color:#3274D9; text-decoration:none;\">\n    Data Lake Dashboard\n  </a>\n</div>\n",
         "mode": "html"
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "transparent": true,
       "type": "text"
     },
@@ -106,9 +106,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -123,7 +125,7 @@
           "refId": "A"
         }
       ],
-      "title": "MinIO Cluster",
+      "title": "MinIO Up",
       "type": "stat"
     },
     {
@@ -169,9 +171,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -225,6 +229,8 @@
       },
       "id": 4001,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -235,11 +241,12 @@
         },
         "showThresholdLabels": false,
         "showThresholdMarkers": true,
+        "sizing": "auto",
         "text": {
           "titleSize": 1
         }
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -266,6 +273,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -279,6 +287,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -367,7 +376,7 @@
         "content": "<div style=\"text-align:center;\">\n  <a href=\"http://grafana.itceq.tn/d/metabase-monitoring/metabase-monitoring\"\n     target=\"_blank\"\n     style=\"font-size:24px; font-weight:bold; color:#3274D9; text-decoration:none;\">\n    Metabase dashboard\n  </a>\n</div>\n",
         "mode": "html"
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "transparent": true,
       "type": "text"
     },
@@ -429,9 +438,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -492,9 +503,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -548,6 +561,8 @@
       },
       "id": 4013,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -557,9 +572,10 @@
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "sizing": "auto"
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -586,6 +602,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -599,6 +616,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -687,7 +705,7 @@
         "content": "<div style=\"text-align:center;\">\n  <a href=\"http://grafana.itceq.tn/d/postgres-monitoring-v1/postgresql-monitoring\"\n     target=\"_blank\"\n     style=\"font-size:24px; font-weight:bold; color:#3274D9; text-decoration:none;\">\n    Postgres dashboard\n  </a>\n</div>\n",
         "mode": "html"
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "transparent": true,
       "type": "text"
     },
@@ -750,9 +768,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -813,9 +833,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -869,6 +891,8 @@
       },
       "id": 4004,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -878,9 +902,10 @@
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "sizing": "auto"
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -907,6 +932,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -920,6 +946,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1008,7 +1035,7 @@
         "content": "<div style=\"text-align:center;\">\n  <a href=\"http://grafana.itceq.tn/d/a23a7e6f-3feb-45f4-902e-95dfbcec13da/airflow-monitoring-dashboard\"\n     target=\"_blank\"\n     style=\"font-size:24px; font-weight:bold; color:#3274D9; text-decoration:none;\">\n    Airflow dashboard\n  </a>\n</div>\n\n\n\n",
         "mode": "html"
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "transparent": true,
       "type": "text"
     },
@@ -1070,9 +1097,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -1133,9 +1162,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -1189,6 +1220,8 @@
       },
       "id": 4007,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -1198,9 +1231,10 @@
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "sizing": "auto"
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -1227,6 +1261,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1240,6 +1275,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1332,7 +1368,7 @@
         "content": "<div style=\"text-align:center;\">\n  <a href=\"http://grafana.itceq.tn/d/spark-monitoring/spark-cluster-monitoring\"\n     target=\"_blank\"\n     style=\"font-size:24px; font-weight:bold; color:#3274D9; text-decoration:none;\">\n    Spark dashboard\n  </a>\n</div>\n\n\n",
         "mode": "html"
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "transparent": true,
       "type": "text"
     },
@@ -1395,9 +1431,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -1456,9 +1494,11 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -1512,6 +1552,8 @@
       },
       "id": 4010,
       "options": {
+        "minVizHeight": 75,
+        "minVizWidth": 75,
         "orientation": "auto",
         "reduceOptions": {
           "calcs": [
@@ -1521,9 +1563,10 @@
           "values": false
         },
         "showThresholdLabels": false,
-        "showThresholdMarkers": true
+        "showThresholdMarkers": true,
+        "sizing": "auto"
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -1550,6 +1593,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -1563,6 +1607,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -1632,8 +1677,7 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": [
     "data lake",
     "postgreSQL",
@@ -1652,7 +1696,7 @@
   },
   "timepicker": {},
   "timezone": "",
-  "title": "Platform Monitoring Overview",
+  "title": "01-Platform Monitoring Overview",
   "uid": "platform-health-monitoring",
   "version": 1,
   "weekStart": ""

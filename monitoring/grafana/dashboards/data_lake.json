@@ -1101,7 +1101,7 @@
   },
   "timepicker": {},
   "timezone": "browser",
-  "title": "Data Lake Health",
+  "title": "02-Data Lake Health",
   "uid": "minio_data_lake_dashboard",
   "version": 1,
   "weekStart": ""
