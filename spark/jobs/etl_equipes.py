@@ -34,11 +34,12 @@ def create_spark_session(app_name="ETL Equipe via Spark + MinIO"):
     hadoopConf.set("fs.s3a.secret.key", MINIO_SECRET_KEY)
     hadoopConf.set("fs.s3a.endpoint", MINIO_ENDPOINT)
     hadoopConf.set("fs.s3a.path.style.access", "true")
+    hadoopConf.set("fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
     return spark
 
 
 def read_raw_csv(spark, raw_path):
-    raw_path = "s3a://raw/"
+    raw_path = "s3a://01-raw/"
     df = spark.read.csv(raw_path, header=True, sep=";", inferSchema=True)
     df.show()
     print("-------->>>>>>>>>>>>>>> files :")
@@ -52,15 +53,14 @@ def read_raw_csv(spark, raw_path):
 
 from pyspark.sql.functions import year, month, dayofmonth, current_timestamp
 
-def clean_and_write(df, transformed_root_path="s3a://transformed", dataset_name="equipe_spark"):
+def clean_and_write(df, transformed_root_path="s3a://02-transformed", dataset_name="equipe_spark"):
     now = current_timestamp()
 
     df_clean = df.dropDuplicates()
 
     # date extraction
-    annee = df_clean.select(year(now)).first()[0]
-    mois = df_clean.select(month(now)).first()[0]
-    jour = df_clean.select(dayofmonth(now)).first()[0]
+    now = datetime.now()
+    annee, mois, jour = now.year, now.month, now.day
 
     # ajouter le nom du dataset dans le chemin
     output_path = f"{transformed_root_path}/{dataset_name}/{annee}/{mois}/{jour}/"
@@ -73,7 +73,7 @@ def clean_and_write(df, transformed_root_path="s3a://transformed", dataset_name=
 
     return df_clean
 
-def add_timestamp_and_write(df_clean, refined_root_path="s3a://refined", dataset_name="equipe_spark"):
+def add_timestamp_and_write(df_clean, refined_root_path="s3a://03-refined", dataset_name="equipe_spark"):
     now = current_timestamp()
 
     df_refined = (
@@ -115,21 +115,20 @@ if __name__ == "__main__":
     spark = create_spark_session(app_name)
 
     if action == "read_raw_csv":
-        df = read_raw_csv(spark, "s3a://raw/")
+        df = read_raw_csv(spark, "s3a://01-raw/")
 
     elif action == "clean_and_transformed":
-        df = read_raw_csv(spark, "s3a://raw/")
-        clean_and_write(df, "s3a://transformed/equipe_spark")
-
+        df = read_raw_csv(spark, "s3a://01-raw/")
+        clean_and_write(df, "s3a://02-transformed/equipe_spark")
     elif action == "add_timestamp_refined":
-        df = read_raw_csv(spark, "s3a://raw/equipe.csv")
-        df_clean = clean_and_write(df, "s3a://transformed/equipe_spark")
-        add_timestamp_and_write(df_clean, "s3a://refined/equipe_spark")
+        df = read_raw_csv(spark, "s3a://01-raw/equipe.csv")
+        df_clean = clean_and_write(df, "s3a://02-transformed/equipe_spark")
+        add_timestamp_and_write(df_clean, "s3a://03-refined/equipe_spark")
 
 
     elif action == "write_postgres":
         today = datetime.today()
-        df = spark.read.csv(f"s3a://refined/equipe_spark/{today.year}/{today.month}/{today.day}/", header=True, inferSchema=True)
+        df = spark.read.csv(f"s3a://03-refined/equipe_spark/{today.year}/{today.month}/{today.day}/", header=True, inferSchema=True)
         write_to_postgres(df)
 
     else:

@@ -21,7 +21,7 @@ MINIO_SECRET_KEY = get_env_var("MINIO_ROOT_PASSWORD")
 MINIO_HOST = get_env_var("MINIO_HOST")
 MINIO_API_PORT = get_env_var("MINIO_API_PORT")
 
-BUCKET_RAW = "raw"
+BUCKET_RAW = "01-raw"
 LOCAL_FILE_PATH = "/opt/airflow/data/equipe2.csv"
 RAW_OBJECT = "equipe1.csv"
 

@@ -1,55 +1,40 @@
-# Manipulation de données
+# --- Manipulation de données (versions fixées pour éviter les calculs de pip) ---
 pandas
 numpy
 pyarrow
 fastparquet
 openpyxl
 
-# Communication avec MinIO / S3
+# --- Cloud & Storage ---
 boto3
 s3fs
 minio
 
-# Accès aux APIs
-requests
-httpx
-
-# Transformations de dates
-python-dateutil
-
-# Base de données (Postgres)
+# --- Base de données ---
+# psycopg2-binary est déjà présent, mais on le garde pour être sûr
+psycopg2-binary 
 sqlalchemy
-psycopg2-binary
 
-# Logging / utils
-loguru
-
-# ML léger si besoin
-scikit-learn
-
-# Optional: parsing JSON ou XML
-lxml
-
+# --- Spark & Airflow Providers ---
+# IMPORTANT : Version de pyspark DOIT être identique à la version binaire (3.5.1)
 pyspark
 apache-airflow-providers-apache-spark
+apache-airflow-providers-celery
+apache-airflow-providers-openlineage
+apache-airflow-providers-postgres
+apache-airflow-providers-redis
 
-# Optional: parsing JSON
-# (lxml supprimé car dépendances système manquantes)
+# --- Utils ---
+loguru
+python-dotenv
+httpx
 ujson
+python-dateutil
 
-# Prometheus
+# --- Monitoring ---
 prometheus-client
 prometheus-api-client
 
-flask
-requests
-
-# Ajout pour CeleryExecutor
-apache-airflow-providers-celery==3.6.0
-celery
-redis
-
-apache-airflow-providers-openlineage
-openlineage-airflow==1.10.0
-
-python-dotenv
+# --- Suppression des inutiles ---
+# flask, requests, celery, redis : DEJA INCLUS dans l'image de base Airflow.
+# openlineage-airflow : Remplacé par le provider officiel ci-dessus.

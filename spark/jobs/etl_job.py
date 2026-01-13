@@ -94,7 +94,7 @@ def create_spark_session(app_name="ETL_Equipe_Production"):
 
 def task_1_ingest(spark):
     print("🚀 Task 1: Ingesting RAW data")
-    src = "s3a://raw/equipe.csv"
+    src = "s3a://01-raw/equipe1.csv"
 
     df = spark.read.csv(src, header=True, sep=";", inferSchema=True)
 
@@ -112,7 +112,7 @@ def task_1_ingest(spark):
 
 def task_2_clean(df):
     print("🧹 Task 2: Cleaning data")
-    dest = "s3a://transformed/cleaned_data"
+    dest = "s3a://02-transformed/cleaned_data"
 
     df_clean = df.dropDuplicates()
 
@@ -132,7 +132,7 @@ def task_2_clean(df):
 
 def task_3_refine(df):
     print("📦 Task 3: Refining data")
-    dest = "s3a://refined/final_output"
+    dest = "s3a://03-refined/final_output"
 
     df_final = (
         df
@@ -169,7 +169,7 @@ def task_4_write_postgres(df, jdbc_url=POSTGRES_URL):
         .save()
 
     # --- Lineage Marquez ---
-    input_dataset = "s3a://refined/final_output"
+    input_dataset = "s3a://03-refined/final_output"
     output_dataset = f"postgresql://{POSTGRES_URL}/{table_name}"
 
     emit_marquez_step(
