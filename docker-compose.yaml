@@ -100,7 +100,7 @@ services:
         mc mb -p myminio/01-raw;
         mc mb -p myminio/02-transformed;
         mc mb -p myminio/03-refined;
-        mc mb -p myminio/99-sandbox;
+        mc mb -p myminio/90-sandbox;
         mc ls myminio;
       "
     restart: "no"
