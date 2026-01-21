@@ -54,4 +54,20 @@ scrape_configs:
       - targets: ['metabase-exporter:9101']
     scrape_interval: 30s
     scrape_timeout: 25s
+    
+# Marquez via JMX Exporter
+  - job_name: 'marquez-jmx'
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['marquez:9404']
+    scrape_interval: 30s
+    scrape_timeout: 25s
 
+  - job_name: 'marquez-http'
+    metrics_path: '/metrics'
+    static_configs:
+      - targets: ['marquez:5000'] 
+
+  - job_name: 'sql-exporter'
+    static_configs:
+      - targets: ['sql-exporter:9399']

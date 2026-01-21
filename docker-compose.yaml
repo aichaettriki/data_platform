@@ -70,6 +70,7 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_PROMETHEUS_AUTH_TYPE: public
+      MINIO_PROMETHEUS_URL: http://prometheus:9090
     ports:
       - "${MINIO_API_PORT}:${MINIO_API_PORT}"
       - "${MINIO_CONSOLE_PORT}:${MINIO_CONSOLE_PORT}"
@@ -257,6 +258,8 @@ services:
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${AIRFLOW_PLUGINS_PATH}:/opt/airflow/plugins
+      - ./airflow/init_connections.py:/opt/airflow/init_connections.py
+ 
  
     command: >
       bash -c "
@@ -456,13 +459,48 @@ services:
       MARQUEZ_DB_URL: ${MARQUEZ_DB_URL}
       MARQUEZ_DB_USER: ${MARQUEZ_DB_USER}
       MARQUEZ_DB_PASSWORD: ${MARQUEZ_DB_PASSWORD}
+      JAVA_OPTS: >
+       -javaagent:/opt/jmx/jmx_prometheus_javaagent.jar=9404:/opt/jmx/jmx-config.yml
     volumes:
-      # On injecte le fichier local dans le conteneur
-      - ${MARQUEZ_CONFIG_PATH}:/etc/marquez/marquez.yml
+    - ./jmx/jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx/jmx_prometheus_javaagent.jar
+    - ./jmx/jmx-config.yml:/opt/jmx/jmx-config.yml
+    - ./marquez.yml:/etc/marquez/marquez.yml:ro
+
     ports:
       - "${MARQUEZ_HTTP_PORT}:${MARQUEZ_HTTP_PORT}"
       - "${MARQUEZ_ADMIN_PORT}:${MARQUEZ_ADMIN_PORT}"
+      - "9404:9404"
+
     restart: always
+
+  #   # JMX Exporter pour Marquez
+  # marquez-jmx-exporter:
+  #   image: bitnami/jmx-exporter:latest
+  #   container_name: marquez-jmx-exporter
+  #   networks: [traefik-public]
+  #   depends_on:
+  #     - marquez
+  #   command:
+  #     - "9404"
+  #     - "/etc/jmx-exporter/config.yml"
+  #   volumes:
+  #     - ./jmx-exporter-config.yml:/etc/jmx-exporter/config.yml:ro
+  #   ports:
+  #     - "9504:9404"
+  #   restart: always
+
+
+  sql-exporter:
+    image: burningalchemist/sql_exporter:latest
+    container_name: sql-exporter
+    environment:
+      - CONFIG=/config/sql_exporter.yml
+    volumes:
+      - ./sql_exporter.yml:/config/sql_exporter.yml
+    networks:
+      - traefik-public
+    ports:
+      - "9399:9399"
  
   marquez-web:
     image: marquezproject/marquez-web:0.41.0
@@ -531,7 +569,7 @@ services:
       - traefik-public
     restart: unless-stopped
     ports:
-      - "${METABASE_PORT}:${METABASE_PORT}"
+      - "${METABASE_PORT}:3000"
       - "${METABASE_EXPORTER_PORT}:${METABASE_EXPORTER_PORT}"
     env_file:
       - ${METABASE_ENV_FILE}
