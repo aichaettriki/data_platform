@@ -1,0 +1,14 @@
+---
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+whitelistObjectNames: ["java.lang:*"]
+rules:
+  - pattern: 'java.lang<type=Memory><([^>]+)MemoryUsage>([^:]+):'
+    name: jvm_memory_used_bytes
+    labels:
+      area: "$1"
+    type: GAUGE
+  - pattern: 'java.lang<type=Threading><>ThreadCount'
+    name: jvm_threads_live
+    type: GAUGE
+  - pattern: ".*"

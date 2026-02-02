@@ -126,3 +126,6 @@ secrets/
 *.bak
 *.backup
 *.old
+
+test_data/
+marquez_pg_data/

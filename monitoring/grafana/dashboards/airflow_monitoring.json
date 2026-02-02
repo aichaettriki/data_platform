@@ -39,7 +39,7 @@
         "content": "<p style=\"text-align:center; font-size:22px; font-weight:bold;\">\n  Airflow Monitoring Dashboard\n</p>\n",
         "mode": "html"
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "transparent": true,
       "type": "text"
     },
@@ -90,13 +90,15 @@
           "fields": "",
           "values": false
         },
+        "showPercentChange": false,
         "text": {
           "valueSize": 80
         },
         "textMode": "auto",
-        "textSize": 50
+        "textSize": 50,
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -166,13 +168,15 @@
           "fields": "",
           "values": false
         },
+        "showPercentChange": false,
         "text": {
           "valueSize": 80
         },
         "textMode": "auto",
-        "textSize": 50
+        "textSize": 50,
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -240,13 +244,15 @@
           "fields": "",
           "values": false
         },
+        "showPercentChange": false,
         "text": {
           "valueSize": 80
         },
         "textMode": "auto",
-        "textSize": 50
+        "textSize": 50,
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -402,6 +408,7 @@
             "mode": "shades"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -435,10 +442,30 @@
                   "index": 1,
                   "text": "ETL csv spark pipeline"
                 },
-                "ingest_api_to_minio": {
+                "ingest_and_transform_ins": {
+                  "color": "purple",
+                  "index": 3,
+                  "text": "Ingest and transform INS"
+                },
+                "ingest_ins_raw": {
+                  "color": "blue",
+                  "index": 4,
+                  "text": "Ingest to raw"
+                },
+                "ins_tre_etl_pipeline1": {
+                  "color": "orange",
+                  "index": 6,
+                  "text": "Transform TRE"
+                },
+                "spark-marquez": {
                   "color": "blue",
                   "index": 2,
-                  "text": "Ingest api to minio"
+                  "text": "Spark markez"
+                },
+                "transform_aggregats": {
+                  "color": "purple",
+                  "index": 5,
+                  "text": "Transform Aggregats"
                 }
               },
               "type": "value"
@@ -580,6 +607,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -612,15 +640,35 @@
                   "index": 1,
                   "text": "ETL csv spark pipeline"
                 },
-                "ingest_api_to_minio": {
-                  "color": "blue",
+                "ingest_and_transform_ins": {
+                  "color": "purple",
                   "index": 2,
-                  "text": "Ingest api to minio"
+                  "text": "Ingest and transform INS"
+                },
+                "ingest_ins_raw": {
+                  "color": "blue",
+                  "index": 6,
+                  "text": "Ingest to raw"
+                },
+                "ins_tre_etl_pipeline1": {
+                  "color": "orange",
+                  "index": 7,
+                  "text": "Transform TRE"
                 },
                 "spark-marquez": {
-                  "color": "orange",
+                  "color": "blue",
                   "index": 3,
                   "text": "Spark marquez"
+                },
+                "transform_aggregats": {
+                  "color": "purple",
+                  "index": 5,
+                  "text": "Transform aggregats"
+                },
+                "transform_ins_tre": {
+                  "color": "light-red",
+                  "index": 4,
+                  "text": "Transform INS "
                 }
               },
               "type": "value"
@@ -726,6 +774,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -763,10 +812,25 @@
                   "index": 2,
                   "text": "Ingest api to minio"
                 },
+                "ingest_ins_raw": {
+                  "color": "blue",
+                  "index": 6,
+                  "text": "Ingest to raw"
+                },
+                "ins_tre_etl_pipeline1": {
+                  "color": "orange",
+                  "index": 4,
+                  "text": "Transform TRE"
+                },
                 "spark-marquez": {
                   "color": "orange",
                   "index": 3,
                   "text": "Spark marquez"
+                },
+                "transform_aggregats": {
+                  "color": "purple",
+                  "index": 5,
+                  "text": "Transform Aggregats"
                 }
               },
               "type": "value"
@@ -788,7 +852,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 10,
+        "w": 11,
         "x": 1,
         "y": 18
       },
@@ -858,6 +922,7 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
             "axisCenteredZero": false,
             "axisColorMode": "text",
             "axisLabel": "",
@@ -895,10 +960,25 @@
                   "index": 2,
                   "text": "Ingest api to minio"
                 },
+                "ingest_ins_raw": {
+                  "color": "orange",
+                  "index": 5,
+                  "text": "Ingest to raw"
+                },
+                "ins_tre_etl_pipeline1": {
+                  "color": "blue",
+                  "index": 6,
+                  "text": "Transform TRE"
+                },
                 "spark-marquez": {
                   "color": "orange",
                   "index": 3,
                   "text": "Spark marquez"
+                },
+                "transform_aggregats": {
+                  "color": "purple",
+                  "index": 4,
+                  "text": "Transform Aggregats"
                 }
               },
               "type": "value"
@@ -919,7 +999,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 10,
+        "w": 11,
         "x": 12,
         "y": 18
       },
@@ -1226,7 +1306,7 @@
         "showHeader": true,
         "sortBy": []
       },
-      "pluginVersion": "10.0.3",
+      "pluginVersion": "10.4.3",
       "targets": [
         {
           "datasource": {
@@ -1288,8 +1368,7 @@
     }
   ],
   "refresh": "",
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 39,
   "tags": [
     "airflow",
     "prometheus",

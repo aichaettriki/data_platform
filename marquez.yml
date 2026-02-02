@@ -12,3 +12,10 @@ db:
   url: ${MARQUEZ_DB_URL}
   user: ${MARQUEZ_DB_USER}
   password: ${MARQUEZ_DB_PASSWORD}
+
+# logging
+
+logging:
+  level: INFO
+  appenders:
+    - type: console

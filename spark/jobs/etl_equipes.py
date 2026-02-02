@@ -45,19 +45,14 @@ def read_raw_csv(spark, raw_path):
     print("-------->>>>>>>>>>>>>>> files :")
     for f in df.inputFiles():
         print(" -", f)
-
         df.printSchema()
         df.show()
     return df
 
 
-from pyspark.sql.functions import year, month, dayofmonth, current_timestamp
-
 def clean_and_write(df, transformed_root_path="s3a://02-transformed", dataset_name="equipe_spark"):
     now = current_timestamp()
-
     df_clean = df.dropDuplicates()
-
     # date extraction
     now = datetime.now()
     annee, mois, jour = now.year, now.month, now.day

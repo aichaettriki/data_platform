@@ -1,0 +1,19 @@
+target:
+  data_source_name: 'postgres://marquez:marquez@marquez-postgres:5432/marquez?sslmode=disable'
+  collectors: [marquez_stats]
+
+collectors:
+  - name: marquez_stats
+    queries:
+      - query: 'SELECT count(*) AS count FROM jobs'
+        metrics:
+          - name: jobs_total
+            help: 'Total jobs count'
+            type: gauge
+            values: [count]
+      - query: 'SELECT count(*) AS count FROM datasets'
+        metrics:
+          - name: datasets_total
+            help: 'Total datasets count'
+            type: gauge
+            values: [count]

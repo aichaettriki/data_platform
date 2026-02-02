@@ -99,6 +99,9 @@ services:
         mc mb -p myminio/02-transformed;
         mc mb -p myminio/03-refined;
         mc mb -p myminio/90-sandbox;
+        mc version enable myminio/01-raw;
+        mc version enable myminio/02-transformed;
+        mc version enable myminio/03-refined;
         mc ls myminio;
       "
     restart: "no"
@@ -259,19 +262,11 @@ services:
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${AIRFLOW_PLUGINS_PATH}:/opt/airflow/plugins
       - ./airflow/init_connections.py:/opt/airflow/init_connections.py
- 
- 
     command: >
       bash -c "
-        airflow db migrate &&
-        airflow users create \
-          --username ${AIRFLOW_ADMIN_USER} \
-          --password ${AIRFLOW_ADMIN_PASSWORD} \
-          --firstname Admin \
-          --lastname Admin \
-          --email admin@example.org \
-          --role Admin || true &&
-        python /opt/airflow/init_connections.py
+      airflow db migrate &&
+      airflow users create --username '$AIRFLOW_ADMIN_USER' --password '$AIRFLOW_ADMIN_PASSWORD' --firstname Admin --lastname Admin --email admin@example.org --role Admin || true;
+      python3 /opt/airflow/init_connections.py
       "
 
 
@@ -293,6 +288,9 @@ services:
       OPENLINEAGE_NAMESPACE: itceq_prod
       
       AIRFLOW__API__AUTH_BACKENDS: airflow.api.auth.backend.basic_auth,airflow.api.auth.backend.session
+      AIRFLOW__WEBSERVER__BASE_URL: http://airflow-webserver:8080
+      AIRFLOW__LOGGING__WORKER_LOG_SERVER_HOST: airflow-worker
+      AIRFLOW__LOGGING__WORKER_LOG_marqSERVER_PORT: 8793
     env_file:
         - .env
     ports:
@@ -302,6 +300,7 @@ services:
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${DATA_PATH}:/opt/airflow/data
+      - ./test_data:/tmp/test_data
     restart: always
     labels:
       - "traefik.enable=true"
@@ -327,7 +326,9 @@ services:
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}
       OPENLINEAGE_URL: ${MARQUEZ_URL}
       OPENLINEAGE_NAMESPACE: itceq_prod
-      
+      AIRFLOW__WEBSERVER__BASE_URL: http://airflow-webserver:8080
+      AIRFLOW__LOGGING__WORKER_LOG_SERVER_HOST: airflow-worker
+      AIRFLOW__LOGGING__WORKER_LOG_SERVER_PORT: 8793    
     env_file:
         - .env
     volumes:
@@ -335,6 +336,7 @@ services:
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${DATA_PATH}:/opt/airflow/data
+      - ./test_data:/tmp/test_data
     command: airflow scheduler
     restart: always
 
@@ -360,6 +362,9 @@ services:
       AIRFLOW__CORE__HIDE_SENSITIVE_VAR_CONN_FIELDS: 'False'
       OPENLINEAGE_URL: ${MARQUEZ_URL}
       OPENLINEAGE_NAMESPACE: itceq_prod
+      AIRFLOW__WEBSERVER__BASE_URL: http://airflow-webserver:8080
+      AIRFLOW__LOGGING__WORKER_LOG_SERVER_HOST: airflow-worker
+      AIRFLOW__LOGGING__WORKER_LOG_SERVER_PORT: 8793
     env_file:
       - .env
     volumes:
@@ -369,6 +374,7 @@ services:
       - ${MINIO_TRANSFORMED_PATH}:/data/transformed
       - ${DATA_PATH}:/opt/airflow/data
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
+      - ./test_data:/tmp/test_data
     command: triggerer
     restart: always
 
@@ -416,6 +422,10 @@ services:
       AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres-airflow:5432/${POSTGRES_DB}
       OPENLINEAGE_URL: ${MARQUEZ_URL}
       OPENLINEAGE_NAMESPACE: itceq_prod
+      AIRFLOW__WEBSERVER__BASE_URL: http://airflow-webserver:8080
+      AIRFLOW__LOGGING__WORKER_LOG_SERVER_HOST: airflow-worker
+      AIRFLOW__LOGGING__WORKER_LOG_SERVER_PORT: 8793
+
       
     env_file:
         - .env
@@ -425,111 +435,112 @@ services:
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${AIRFLOW_PLUGINS_PATH}:/opt/airflow/plugins
       - ${DATA_PATH}:/opt/airflow/data
+      - ./test_data:/tmp/test_data
     command: airflow celery worker
     restart: always
 
-  # ---------- Marquez ----------
-  marquez-postgres:
-    image: postgres:16-alpine
-    container_name: marquez-postgres
-    networks: [traefik-public]
-    environment:
-      POSTGRES_DB: ${MARQUEZ_POSTGRES_DB}
-      POSTGRES_USER: ${MARQUEZ_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${MARQUEZ_POSTGRES_PASSWORD}
-      POSTGRES_HOST_AUTH_METHOD: trust
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${MARQUEZ_POSTGRES_USER} -d ${MARQUEZ_POSTGRES_DB}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - ./marquez_pg_data:/var/lib/postgresql/data
-
-  marquez:
-    image: marquezproject/marquez:0.49.0
-    container_name: marquez
-    networks: [traefik-public]
-    depends_on:
-      - marquez-postgres
-    environment:
-      # Indique à l'appli où trouver le fichier qu'on vient de créer
-      MARQUEZ_CONFIG: /etc/marquez/marquez.yml
-      # Vos variables de connexion
-      MARQUEZ_DB_URL: ${MARQUEZ_DB_URL}
-      MARQUEZ_DB_USER: ${MARQUEZ_DB_USER}
-      MARQUEZ_DB_PASSWORD: ${MARQUEZ_DB_PASSWORD}
-      JAVA_OPTS: >
-       -javaagent:/opt/jmx/jmx_prometheus_javaagent.jar=9404:/opt/jmx/jmx-config.yml
-    volumes:
-    - ./jmx/jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx/jmx_prometheus_javaagent.jar
-    - ./jmx/jmx-config.yml:/opt/jmx/jmx-config.yml
-    - ./marquez.yml:/etc/marquez/marquez.yml:ro
-
-    ports:
-      - "${MARQUEZ_HTTP_PORT}:${MARQUEZ_HTTP_PORT}"
-      - "${MARQUEZ_ADMIN_PORT}:${MARQUEZ_ADMIN_PORT}"
-      - "9404:9404"
-
-    restart: always
-
-  #   # JMX Exporter pour Marquez
-  # marquez-jmx-exporter:
-  #   image: bitnami/jmx-exporter:latest
-  #   container_name: marquez-jmx-exporter
+  # # ---------- Marquez ----------
+  # marquez-postgres:
+  #   image: postgres:16-alpine
+  #   container_name: marquez-postgres
   #   networks: [traefik-public]
-  #   depends_on:
-  #     - marquez
-  #   command:
-  #     - "9404"
-  #     - "/etc/jmx-exporter/config.yml"
+  #   environment:
+  #     POSTGRES_DB: ${MARQUEZ_POSTGRES_DB}
+  #     POSTGRES_USER: ${MARQUEZ_POSTGRES_USER}
+  #     POSTGRES_PASSWORD: ${MARQUEZ_POSTGRES_PASSWORD}
+  #     POSTGRES_HOST_AUTH_METHOD: trust
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U ${MARQUEZ_POSTGRES_USER} -d ${MARQUEZ_POSTGRES_DB}"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
   #   volumes:
-  #     - ./jmx-exporter-config.yml:/etc/jmx-exporter/config.yml:ro
+  #     - ./marquez_pg_data:/var/lib/postgresql/data
+
+  # marquez:
+  #   image: marquezproject/marquez:0.49.0
+  #   container_name: marquez
+  #   networks: [traefik-public]
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:5000/api/v1/namespaces"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #   depends_on:
+  #     - marquez-postgres
+  #   environment:
+  #     # Indique à l'appli où trouver le fichier qu'on vient de créer
+  #     MARQUEZ_CONFIG: /etc/marquez/marquez.yml
+  #     # Vos variables de connexion
+  #     MARQUEZ_DB_URL: ${MARQUEZ_DB_URL}
+  #     MARQUEZ_DB_USER: ${MARQUEZ_DB_USER}
+  #     MARQUEZ_DB_PASSWORD: ${MARQUEZ_DB_PASSWORD}
+  #     JAVA_OPTS: >
+  #      -javaagent:/opt/jmx/jmx_prometheus_javaagent.jar=9404:/opt/jmx/jmx-config.yml
+  #   volumes:
+  #   - ./jmx/jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx/jmx_prometheus_javaagent.jar
+  #   - ./jmx/jmx-config.yml:/opt/jmx/jmx-config.yml
+  #   - ./marquez.yml:/etc/marquez/marquez.yml:ro
+
   #   ports:
-  #     - "9504:9404"
+  #     - "${MARQUEZ_HTTP_PORT}:${MARQUEZ_HTTP_PORT}"
+  #     - "${MARQUEZ_ADMIN_PORT}:${MARQUEZ_ADMIN_PORT}"
+  #     - "9404:9404"
+
   #   restart: always
 
 
-  sql-exporter:
-    image: burningalchemist/sql_exporter:latest
-    container_name: sql-exporter
-    environment:
-      - CONFIG=/config/sql_exporter.yml
-    volumes:
-      - ./sql_exporter.yml:/config/sql_exporter.yml
-    networks:
-      - traefik-public
-    ports:
-      - "9399:9399"
+  # sql-exporter:
+  #   image: burningalchemist/sql_exporter:0.17.1 # Version stable
+  #   container_name: sql-exporter
+  #   # On retire "environment: CONFIG" car il n'est pas utilisé par cette image
+  #   command: ["-config.file=/config/sql_exporter.yml"] 
+  #   volumes:
+  #     - ./sql_exporter.yml:/config/sql_exporter.yml
+  #   networks:
+  #     - traefik-public
+  #   ports:
+  #     - "9399:9399"
+  #   depends_on:
+  #     - marquez-postgres
+  #   restart: always
  
-  marquez-web:
-    image: marquezproject/marquez-web:0.41.0
-    container_name: marquez-web
-    networks: [traefik-public]
-    depends_on:
-      - marquez
-    environment:
-      - MARQUEZ_URL=${MARQUEZ_URL}
-    ports:
-      - "3050:3000"
+  # marquez-web:
+  #   image: marquezproject/marquez-web:0.41.0
+  #   container_name: marquez-web
+  #   networks: [traefik-public]
+  #   depends_on:
+  #     - marquez
+  #   environment:
+  #     - MARQUEZ_URL=${MARQUEZ_URL}
+  #   ports:
+  #     - "3050:3000"
+  #   healthcheck: # ADD THIS HEALTHCHECK
+  #     test: ["CMD-SHELL", "curl -f http://marquez-web:3000 || exit 1"] # Adjust port and endpoint if needed
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+  #     start_period: 20s # Give the service some time to start before checking
  
-  marquez-proxy:
-    image: nginx:alpine
-    container_name: marquez-proxy
-    networks: [traefik-public]
-    depends_on:
-      - marquez
-      - marquez-web
-    ports:
-      - "3002:80"
-    volumes:
-      - ${NGINX_CONFIG_PATH}:/etc/nginx/nginx.conf:ro
-    restart: always
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.marquez-ui.rule=Host(`marquez.itceq.tn`)"
-      - "traefik.http.routers.marquez-ui.entrypoints=web"
-      - "traefik.http.services.marquez-ui.loadbalancer.server.port=80"
+  # marquez-proxy:
+  #   image: nginx:alpine
+  #   container_name: marquez-proxy
+  #   networks: [traefik-public]
+  #   depends_on:
+  #     marquez:
+  #       condition: service_healthy
+  #     marquez-web:
+  #       condition: service_healthy
+  #   ports:
+  #     - "3002:80"
+  #   volumes:
+  #     - ${NGINX_CONFIG_PATH}:/etc/nginx/nginx.conf:ro
+  #   restart: always
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.marquez-ui.rule=Host(`marquez.itceq.tn`)"
+  #     - "traefik.http.routers.marquez-ui.entrypoints=web"
+  #     - "traefik.http.services.marquez-ui.loadbalancer.server.port=80"
 
 
   # ------------------------
