@@ -716,6 +716,50 @@ services:
     restart: always
 
 
+  # trino:
+  #     image: trinodb/trino:latest
+  #     container_name: trino
+  #     user: root
+  #     ports:
+  #       - "8090:8080"
+  #     environment:
+  #       AWS_ACCESS_KEY_ID: minio
+  #       AWS_SECRET_ACCESS_KEY: minio123
+  #       HADOOP_S3_ENDPOINT: http://minio:9000
+  #       HADOOP_S3_PATH_STYLE_ACCESS: "true"
+  #       HADOOP_S3_SSL_ENABLED: "false"
+  #     volumes:
+  #       - ./etc/trino:/etc/trino
+  #       - trino_data:/var/trino/data
+  #     depends_on:
+  #       - minio
+
+  # ------------------------
+  # Interface SQL MinIO (DuckDB)
+  # ------------------------
+  sql-interface:
+    build: ./sql-interface
+    container_name: sql-interface
+    networks:
+      - traefik-public
+    ports:
+      - "5000:5000"
+    environment:
+      MINIO_ENDPOINT: "minio:9000"
+      MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
+      MINIO_SECRET_KEY: "${MINIO_ROOT_PASSWORD}"
+      MINIO_USE_SSL: "false"
+    depends_on:
+      - minio
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.sql-interface.rule=Host(`sql.itceq.tn`)"
+      - "traefik.http.routers.sql-interface.entrypoints=web"
+      - "traefik.http.services.sql-interface.loadbalancer.server.port=5000"
+
+
+
 
 # ------------------------ Volumes ------------------------
 volumes:
@@ -723,6 +767,8 @@ volumes:
   mb_internal_data:
   marquez_pg_data:
   minio-data:
+  trino_data:
+
 
 # ------------------------ Networks ------------------------
 networks:

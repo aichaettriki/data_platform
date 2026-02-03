@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interface SQL pour MinIO - DuckDB</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-database"></i> Interface SQL pour MinIO</h1>
+                <p class="subtitle">Propulsé par DuckDB</p>
+            </div>
+            <button class="btn-config" onclick="toggleConfig()">
+                <i class="fas fa-cog"></i> Configuration
+            </button>
+        </header>
+
+        <!-- Configuration Panel -->
+        <div id="configPanel" class="config-panel" style="display: none;">
+            <h3><i class="fas fa-server"></i> Configuration MinIO</h3>
+            <div class="config-form">
+                <div class="form-group">
+                    <label>Endpoint MinIO:</label>
+                    <input type="text" id="endpoint" placeholder="localhost:9000">
+                </div>
+                <div class="form-group">
+                    <label>Access Key ID:</label>
+                    <input type="text" id="accessKey" placeholder="minioadmin">
+                </div>
+                <div class="form-group">
+                    <label>Secret Access Key:</label>
+                    <input type="password" id="secretKey" placeholder="minioadmin">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="useSSL">
+                        Utiliser SSL/HTTPS
+                    </label>
+                </div>
+                <button class="btn btn-primary" onclick="saveConfig()">
+                    <i class="fas fa-save"></i> Sauvegarder
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Panel - Query Editor -->
+            <div class="left-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-code"></i> Éditeur SQL</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="loadExamples()">
+                            <i class="fas fa-book"></i> Exemples
+                        </button>
+                        <button class="btn btn-secondary" onclick="clearQuery()">
+                            <i class="fas fa-eraser"></i> Effacer
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="query-container">
+                    <textarea id="queryEditor" class="query-editor" placeholder="-- Entrez votre requête SQL ici
+-- Exemple:
+SELECT * FROM read_parquet('s3://mybucket/data.parquet') LIMIT 10;
+
+-- Formats supportés:
+-- read_parquet('s3://bucket/file.parquet')
+-- read_csv('s3://bucket/file.csv')
+-- read_json('s3://bucket/file.json')
+"></textarea>
+                </div>
+
+                <div class="query-actions">
+                    <button class="btn btn-success btn-large" onclick="executeQuery()">
+                        <i class="fas fa-play"></i> Exécuter la requête
+                    </button>
+                    <span id="executionInfo" class="execution-info"></span>
+                </div>
+
+                <!-- Examples Dropdown -->
+                <div id="examplesDropdown" class="examples-dropdown" style="display: none;">
+                    <h3>Exemples de requêtes</h3>
+                    <div id="examplesList"></div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Results -->
+            <div class="right-panel">
+                <div class="panel-header">
+                    <h2><i class="fas fa-table"></i> Résultats</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-secondary" onclick="exportResults('csv')" id="exportCsvBtn" disabled>
+                            <i class="fas fa-download"></i> CSV
+                        </button>
+                        <button class="btn btn-secondary" onclick="exportResults('json')" id="exportJsonBtn" disabled>
+                            <i class="fas fa-download"></i> JSON
+                        </button>
+                    </div>
+                </div>
+
+                <div id="resultsContainer" class="results-container">
+                    <div class="empty-state">
+                        <i class="fas fa-search"></i>
+                        <p>Exécutez une requête pour voir les résultats</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>DuckDB SQL Interface pour MinIO | Formats supportés: Parquet, CSV, JSON</p>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Exécution de la requête...</p>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
