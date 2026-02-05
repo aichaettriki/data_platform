@@ -1,10 +1,10 @@
-FROM apache/airflow:2.7.3-python3.11
+FROM apache/airflow:2.7.3-python3.8
 
 USER root
 
 # Déclaration des ARGs pour que l'installation pip fonctionne
 ARG AIRFLOW_VERSION=2.7.3
-ARG PYTHON_VERSION=3.11
+ARG PYTHON_VERSION=3.8
 
 # 1. Installation de Java
 RUN apt-get update && \

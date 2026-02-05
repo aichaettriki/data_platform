@@ -2,12 +2,12 @@ FROM apache/spark:3.5.1
 
 USER root
 
-# 1. Install System Dependencies (Minimaliste pour la prod)
+# Python 3.8 est DÉJÀ présent → on installe seulement pip
 RUN apt-get update && apt-get install -y \
     python3-pip \
     curl \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-
+    
 # 2. Setup Work Directory
 # Note : L'image apache/spark utilise l'UID 185 par défaut, pas 1001.
 RUN mkdir -p /opt/spark/work /opt/spark/conf /opt/spark/jars && \

@@ -41,6 +41,7 @@ services:
     volumes:
       - ${PGDATA_PATH}:/var/lib/postgresql/data
       - ${POSTGRE_INIT}:/docker-entrypoint-initdb.d
+      - ./test_data:/tmp/test_data
     restart: always
 
   # ---------- PostgreSQL Exporter ----------
@@ -70,7 +71,6 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_PROMETHEUS_AUTH_TYPE: public
-      MINIO_PROMETHEUS_URL: http://prometheus:9090
     ports:
       - "${MINIO_API_PORT}:${MINIO_API_PORT}"
       - "${MINIO_CONSOLE_PORT}:${MINIO_CONSOLE_PORT}"
@@ -230,8 +230,11 @@ services:
       - "traefik.http.routers.prometheus.entrypoints=web"
       - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
 
-
-  # ---------- Airflow ----------
+  # ------------------------------
+  # Airflow 
+  # ------------------------------
+  
+  # ---------- Airflow Init ----------
   airflow-init:
     build: ./airflow
     container_name: airflow-init
@@ -258,22 +261,18 @@ services:
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${AIRFLOW_PLUGINS_PATH}:/opt/airflow/plugins
+      - ./test_data:/tmp/test_data
+      # ADDED: Mount the python script so the container can see it
       - ./airflow/init_connections.py:/opt/airflow/init_connections.py
  
- 
+    # FIXED: Removed backslashes (\). 
+    # The '>' tells YAML to replace newlines with spaces automatically.
     command: >
       bash -c "
         airflow db migrate &&
-        airflow users create \
-          --username ${AIRFLOW_ADMIN_USER} \
-          --password ${AIRFLOW_ADMIN_PASSWORD} \
-          --firstname Admin \
-          --lastname Admin \
-          --email admin@example.org \
-          --role Admin || true &&
+        airflow users create --username ${AIRFLOW_ADMIN_USER} --password ${AIRFLOW_ADMIN_PASSWORD} --firstname Admin --lastname Admin --email admin@example.org --role Admin || true &&
         python /opt/airflow/init_connections.py
       "
-
 
   airflow-webserver:
     build: ./airflow
@@ -302,6 +301,8 @@ services:
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${DATA_PATH}:/opt/airflow/data
+      - ${INS_SOURCES_PATH}:/opt/airflow/ins_sources
+      - ./test_data:/tmp/test_data
     restart: always
     labels:
       - "traefik.enable=true"
@@ -335,6 +336,8 @@ services:
       - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${DATA_PATH}:/opt/airflow/data
+      - ${INS_SOURCES_PATH}:/opt/airflow/ins_sources
+      - ./test_data:/tmp/test_data
     command: airflow scheduler
     restart: always
 
@@ -369,6 +372,7 @@ services:
       - ${MINIO_TRANSFORMED_PATH}:/data/transformed
       - ${DATA_PATH}:/opt/airflow/data
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
+      - ./test_data:/tmp/test_data
     command: triggerer
     restart: always
 
@@ -395,6 +399,7 @@ services:
       volumes:
         - ${AIRFLOW_LOGS_PATH}:/opt/airflow/logs:ro
         - ${AIRFLOW_DAGS_PATH}:/opt/airflow/dags:ro
+        - ./test_data:/tmp/test_data
       depends_on:
         - airflow-webserver
         - loki
@@ -425,6 +430,8 @@ services:
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${AIRFLOW_PLUGINS_PATH}:/opt/airflow/plugins
       - ${DATA_PATH}:/opt/airflow/data
+      - ${INS_SOURCES_PATH}:/opt/airflow/ins_sources
+      - ./test_data:/tmp/test_data
     command: airflow celery worker
     restart: always
 
@@ -459,48 +466,13 @@ services:
       MARQUEZ_DB_URL: ${MARQUEZ_DB_URL}
       MARQUEZ_DB_USER: ${MARQUEZ_DB_USER}
       MARQUEZ_DB_PASSWORD: ${MARQUEZ_DB_PASSWORD}
-      JAVA_OPTS: >
-       -javaagent:/opt/jmx/jmx_prometheus_javaagent.jar=9404:/opt/jmx/jmx-config.yml
     volumes:
-    - ./jmx/jmx_prometheus_javaagent-0.20.0.jar:/opt/jmx/jmx_prometheus_javaagent.jar
-    - ./jmx/jmx-config.yml:/opt/jmx/jmx-config.yml
-    - ./marquez.yml:/etc/marquez/marquez.yml:ro
-
+      # On injecte le fichier local dans le conteneur
+      - ${MARQUEZ_CONFIG_PATH}:/etc/marquez/marquez.yml
     ports:
       - "${MARQUEZ_HTTP_PORT}:${MARQUEZ_HTTP_PORT}"
       - "${MARQUEZ_ADMIN_PORT}:${MARQUEZ_ADMIN_PORT}"
-      - "9404:9404"
-
     restart: always
-
-  #   # JMX Exporter pour Marquez
-  # marquez-jmx-exporter:
-  #   image: bitnami/jmx-exporter:latest
-  #   container_name: marquez-jmx-exporter
-  #   networks: [traefik-public]
-  #   depends_on:
-  #     - marquez
-  #   command:
-  #     - "9404"
-  #     - "/etc/jmx-exporter/config.yml"
-  #   volumes:
-  #     - ./jmx-exporter-config.yml:/etc/jmx-exporter/config.yml:ro
-  #   ports:
-  #     - "9504:9404"
-  #   restart: always
-
-
-  sql-exporter:
-    image: burningalchemist/sql_exporter:latest
-    container_name: sql-exporter
-    environment:
-      - CONFIG=/config/sql_exporter.yml
-    volumes:
-      - ./sql_exporter.yml:/config/sql_exporter.yml
-    networks:
-      - traefik-public
-    ports:
-      - "9399:9399"
  
   marquez-web:
     image: marquezproject/marquez-web:0.41.0
@@ -559,7 +531,6 @@ services:
   # ------------------------
   # Metabase
   # ------------------------
-    # 1. METABASE APP (Port 3021)
   metabase:
     build:
       context: ./metabase/build
@@ -569,10 +540,9 @@ services:
       - traefik-public
     restart: unless-stopped
     ports:
-      - "${METABASE_PORT}:3000"
-      - "${METABASE_EXPORTER_PORT}:${METABASE_EXPORTER_PORT}"
+      - "3001:3000"
     env_file:
-      - ${METABASE_ENV_FILE}
+      - ./metabase/env/metabase.env
     depends_on:
       metabase_db_internal:
         condition: service_healthy
@@ -581,49 +551,40 @@ services:
       - "traefik.http.routers.metabase.rule=Host(`metabase.itceq.tn`)"
       - "traefik.http.routers.metabase.entrypoints=web"
       - "traefik.http.services.metabase.loadbalancer.server.port=3000"
-    environment:
-      - MB_PROMETHEUS_SERVER_PORT=9191
- 
-  # 2. INTERNAL METADATA DB
+    
   metabase_db_internal:
-    image: postgres:16.1
+    image: postgres:15
     networks:
       - traefik-public
     container_name: metabase_db_internal
     environment:
-      POSTGRES_DB: ${METABASE_POSTGRES_DB}
-      POSTGRES_USER: ${METABASE_POSTGRES_USER}
-      POSTGRES_PASSWORD: ${METABASE_POSTGRES_PASSWORD}
+      POSTGRES_DB: metabase_internal
+      POSTGRES_USER: mb_internal_user
+      POSTGRES_PASSWORD: mb_internal_pass
     volumes:
       - mb_internal_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
+      test: ["CMD-SHELL", "pg_isready -U mb_internal_user -d metabase_internal"]
+      interval: 5s
       retries: 5
-      start_period: 10s # Donne 10s à Postgres pour créer la DB avant de tester
-
-  # ------------------------
-  # Metabase Exporter
-  # ------------------------
+    
   metabase-exporter:
     build: ./metabase/metabase-exporter
     container_name: metabase-exporter
     networks:
       - traefik-public
     environment:
-      METABASE_URL: "${METABASE_URL}"
-      METABASE_USERNAME: "${METABASE_USERNAME}"
-      METABASE_PASSWORD: "${METABASE_PASSWORD}"
-      EXPORTER_PORT: "${METABASE_EXPORTER_PORT}"
-      SCRAPE_INTERVAL: "${METABASE_SCRAPE_INTERVAL}"
+      METABASE_URL: "http://metabase:3000"
+      METABASE_USERNAME: "admin@example.com"
+      METABASE_PASSWORD: "AdminPass123"
+      EXPORTER_PORT: "9101"
+      SCRAPE_INTERVAL: "30"
     ports:
-      - "9102:${METABASE_EXPORTER_PORT}"
+      - "9101:9101"
     depends_on:
       - metabase
     restart: always
  
-  # 3. ZERO-TOUCH DEPLOYER (The Magic)
   metabase_deployer:
     image: python:3.9-slim
     networks:
@@ -632,18 +593,15 @@ services:
     depends_on:
       - metabase
     volumes:
-      - ${METABASE_SCRIPTS_PATH}:/scripts
-      - ${METABASE_SAVED_STATES_PATH}:/saved_states # Mounts the JSONs
+      - ./metabase/scripts:/scripts
+      - ./metabase/saved_states:/saved_states
     working_dir: /scripts
     env_file:
-      - ${METABASE_ENV_FILE}
-    # Install libs -> Run Setup -> Run Import -> Exit
+      - ./metabase/env/metabase.env
     command: >
       sh -c "pip install requests metabase-api && python deploy_solution.py"
  
  
-
-
   # ------------------------
   # pgAdmin
   # ------------------------
@@ -705,6 +663,63 @@ services:
     restart: always
 
 
+ 
+  # ------------------------
+  # Trino interface - Minio
+  # ------------------------
+
+  # ---------- Hive Metastore (Gère les schémas des fichiers Parquet) ----------
+  # ---------- Hive Metastore ----------
+  hive-metastore:
+    image: rtdl/hive-metastore:3.1.2
+    container_name: hive-metastore
+    networks:
+      - traefik-public
+    depends_on:
+      - postgres-airflow
+    environment:
+      # Connexion Postgres
+      - METASTORE_TYPE=postgres
+      - METASTORE_DB_HOST=postgres-airflow
+      - METASTORE_DB_PORT=5432
+      - METASTORE_DB_NAME=metastore_db
+      - METASTORE_DB_USER=${POSTGRES_USER}
+      - METASTORE_DB_PASSWORD=${POSTGRES_PASSWORD}
+      
+      # Configuration MinIO
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - AWS_ENDPOINT=http://minio:${MINIO_API_PORT}
+      - AWS_PATH_STYLE_ACCESS=true
+      
+      # Configuration Hadoop pour MinIO
+      # IMPORTANT : Ne pas mettre de guillemets autour des valeurs true/false ici
+      - HIVE_SITE_CONF_fs_s3a_path_style_access=true
+      - HIVE_SITE_CONF_fs_s3a_impl=org.apache.hadoop.fs.s3a.S3AFileSystem
+      - HIVE_SITE_CONF_fs_s3a_connection_ssl_enabled=false
+    # PAS de ligne 'command:', l'image gère son démarrage
+    restart: always
+
+
+  # ---------- Trino (Moteur SQL) ----------
+  trino:
+    image: trinodb/trino:436
+    container_name: trino
+    networks:
+      - traefik-public
+    ports:
+      - "8083:8080" # Port 8083 pour éviter le conflit avec Spark (8080) et Airflow (8085)
+    volumes:
+      - ./trino/etc:/etc/trino
+    depends_on:
+      - hive-metastore
+      - minio
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.trino.rule=Host(`trino.itceq.tn`)"
+      - "traefik.http.routers.trino.entrypoints=web"
+      - "traefik.http.services.trino.loadbalancer.server.port=8080"
 
 # ------------------------ Volumes ------------------------
 volumes:
