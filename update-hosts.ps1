@@ -11,7 +11,9 @@ $entries = @(
 "127.0.0.1 pgadmin.itceq.tn",
 "127.0.0.1 spark.itceq.tn",
 "127.0.0.1 catalog.itceq.tn",
-"127.0.0.1 marquez.itceq.tn"
+"127.0.0.1 marquez.itceq.tn",
+"127.0.0.1 sql.itceq.tn"
+
 )
 
 foreach ($entry in $entries) {

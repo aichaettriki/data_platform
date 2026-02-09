@@ -140,7 +140,22 @@ def get_examples():
     examples = [
         {
             'name': 'Lire un fichier Parquet',
-            'query': "SELECT * FROM read_parquet('s3://mybucket/data.parquet') LIMIT 10;"
+            'query': "SELECT * FROM read_parquet('s3://mybucket/data.parquet');"
+        },
+        {
+        'name': 'Lire tous les fichiers Parquet d’un dossier',
+        'query': """SELECT *
+FROM read_parquet('s3://mybucket/folder/*.parquet');"""
+    },
+    {
+        'name': 'Lire récursivement tous les sous-dossiers',
+        'query': """SELECT *
+FROM read_parquet('s3://mybucket/**/*.parquet');"""
+    },
+        {
+            'name': 'Lire plusieurs années TRE (Parquet)',
+            'query': """SELECT *
+FROM read_parquet('s3://mybucket/folder/202[0-2]/*.parquet');"""
         },
         {
             'name': 'Lire un fichier CSV',
@@ -150,35 +165,12 @@ def get_examples():
             'name': 'Lire un fichier JSON',
             'query': "SELECT * FROM read_json('s3://mybucket/data.json') LIMIT 10;"
         },
-        {
-            'name': 'Agrégation sur Parquet',
-            'query': """SELECT 
-    category, 
-    COUNT(*) as count,
-    AVG(price) as avg_price
-FROM read_parquet('s3://mybucket/products.parquet')
-GROUP BY category
-ORDER BY count DESC;"""
-        },
-        {
-            'name': 'Joindre plusieurs fichiers',
-            'query': """SELECT 
-    o.order_id,
-    o.order_date,
-    c.customer_name,
-    o.total_amount
-FROM read_parquet('s3://mybucket/orders.parquet') o
-JOIN read_parquet('s3://mybucket/customers.parquet') c
-    ON o.customer_id = c.customer_id
-LIMIT 10;"""
-        },
+        
         {
             'name': 'Filtrer avec WHERE',
             'query': """SELECT * 
 FROM read_parquet('s3://mybucket/sales.parquet')
-WHERE date >= '2024-01-01' 
-  AND amount > 100
-LIMIT 20;"""
+WHERE date >= '2024-01-01';"""
         }
     ]
     

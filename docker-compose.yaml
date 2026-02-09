@@ -715,25 +715,6 @@ services:
     command: -config.file=/etc/promtail/config.yaml
     restart: always
 
-
-  # trino:
-  #     image: trinodb/trino:latest
-  #     container_name: trino
-  #     user: root
-  #     ports:
-  #       - "8090:8080"
-  #     environment:
-  #       AWS_ACCESS_KEY_ID: minio
-  #       AWS_SECRET_ACCESS_KEY: minio123
-  #       HADOOP_S3_ENDPOINT: http://minio:9000
-  #       HADOOP_S3_PATH_STYLE_ACCESS: "true"
-  #       HADOOP_S3_SSL_ENABLED: "false"
-  #     volumes:
-  #       - ./etc/trino:/etc/trino
-  #       - trino_data:/var/trino/data
-  #     depends_on:
-  #       - minio
-
   # ------------------------
   # Interface SQL MinIO (DuckDB)
   # ------------------------
