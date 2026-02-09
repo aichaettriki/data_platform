@@ -10,8 +10,8 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 import sys
-import os
 import re
+import os
 from io import BytesIO
 from datetime import datetime
  
@@ -22,7 +22,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
  
- 
+
 def create_spark_session(app_name="Competitif Scores Processor"):
     """Create Spark session with MinIO configuration"""
     spark = (
@@ -67,7 +67,8 @@ def find_latest_files_in_minio(minio_client, bucket, base_folder):
     logger.info(f"   Using: {excel_files[0]}")
    
     return excel_files[0]
- 
+
+
 
 def clean_roman_prefix(text: str) -> str:
     """
@@ -230,6 +231,7 @@ class CompetitifScoresProcessor:
            
             text = str(cell_a.value).strip()
             text = clean_roman_prefix(text)
+
             if len(text) < self.detection_config['min_text_length']:
                 continue
            
@@ -262,7 +264,8 @@ class CompetitifScoresProcessor:
        
         self.title_sections = detected_titles
         return detected_titles
-   
+    
+
     def transform_data(self):
         """Transform data from wide to long format"""
         logger.info("="*80)
@@ -406,7 +409,7 @@ class CompetitifScoresProcessor:
         self.transformed_data = df_transformed
         return df_transformed
 
-
+   
     def calculate_rankings(self):
         """Calculate rankings using Spark"""
         logger.info("="*80)
@@ -443,48 +446,38 @@ class CompetitifScoresProcessor:
         return df_ranked
    
     def save_to_minio(self):
-        """Save ranked data to MinIO in Parquet format (stable overwrite)"""
+        """Save ranked data to MinIO in Parquet format"""
         logger.info("="*80)
         logger.info("STEP 5: SAVING TO MINIO")
         logger.info("="*80)
-    
+       
         # Convert to Spark DataFrame
         spark_df_ranked = self.spark.createDataFrame(self.ranked_data)
-
-        # Build output path
+        # spark_df_ranked = self.spark.createDataFrame(self.transformed_data)
+        # Build output path (ignoring date components as requested)
+        # Schema: ITCEQ/compétitivité/positionnement/
         output_s3_path = f"s3a://{self.minio_config.bucket_transformed}/{self.output_path}"
-    
+       
         logger.info(f"Output path: {output_s3_path}")
         logger.info(f"Format: Parquet")
         logger.info(f"Records: {spark_df_ranked.count():,}")
         logger.info(f"Columns: {spark_df_ranked.columns}")
-
-        # =========================================================
-        # CONFIGURATION S3A COMPATIBLE MINIO (SPARK VANILLA)
-        # =========================================================
-        self.spark.conf.set("spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version", "2")
-        self.spark.conf.set("spark.hadoop.fs.s3a.committer.name", "directory")
-
-        # =========================================================
-        # WRITE PARQUET (OVERWRITE)
-        # =========================================================
+       
+        # Save as Parquet (overwrite mode)
         spark_df_ranked.write \
             .mode("overwrite") \
-            .option("fs.s3a.committer.name", "directory") \
             .parquet(output_s3_path)
-    
-        logger.info("✅ Data saved to MinIO with overwrite enabled")
-        logger.info(f"   Bucket: {self.minio_config.bucket_transformed}")
+       
+        logger.info(f"✅ Data saved to MinIO bucket: {self.minio_config.bucket_transformed}")
         logger.info(f"   Path: {self.output_path}")
-    
+        logger.info(f"   Format: Parquet")
+       
         return {
             'bucket': self.minio_config.bucket_transformed,
             'path': self.output_path,
             'records': len(self.ranked_data),
             'format': 'parquet'
         }
-
-
    
     def validate_minio_output(self):
         """Validate the Parquet files in MinIO"""
@@ -602,9 +595,9 @@ def main():
     month = sys.argv[2]
     day = sys.argv[3]
    
-    logger.info(f"Processing date: {year}/{month}/{day}")
+    logger.info(f"Processing date: {year}/{month}")
     logger.info(f"MinIO Endpoint: {os.getenv('MINIO_ENDPOINT', 'http://minio:9000')}")
-    logger.info(f"MinIO User: {os.getenv('MINIO_ROOT_USER', 'minioadmin')}")
+    logger.info(f"MinIO User: {os.getenv('MINIO_ROOT_USER', 'minio')}")
    
     # Run processor
     processor = CompetitifScoresProcessor(year, month, day)
