@@ -137,6 +137,7 @@ services:
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${SPARK_EVENT_PATH}:/opt/spark/events
       - ${SPARK_PROPERTIES_PATH}:/opt/spark/conf/metrics.properties
+      - ./spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
     restart: always
     labels:
       - "traefik.enable=true"
@@ -174,6 +175,7 @@ services:
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
       - ${SPARK_EVENT_PATH}:/opt/spark/events
       - ${SPARK_PROPERTIES_PATH}:/opt/spark/conf/metrics.properties
+      - ./spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
     restart: always
 
   spark-history-server:
@@ -188,6 +190,7 @@ services:
       /opt/spark/bin/spark-class org.apache.spark.deploy.history.HistoryServer
     volumes:
       - ${SPARK_EVENT_PATH}:/opt/spark/events
+      - ./spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
     ports:
       - "18080:18080"
     restart: always

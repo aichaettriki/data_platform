@@ -24,22 +24,28 @@ logger = logging.getLogger(__name__)
  
 
 def create_spark_session(app_name="Competitif Scores Processor"):
-    """Create Spark session with MinIO configuration"""
     spark = (
         SparkSession.builder
         .appName(app_name)
-        .config("spark.hadoop.fs.s3a.access.key", os.getenv("MINIO_ROOT_USER", "minioadmin"))
-        .config("spark.hadoop.fs.s3a.secret.key", os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"))
+
+        # MinIO
+        .config("spark.hadoop.fs.s3a.access.key", os.getenv("MINIO_ROOT_USER"))
+        .config("spark.hadoop.fs.s3a.secret.key", os.getenv("MINIO_ROOT_PASSWORD"))
         .config("spark.hadoop.fs.s3a.endpoint", os.getenv("MINIO_ENDPOINT", "http://minio:9000"))
         .config("spark.hadoop.fs.s3a.path.style.access", "true")
-        .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
         .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
+        .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+
+        # Spark tuning
         .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
         .config("spark.driver.memory", "4g")
         .config("spark.executor.memory", "4g")
+
         .getOrCreate()
     )
     return spark
+
+
  
  
 def find_latest_files_in_minio(minio_client, bucket, base_folder):
@@ -107,8 +113,10 @@ class CompetitifScoresProcessor:
        
         # Build MinIO paths
         self.input_path = f"{year}/{month}/ITCEQ/competitivite/positionnement/"
-        self.output_path = "ITCEQ/Compétivité/Positionnement/"
-       
+        self.output_path = "ITCEQ/Competivite/Positionnement/"
+        # Run ID pour isolation par exécution
+        self.run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+
         # Detection configuration
         self.detection_config = {
             'column_b_must_be_empty': True,
@@ -456,8 +464,7 @@ class CompetitifScoresProcessor:
         # spark_df_ranked = self.spark.createDataFrame(self.transformed_data)
         # Build output path (ignoring date components as requested)
         # Schema: ITCEQ/compétitivité/positionnement/
-        output_s3_path = f"s3a://{self.minio_config.bucket_transformed}/{self.output_path}"
-       
+        output_s3_path = f"s3a://{self.minio_config.bucket_transformed}/{self.output_path}" 
         logger.info(f"Output path: {output_s3_path}")
         logger.info(f"Format: Parquet")
         logger.info(f"Records: {spark_df_ranked.count():,}")

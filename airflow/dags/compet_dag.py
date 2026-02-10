@@ -12,7 +12,12 @@ spark_competitif_processor.py <year> <month> <day>
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.operators.python import PythonOperator
 from airflow.models import Variable
+from minio import Minio
+from datetime import datetime, timezone, timedelta
+from minio.deleteobjects import DeleteObject
+import logging
 import os
 from dotenv import load_dotenv
 
@@ -26,6 +31,7 @@ def get_env_var(name, default=None, required=False):
     if required and value is None:
         raise ValueError(f"Missing required environment variable: {name}")
     return value
+
 
 # ===============================
 # Configuration générale
@@ -56,7 +62,7 @@ SPARK_APP_PATH = "/opt/spark/jobs/competitif_job.py"
 with DAG(
     dag_id="competitif_scores_pipeline",
     default_args=default_args,
-    schedule_interval="@daily",   # ou None pour manuel
+    schedule_interval=None,   # ou None pour manuel
     catchup=False,
     max_active_runs=1,
     tags=["spark", "minio", "itceq"],
@@ -87,5 +93,5 @@ with DAG(
             "MINIO_ROOT_PASSWORD": MINIO_PASSWORD,
         },
     )
-
+    
     run_spark_job

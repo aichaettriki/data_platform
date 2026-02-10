@@ -152,11 +152,21 @@ FROM read_parquet('s3://mybucket/folder/*.parquet');"""
         'query': """SELECT *
 FROM read_parquet('s3://mybucket/**/*.parquet');"""
     },
+        
         {
-            'name': 'Lire plusieurs années TRE (Parquet)',
-            'query': """SELECT *
-FROM read_parquet('s3://mybucket/folder/202[0-2]/*.parquet');"""
-        },
+        'name': 'Compter le nombre de fichiers dans un dossier',
+        'query': """SELECT count(*) as nb_fichiers
+FROM glob('s3://mybucket/folder/*.parquet');"""
+    },
+    {
+        'name': 'Lister les fichiers d’un dossier',
+        'query': """SELECT file
+        FROM glob('s3://mybucket/folder/**/*');"""
+    },
+     {
+        'name': 'Inclure le nom du fichier dans les résultats',
+        'query': """SELECT * FROM read_parquet('s3://mybucket/folder/*.parquet', filename=true);"""
+    },
         {
             'name': 'Lire un fichier CSV',
             'query': "SELECT * FROM read_csv('s3://mybucket/data.csv') LIMIT 10;"
@@ -164,6 +174,11 @@ FROM read_parquet('s3://mybucket/folder/202[0-2]/*.parquet');"""
         {
             'name': 'Lire un fichier JSON',
             'query': "SELECT * FROM read_json('s3://mybucket/data.json') LIMIT 10;"
+        },
+        {
+            'name': 'Lire plusieurs années TRE (Parquet)',
+            'query': """SELECT *
+FROM read_parquet('s3://mybucket/folder/202[0-2]/*.parquet');"""
         },
         
         {
