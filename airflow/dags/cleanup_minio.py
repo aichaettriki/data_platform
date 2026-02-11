@@ -1,4 +1,4 @@
-from airflow import DAG
+from airflow import DAG 
 from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 import boto3
@@ -30,6 +30,9 @@ default_args = {
     'retry_delay': timedelta(minutes=5),
 }
 
+# =========================================================
+# Client MinIO
+# =========================================================
 def get_minio_client():
     return boto3.client(
         's3',
@@ -40,241 +43,269 @@ def get_minio_client():
         region_name='us-east-1'
     )
 
+# =========================================================
+# Fonctions de recherche et suppression
+# =========================================================
 def find_all_temporary_folders(**context):
     """Trouve tous les dossiers _temporary dans tous les buckets"""
     
     s3_client = get_minio_client()
-    
     print(f"🔍 Recherche de TOUS les dossiers '_temporary' dans MinIO")
-    print(f"🔗 Endpoint: {MINIO_ENDPOINT}\n")
     
-    # Lister tous les buckets
-    buckets_response = s3_client.list_buckets()
-    buckets = [b['Name'] for b in buckets_response['Buckets']]
-    print(f"📦 {len(buckets)} bucket(s) trouvé(s): {', '.join(buckets)}\n")
-    
+    buckets = [b['Name'] for b in s3_client.list_buckets()['Buckets']]
     temporary_folders = []
     
-    # Pour chaque bucket
     for bucket_name in buckets:
-        print(f"\n🔎 Analyse du bucket: {bucket_name}")
-        print("-" * 60)
+        print(f"\n🔎 Bucket: {bucket_name}")
+        found_paths = set()
+        paginator = s3_client.get_paginator('list_object_versions')
         
-        try:
-            # Lister avec versions pour voir TOUS les objets
-            paginator = s3_client.get_paginator('list_object_versions')
-            
-            found_paths = set()
-            sample_keys = []
-            
-            for page in paginator.paginate(Bucket=bucket_name):
-                
-                # Analyser les Versions
-                if 'Versions' in page:
-                    for obj in page['Versions']:
-                        key = obj['Key']
-                        
-                        # Garder quelques exemples pour debug
-                        if len(sample_keys) < 5:
-                            sample_keys.append(key)
-                        
-                        # Chercher '_temporary' dans le chemin (avec ou sans slash)
-                        if '_temporary' in key:
-                            # Extraire le chemin parent du dossier _temporary
-                            parts = key.split('_temporary')
-                            if len(parts) > 1:
-                                # Reconstruire le chemin jusqu'à _temporary/
-                                temp_path = parts[0] + '_temporary/'
-                                
-                                if temp_path not in found_paths:
-                                    found_paths.add(temp_path)
-                                    temporary_folders.append({
-                                        'bucket': bucket_name,
-                                        'path': temp_path
-                                    })
-                                    print(f"   ✅ Trouvé: {temp_path}")
-                                    print(f"      Exemple de fichier: {key}")
-                
-                # Analyser aussi les DeleteMarkers
-                if 'DeleteMarkers' in page:
-                    for marker in page['DeleteMarkers']:
-                        key = marker['Key']
-                        
-                        if '_temporary' in key:
-                            parts = key.split('_temporary')
-                            if len(parts) > 1:
-                                temp_path = parts[0] + '_temporary/'
-                                
-                                if temp_path not in found_paths:
-                                    found_paths.add(temp_path)
-                                    temporary_folders.append({
-                                        'bucket': bucket_name,
-                                        'path': temp_path
-                                    })
-                                    print(f"   ✅ Trouvé (delete marker): {temp_path}")
-            
-            if not found_paths:
-                print(f"   ℹ️  Aucun dossier '_temporary' trouvé")
-                if sample_keys:
-                    print(f"   📝 Exemples de chemins dans ce bucket:")
-                    for sample in sample_keys[:5]:
-                        print(f"      - {sample}")
-            
-        except Exception as e:
-            print(f"   ⚠️  Erreur lors de l'analyse: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            continue
+        for page in paginator.paginate(Bucket=bucket_name):
+            # Versions
+            for obj in page.get('Versions', []):
+                key = obj['Key']
+                if '_temporary' in key:
+                    temp_path = key.split('_temporary')[0] + '_temporary/'
+                    if temp_path not in found_paths:
+                        found_paths.add(temp_path)
+                        temporary_folders.append({'bucket': bucket_name, 'path': temp_path})
+                        print(f"   ✅ Trouvé: {temp_path}")
+            # Delete markers
+            for marker in page.get('DeleteMarkers', []):
+                key = marker['Key']
+                if '_temporary' in key:
+                    temp_path = key.split('_temporary')[0] + '_temporary/'
+                    if temp_path not in found_paths:
+                        found_paths.add(temp_path)
+                        temporary_folders.append({'bucket': bucket_name, 'path': temp_path})
+                        print(f"   ✅ Trouvé (delete marker): {temp_path}")
     
-    print("\n" + "=" * 60)
-    print(f"🎯 Résumé: {len(temporary_folders)} dossier(s) '_temporary' trouvé(s)")
-    print("=" * 60)
-    
-    for item in temporary_folders:
-        print(f"   📁 {item['bucket']}/{item['path']}")
-    
+    print(f"\n🎯 Résumé: {len(temporary_folders)} dossier(s) '_temporary' trouvé(s)")
     context['ti'].xcom_push(key='temporary_folders', value=temporary_folders)
-    
     return temporary_folders
 
 def delete_all_temporary_folders(**context):
-    """Supprime tous les dossiers _temporary trouvés"""
+    """Supprime tous les dossiers _temporary"""
     
     s3_client = get_minio_client()
-    
-    temporary_folders = context['ti'].xcom_pull(
-        task_ids='find_temporary_folders',
-        key='temporary_folders'
-    )
+    temporary_folders = context['ti'].xcom_pull(task_ids='find_temporary_folders', key='temporary_folders')
     
     if not temporary_folders:
-        print("ℹ️  Aucun dossier '_temporary' à supprimer")
+        print("ℹ️ Aucun dossier '_temporary' à supprimer")
         return 0
     
-    print(f"🗑️  Début de la suppression de {len(temporary_folders)} dossier(s)\n")
-    
     total_deleted = 0
-    summary = []
-    
     for idx, item in enumerate(temporary_folders, 1):
         bucket_name = item['bucket']
         prefix = item['path']
-        
-        print(f"\n{'=' * 60}")
-        print(f"[{idx}/{len(temporary_folders)}] Bucket: {bucket_name}")
-        print(f"Path: {prefix}")
-        print('-' * 60)
-        
+        print(f"\n[{idx}/{len(temporary_folders)}] Suppression: {bucket_name}/{prefix}")
         paginator = s3_client.get_paginator('list_object_versions')
         delete_count = 0
-        batch_count = 0
         
-        try:
-            for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
-                objects_to_delete = []
-                
-                # Versions actuelles
-                if 'Versions' in page:
-                    for version in page['Versions']:
-                        objects_to_delete.append({
-                            'Key': version['Key'],
-                            'VersionId': version['VersionId']
-                        })
-                
-                # Delete markers
-                if 'DeleteMarkers' in page:
-                    for marker in page['DeleteMarkers']:
-                        objects_to_delete.append({
-                            'Key': marker['Key'],
-                            'VersionId': marker['VersionId']
-                        })
-                
-                # Supprimer par batch (max 1000)
-                if objects_to_delete:
-                    # Diviser en chunks de 1000 max
-                    for i in range(0, len(objects_to_delete), 1000):
-                        chunk = objects_to_delete[i:i+1000]
-                        
-                        response = s3_client.delete_objects(
-                            Bucket=bucket_name,
-                            Delete={'Objects': chunk}
-                        )
-                        
-                        batch_count += 1
-                        delete_count += len(chunk)
-                        
-                        print(f"   ✅ Batch {batch_count}: {len(chunk)} objets supprimés (total: {delete_count})")
-                        
-                        if 'Errors' in response:
-                            for error in response['Errors']:
-                                print(f"   ⚠️  Erreur: {error.get('Key', 'unknown')} - {error.get('Message', 'unknown error')}")
+        for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
+            objects_to_delete = [{'Key': v['Key'], 'VersionId': v['VersionId']} for v in page.get('Versions', [])]
+            objects_to_delete += [{'Key': m['Key'], 'VersionId': m['VersionId']} for m in page.get('DeleteMarkers', [])]
             
-            total_deleted += delete_count
-            
-            summary.append({
-                'bucket': bucket_name,
-                'path': prefix,
-                'deleted': delete_count,
-                'batches': batch_count,
-                'status': 'success'
-            })
-            
-            print(f"✅ Terminé: {delete_count} objets/versions supprimés en {batch_count} batch(es)")
-            
-        except Exception as e:
-            print(f"❌ Erreur: {str(e)}")
-            import traceback
-            traceback.print_exc()
-            
-            summary.append({
-                'bucket': bucket_name,
-                'path': prefix,
-                'deleted': delete_count,
-                'status': 'error',
-                'error': str(e)
-            })
+            for i in range(0, len(objects_to_delete), 1000):
+                chunk = objects_to_delete[i:i+1000]
+                s3_client.delete_objects(Bucket=bucket_name, Delete={'Objects': chunk})
+                delete_count += len(chunk)
+        
+        total_deleted += delete_count
+        print(f"   ✅ {delete_count} objets/versions supprimés dans {prefix}")
     
-    # Afficher le résumé final
-    print("\n" + "=" * 60)
-    print("📊 RÉSUMÉ FINAL")
-    print("=" * 60)
-    
-    for item in summary:
-        status_icon = "✅" if item['status'] == 'success' else "❌"
-        print(f"\n{status_icon} {item['bucket']}/{item['path']}")
-        print(f"   Supprimés: {item['deleted']} objets/versions")
-        if item['status'] == 'error':
-            print(f"   Erreur: {item.get('error', 'Unknown')}")
-    
-    print(f"\n🎉 TOTAL: {total_deleted} objets/versions supprimés dans {len(temporary_folders)} dossier(s)")
-    print("=" * 60)
-    
-    context['ti'].xcom_push(key='total_deleted', value=total_deleted)
-    context['ti'].xcom_push(key='summary', value=summary)
-    
+    print(f"\n🎉 TOTAL: {total_deleted} objets/versions '_temporary' supprimés")
+    context['ti'].xcom_push(key='total_deleted_temporary', value=total_deleted)
     return total_deleted
 
+# =========================================================
+# Fonctions pour _temp_write
+# =========================================================
+def find_all_temp_write_folders(**context):
+    """Trouve tous les dossiers avec suffixe '_temp_write'"""
+    
+    s3_client = get_minio_client()
+    print(f"🔍 Recherche de TOUS les dossiers '_temp_write'")
+    
+    buckets = [b['Name'] for b in s3_client.list_buckets()['Buckets']]
+    temp_write_folders = []
+    
+    for bucket_name in buckets:
+        print(f"\n🔎 Bucket: {bucket_name}")
+        found_paths = set()
+        paginator = s3_client.get_paginator('list_object_versions')
+        
+        for page in paginator.paginate(Bucket=bucket_name):
+            for obj in page.get('Versions', []):
+                key = obj['Key']
+                if key.endswith('_temp_write') or '_temp_write/' in key:
+                    temp_path = key.split('_temp_write')[0] + '_temp_write/'
+                    if temp_path not in found_paths:
+                        found_paths.add(temp_path)
+                        temp_write_folders.append({'bucket': bucket_name, 'path': temp_path})
+                        print(f"   ✅ Trouvé: {temp_path}")
+            for marker in page.get('DeleteMarkers', []):
+                key = marker['Key']
+                if key.endswith('_temp_write') or '_temp_write/' in key:
+                    temp_path = key.split('_temp_write')[0] + '_temp_write/'
+                    if temp_path not in found_paths:
+                        found_paths.add(temp_path)
+                        temp_write_folders.append({'bucket': bucket_name, 'path': temp_path})
+                        print(f"   ✅ Trouvé (delete marker): {temp_path}")
+    
+    print(f"\n🎯 Résumé: {len(temp_write_folders)} dossier(s) '_temp_write' trouvé(s)")
+    context['ti'].xcom_push(key='temp_write_folders', value=temp_write_folders)
+    return temp_write_folders
+
+def delete_all_temp_write_folders(**context):
+    """Supprime tous les dossiers avec suffixe '_temp_write'"""
+    
+    s3_client = get_minio_client()
+    temp_write_folders = context['ti'].xcom_pull(task_ids='find_temp_write_folders', key='temp_write_folders')
+    
+    if not temp_write_folders:
+        print("ℹ️ Aucun dossier '_temp_write' à supprimer")
+        return 0
+    
+    total_deleted = 0
+    for idx, item in enumerate(temp_write_folders, 1):
+        bucket_name = item['bucket']
+        prefix = item['path']
+        print(f"\n[{idx}/{len(temp_write_folders)}] Suppression: {bucket_name}/{prefix}")
+        paginator = s3_client.get_paginator('list_object_versions')
+        delete_count = 0
+        
+        for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
+            objects_to_delete = [{'Key': v['Key'], 'VersionId': v['VersionId']} for v in page.get('Versions', [])]
+            objects_to_delete += [{'Key': m['Key'], 'VersionId': m['VersionId']} for m in page.get('DeleteMarkers', [])]
+            
+            for i in range(0, len(objects_to_delete), 1000):
+                chunk = objects_to_delete[i:i+1000]
+                s3_client.delete_objects(Bucket=bucket_name, Delete={'Objects': chunk})
+                delete_count += len(chunk)
+        
+        total_deleted += delete_count
+        print(f"   ✅ {delete_count} objets/versions supprimés dans {prefix}")
+    
+    print(f"\n🎉 TOTAL: {total_deleted} objets/versions '_temp_write' supprimés")
+    context['ti'].xcom_push(key='total_deleted_temp_write', value=total_deleted)
+    return total_deleted
+
+
+# =========================================================
+# Fonctions pour fichiers _SUCCESS, _COPYING_, etc.
+# =========================================================
+def find_all_marker_files(**context):
+    """Trouve tous les fichiers _SUCCESS, _COPYING_ dans tous les buckets"""
+    
+    s3_client = get_minio_client()
+    marker_suffixes = ['_SUCCESS', '_COPYING_']  # Ajouter d'autres si nécessaire
+    print(f"🔍 Recherche de fichiers marqueurs: {marker_suffixes}")
+    
+    buckets = [b['Name'] for b in s3_client.list_buckets()['Buckets']]
+    marker_files = []
+    
+    for bucket_name in buckets:
+        print(f"\n🔎 Bucket: {bucket_name}")
+        paginator = s3_client.get_paginator('list_object_versions')
+        
+        for page in paginator.paginate(Bucket=bucket_name):
+            for obj in page.get('Versions', []):
+                key = obj['Key']
+                if any(key.endswith(suf) for suf in marker_suffixes):
+                    marker_files.append({'bucket': bucket_name, 'key': key, 'version_id': obj['VersionId']})
+                    print(f"   ✅ Trouvé: {key}")
+            for marker in page.get('DeleteMarkers', []):
+                key = marker['Key']
+                if any(key.endswith(suf) for suf in marker_suffixes):
+                    marker_files.append({'bucket': bucket_name, 'key': key, 'version_id': marker['VersionId']})
+                    print(f"   ✅ Trouvé (delete marker): {key}")
+    
+    print(f"\n🎯 Résumé: {len(marker_files)} fichiers marqueurs trouvés")
+    context['ti'].xcom_push(key='marker_files', value=marker_files)
+    return marker_files
+
+def delete_all_marker_files(**context):
+    """Supprime tous les fichiers _SUCCESS, _COPYING_, etc."""
+    
+    s3_client = get_minio_client()
+    marker_files = context['ti'].xcom_pull(task_ids='find_marker_files', key='marker_files')
+    
+    if not marker_files:
+        print("ℹ️ Aucun fichier marqueur à supprimer")
+        return 0
+    
+    total_deleted = 0
+    for idx, item in enumerate(marker_files, 1):
+        bucket_name = item['bucket']
+        key = item['key']
+        version_id = item['version_id']
+        
+        print(f"\n[{idx}/{len(marker_files)}] Suppression: {bucket_name}/{key}")
+        s3_client.delete_object(Bucket=bucket_name, Key=key, VersionId=version_id)
+        total_deleted += 1
+    
+    print(f"\n🎉 TOTAL: {total_deleted} fichiers marqueurs supprimés")
+    context['ti'].xcom_push(key='total_deleted_marker_files', value=total_deleted)
+    return total_deleted
+
+
+# =========================================================
+# DAG Airflow
+# =========================================================
 with DAG(
-    'cleanup_all_temporary_folders',
+    'cleanup_minio_folders',
     default_args=default_args,
-    description='Nettoie TOUS les dossiers _temporary dans TOUS les buckets MinIO',
+    description='Nettoie TOUS les dossiers _temporary et _temp_write dans TOUS les buckets MinIO',
     schedule_interval='0 2 * * 0',  # Dimanches à 2h
     catchup=False,
     tags=['cleanup', 'minio', 'maintenance', 'global'],
 ) as dag:
     
-    find_folders = PythonOperator(
+    # _temporary
+    find_temporary = PythonOperator(
         task_id='find_temporary_folders',
         python_callable=find_all_temporary_folders,
         provide_context=True,
         execution_timeout=timedelta(minutes=30),
     )
     
-    cleanup_folders = PythonOperator(
+    cleanup_temporary = PythonOperator(
         task_id='delete_all_temporary_folders',
         python_callable=delete_all_temporary_folders,
         provide_context=True,
         execution_timeout=timedelta(hours=2),
     )
     
-    find_folders >> cleanup_folders
+    # _temp_write
+    find_temp_write = PythonOperator(
+        task_id='find_temp_write_folders',
+        python_callable=find_all_temp_write_folders,
+        provide_context=True,
+        execution_timeout=timedelta(minutes=30),
+    )
+    
+    cleanup_temp_write = PythonOperator(
+        task_id='delete_all_temp_write_folders',
+        python_callable=delete_all_temp_write_folders,
+        provide_context=True,
+        execution_timeout=timedelta(hours=2),
+    )
+    find_marker_files = PythonOperator(
+    task_id='find_marker_files',
+    python_callable=find_all_marker_files,
+    provide_context=True,
+    execution_timeout=timedelta(minutes=30),
+    trigger_rule='all_done', 
+)
+
+    cleanup_marker_files = PythonOperator(
+    task_id='delete_all_marker_files',
+    python_callable=delete_all_marker_files,
+    provide_context=True,
+    execution_timeout=timedelta(hours=2),
+    trigger_rule='all_done',
+)
+    
+    # Dépendances
+    find_temporary >> cleanup_temporary  >> find_temp_write >> cleanup_temp_write >> find_marker_files >> cleanup_marker_files
