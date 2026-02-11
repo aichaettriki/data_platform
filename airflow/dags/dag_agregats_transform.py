@@ -1,5 +1,6 @@
 from airflow import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from datetime import datetime
 import os
 from dotenv import load_dotenv
@@ -65,3 +66,9 @@ with DAG(
             "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
         },
     )
+    trigger_cleanup = TriggerDagRunOperator(
+    task_id='trigger_cleanup_minio',
+    trigger_dag_id='cleanup_minio_folders',  # ton DAG de nettoyage
+    wait_for_completion=True,               # True si tu veux attendre la fin
+)
+    transform_spark >> trigger_cleanup

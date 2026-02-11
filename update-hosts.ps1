@@ -12,7 +12,7 @@ $entries = @(
 "127.0.0.1 spark.itceq.tn",
 "127.0.0.1 catalog.itceq.tn",
 "127.0.0.1 marquez.itceq.tn",
-"127.0.0.1 sql.itceq.tn"
+"127.0.0.1 MinioQuest.itceq.tn"
 
 )
 

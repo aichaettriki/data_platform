@@ -1,6 +1,7 @@
 from datetime import datetime
 from airflow import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 import os
 from dotenv import load_dotenv
 
@@ -22,10 +23,6 @@ MINIO_PASSWORD = get_env_var("MINIO_ROOT_PASSWORD", required=True)
 # Define Buckets
 RAW_BUCKET = "s3a://01-raw"
 TRANSFORMED_BUCKET = "s3a://transformed"
-
-# # SPECIFIC FILE TO PROCESS
-# SPECIFIC_FILE = "2015_C.xlsx"
-# INPUT_PATH = f"{RAW_BUCKET}/{SPECIFIC_FILE}"
 
 # Path to the Spark script
 SPARK_SCRIPT_PATH = "/opt/spark/jobs/etl_tre.py"
@@ -63,10 +60,13 @@ with DAG(
         conf={
             "spark.hadoop.fs.s3a.impl": "org.apache.hadoop.fs.s3a.S3AFileSystem",
             "spark.hadoop.fs.s3a.path.style.access": "true",
-            # MinIO Credentials can be passed here or inside the python script via Env Vars
-            # "spark.hadoop.fs.s3a.endpoint": "http://minio:9000",
         },
         verbose=True
     )
+    trigger_cleanup = TriggerDagRunOperator(
+    task_id='trigger_cleanup_minio',
+    trigger_dag_id='cleanup_minio_folders',  # ton DAG de nettoyage
+    wait_for_completion=True,               # True si tu veux attendre la fin
+)
 
-    transform_tre_task
+    transform_tre_task >> trigger_cleanup

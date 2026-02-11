@@ -47,10 +47,20 @@ body {
     align-items: center;
 }
 
+/* Style spécifique pour le logo flamingo */
+.logo-img {
+    height: 80px; /* On force une hauteur plus grande car le logo est vertical */
+    width: auto;  /* Garde les proportions */
+    vertical-align: middle;
+    margin-right: 15px;
+    /* Optionnel : ajoute un petit effet de relief */
+    filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));
+}
+
+/* Ajustement du header pour laisser passer le grand logo */
 .header-content h1 {
-    font-size: 2em;
-    color: var(--primary-color);
-    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
 }
 
 .header-content h1 i {
@@ -134,7 +144,7 @@ body {
 .right-panel {
     background: var(--bg-primary);
     border-radius: 12px;
-    padding: 25px;
+    padding: 15px;
     box-shadow: var(--shadow-md);
     display: flex;
     flex-direction: column;
@@ -167,8 +177,8 @@ body {
 
 .query-editor {
     width: 100%;
-    height: 400px;
-    padding: 15px;
+    height: 100px;
+    padding: 8px;
     border: 2px solid var(--border-color);
     border-radius: 8px;
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
@@ -187,7 +197,7 @@ body {
 .query-actions {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
 }
 
 .execution-info {
@@ -322,10 +332,10 @@ body {
 
 /* Buttons */
 .btn {
-    padding: 10px 20px;
+    padding: 8px 15px;
     border: none;
     border-radius: 8px;
-    font-size: 0.95em;
+    font-size: 0.85em;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;

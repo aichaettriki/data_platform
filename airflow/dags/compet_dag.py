@@ -12,6 +12,7 @@ spark_competitif_processor.py <year> <month> <day>
 from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.python import PythonOperator
 from airflow.models import Variable
 from minio import Minio
@@ -93,5 +94,9 @@ with DAG(
             "MINIO_ROOT_PASSWORD": MINIO_PASSWORD,
         },
     )
-    
-    run_spark_job
+    trigger_cleanup = TriggerDagRunOperator(
+    task_id='trigger_cleanup_minio',
+    trigger_dag_id='cleanup_minio_folders',  # ton DAG de nettoyage
+    wait_for_completion=True,               # True si tu veux attendre la fin
+)
+    run_spark_job >> trigger_cleanup

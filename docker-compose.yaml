@@ -738,7 +738,7 @@ services:
     restart: always
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.sql-interface.rule=Host(`sql.itceq.tn`)"
+      - "traefik.http.routers.sql-interface.rule=Host(`MinioQuest.itceq.tn`)"
       - "traefik.http.routers.sql-interface.entrypoints=web"
       - "traefik.http.services.sql-interface.loadbalancer.server.port=5000"
 
