@@ -53,7 +53,7 @@ MINIO_ENDPOINT = get_env_var("MINIO_ENDPOINT", required=True)
 MINIO_ROOT_USER = get_env_var("MINIO_ROOT_USER", required=True)
 MINIO_PASSWORD = get_env_var("MINIO_ROOT_PASSWORD", required=True)
 
-SPARK_APP_PATH = "/opt/spark/jobs/competitif_job.py"
+SPARK_APP_PATH = "/opt/spark/jobs/competitivite_processing.py"
 
 
 # ===============================
@@ -61,7 +61,7 @@ SPARK_APP_PATH = "/opt/spark/jobs/competitif_job.py"
 # ===============================
 
 with DAG(
-    dag_id="competitif_scores_pipeline",
+    dag_id="Transform_Competitivite",
     default_args=default_args,
     schedule_interval=None,   # ou None pour manuel
     catchup=False,
@@ -96,7 +96,7 @@ with DAG(
     )
     trigger_cleanup = TriggerDagRunOperator(
     task_id='trigger_cleanup_minio',
-    trigger_dag_id='cleanup_minio_folders',  # ton DAG de nettoyage
+    trigger_dag_id='Cleanup_Minio',  # ton DAG de nettoyage
     wait_for_completion=True,               # True si tu veux attendre la fin
 )
     run_spark_job >> trigger_cleanup

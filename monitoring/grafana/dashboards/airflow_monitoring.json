@@ -432,40 +432,30 @@
           "mappings": [
             {
               "options": {
-                "etl_csv_pipeline": {
+                "Cleanup_Minio": {
                   "color": "green",
-                  "index": 0,
-                  "text": "ETL csv pipeline"
-                },
-                "etl_csv_spark_pipeline_v2": {
-                  "color": "yellow",
-                  "index": 1,
-                  "text": "ETL csv spark pipeline"
-                },
-                "ingest_and_transform_ins": {
-                  "color": "purple",
                   "index": 3,
-                  "text": "Ingest and transform INS"
+                  "text": "Cleanup Minio"
                 },
-                "ingest_ins_raw": {
+                "Ingest_to_Raw": {
                   "color": "blue",
-                  "index": 4,
+                  "index": 0,
                   "text": "Ingest to raw"
                 },
-                "ins_tre_etl_pipeline1": {
-                  "color": "orange",
-                  "index": 6,
-                  "text": "Transform TRE"
-                },
-                "spark-marquez": {
-                  "color": "blue",
-                  "index": 2,
-                  "text": "Spark markez"
-                },
-                "transform_aggregats": {
+                "Transform_Agregats": {
                   "color": "purple",
-                  "index": 5,
+                  "index": 1,
                   "text": "Transform Aggregats"
+                },
+                "Transform_Competitivite": {
+                  "color": "light-red",
+                  "index": 4,
+                  "text": "Transform Competitivite"
+                },
+                "Transform_TRE": {
+                  "color": "orange",
+                  "index": 2,
+                  "text": "Transform TRE"
                 }
               },
               "type": "value"
@@ -630,45 +620,30 @@
           "mappings": [
             {
               "options": {
-                "etl_csv_pipeline": {
+                "Cleanup_Minio": {
                   "color": "green",
-                  "index": 0,
-                  "text": "ETL csv pipeline"
+                  "index": 3,
+                  "text": "Cleanup Minio"
                 },
-                "etl_csv_spark_pipeline_v2": {
-                  "color": "yellow",
-                  "index": 1,
-                  "text": "ETL csv spark pipeline"
-                },
-                "ingest_and_transform_ins": {
-                  "color": "purple",
-                  "index": 2,
-                  "text": "Ingest and transform INS"
-                },
-                "ingest_ins_raw": {
+                "Ingest_to_Raw": {
                   "color": "blue",
-                  "index": 6,
+                  "index": 1,
                   "text": "Ingest to raw"
                 },
-                "ins_tre_etl_pipeline1": {
-                  "color": "orange",
-                  "index": 7,
-                  "text": "Transform TRE"
-                },
-                "spark-marquez": {
-                  "color": "blue",
-                  "index": 3,
-                  "text": "Spark marquez"
-                },
-                "transform_aggregats": {
+                "Transform_Agregats": {
                   "color": "purple",
-                  "index": 5,
-                  "text": "Transform aggregats"
+                  "index": 0,
+                  "text": "Transform Aggregats"
                 },
-                "transform_ins_tre": {
-                  "color": "light-red",
+                "Transform_Competitivite": {
+                  "color": "red",
                   "index": 4,
-                  "text": "Transform INS "
+                  "text": "Transform Competitivite"
+                },
+                "Transform_TRE": {
+                  "color": "orange",
+                  "index": 2,
+                  "text": "Transform TRE"
                 }
               },
               "type": "value"
@@ -797,40 +772,30 @@
           "mappings": [
             {
               "options": {
-                "etl_csv_pipeline": {
+                "Cleanup_Minio": {
                   "color": "green",
+                  "index": 3,
+                  "text": "Cleanup Minio"
+                },
+                "Ingest_to_Raw": {
+                  "color": "blue",
                   "index": 0,
-                  "text": "ETL csv pipeline"
-                },
-                "etl_csv_spark_pipeline_v2": {
-                  "color": "yellow",
-                  "index": 1,
-                  "text": "ETL csv spark pipeline"
-                },
-                "ingest_api_to_minio": {
-                  "color": "blue",
-                  "index": 2,
-                  "text": "Ingest api to minio"
-                },
-                "ingest_ins_raw": {
-                  "color": "blue",
-                  "index": 6,
                   "text": "Ingest to raw"
                 },
-                "ins_tre_etl_pipeline1": {
-                  "color": "orange",
-                  "index": 4,
-                  "text": "Transform TRE"
-                },
-                "spark-marquez": {
-                  "color": "orange",
-                  "index": 3,
-                  "text": "Spark marquez"
-                },
-                "transform_aggregats": {
+                "Transform_Agregats": {
                   "color": "purple",
-                  "index": 5,
+                  "index": 1,
                   "text": "Transform Aggregats"
+                },
+                "Transform_Competitivite": {
+                  "color": "red",
+                  "index": 4,
+                  "text": "Transform Competitivite"
+                },
+                "Transform_TRE": {
+                  "color": "orange",
+                  "index": 2,
+                  "text": "Transform TRE"
                 }
               },
               "type": "value"
@@ -945,40 +910,30 @@
           "mappings": [
             {
               "options": {
-                "etl_csv_pipeline": {
+                "Cleanup_Minio": {
                   "color": "green",
-                  "index": 0,
-                  "text": "ETL csv pipeline"
+                  "index": 3,
+                  "text": "Cleanup Minio"
                 },
-                "etl_csv_spark_pipeline_v2": {
-                  "color": "yellow",
-                  "index": 1,
-                  "text": "ETL csv spark pipeline"
-                },
-                "ingest_api_to_minio": {
+                "Ingest_to_Raw": {
                   "color": "blue",
-                  "index": 2,
-                  "text": "Ingest api to minio"
-                },
-                "ingest_ins_raw": {
-                  "color": "orange",
-                  "index": 5,
+                  "index": 1,
                   "text": "Ingest to raw"
                 },
-                "ins_tre_etl_pipeline1": {
-                  "color": "blue",
-                  "index": 6,
-                  "text": "Transform TRE"
-                },
-                "spark-marquez": {
-                  "color": "orange",
-                  "index": 3,
-                  "text": "Spark marquez"
-                },
-                "transform_aggregats": {
+                "Transform_Agregats": {
                   "color": "purple",
-                  "index": 4,
+                  "index": 0,
                   "text": "Transform Aggregats"
+                },
+                "Transform_Competitivite": {
+                  "color": "red",
+                  "index": 4,
+                  "text": "Transform Competitivite"
+                },
+                "Transform_TRE": {
+                  "color": "orange",
+                  "index": 2,
+                  "text": "Transform TRE"
                 }
               },
               "type": "value"
@@ -1464,6 +1419,6 @@
   "timezone": "browser",
   "title": "05-Airflow Monitoring Dashboard",
   "uid": "a23a7e6f-3feb-45f4-902e-95dfbcec13da",
-  "version": 1,
+  "version": 3,
   "weekStart": ""
 }

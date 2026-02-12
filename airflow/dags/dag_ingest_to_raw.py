@@ -21,7 +21,7 @@ MINIO_SECRET_KEY = get_env_var("MINIO_ROOT_PASSWORD", required=True)
 
 LOCAL_INPUT_DIR = "/opt/airflow/data"
 RAW_BUCKET = "01-raw"
-SOURCE = "INS"
+
 
 def upload_files_to_raw(**context):
     execution_date = context["ds"]  # yyyy-mm-dd
@@ -55,7 +55,7 @@ def upload_files_to_raw(**context):
 
 
 with DAG(
-    dag_id="ingest_ins_raw",
+    dag_id="Ingest_to_Raw",
     start_date=datetime(2024, 1, 1),
     schedule_interval=None,
     catchup=False,

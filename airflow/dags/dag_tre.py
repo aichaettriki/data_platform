@@ -25,7 +25,7 @@ RAW_BUCKET = "s3a://01-raw"
 TRANSFORMED_BUCKET = "s3a://transformed"
 
 # Path to the Spark script
-SPARK_SCRIPT_PATH = "/opt/spark/jobs/etl_tre.py"
+SPARK_SCRIPT_PATH = "/opt/spark/jobs/tre_processing.py"
 
 default_args = {
     'owner': 'data_team',
@@ -36,10 +36,9 @@ default_args = {
 }
 
 with DAG(
-    dag_id='ins_tre_etl_pipeline1',
+    dag_id='Transform_TRE',
     default_args=default_args,
     description='ETL for INS TRE Economic Files',
-    schedule_interval='@daily',
     catchup=False,
     tags=['INS', 'TRE', 'Spark']
 ) as dag:
@@ -65,7 +64,7 @@ with DAG(
     )
     trigger_cleanup = TriggerDagRunOperator(
     task_id='trigger_cleanup_minio',
-    trigger_dag_id='cleanup_minio_folders',  # ton DAG de nettoyage
+    trigger_dag_id='Cleanup_Minio',  # ton DAG de nettoyage
     wait_for_completion=True,               # True si tu veux attendre la fin
 )
 

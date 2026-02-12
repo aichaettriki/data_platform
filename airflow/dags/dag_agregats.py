@@ -20,15 +20,14 @@ MINIO_ENDPOINT = get_env_var("MINIO_ENDPOINT", required=True)
 MINIO_USER = get_env_var("MINIO_ROOT_USER", required=True)
 MINIO_PASSWORD = get_env_var("MINIO_ROOT_PASSWORD", required=True)
 
-JOB_PATH = "/opt/spark/jobs/transform_aggregats_job.py"
+JOB_PATH = "/opt/spark/jobs/agregats_processing.py"
 
 # =========================================================
 # DAG
 # =========================================================
 with DAG(
-    dag_id="transform_aggregats_spark",
+    dag_id="Transform_Agregats",
     start_date=datetime(2026, 1, 27),
-    schedule_interval="@daily",
     catchup=False,
     tags=["spark", "minio", "parquet"],
 ) as dag:
@@ -68,7 +67,7 @@ with DAG(
     )
     trigger_cleanup = TriggerDagRunOperator(
     task_id='trigger_cleanup_minio',
-    trigger_dag_id='cleanup_minio_folders',  # ton DAG de nettoyage
+    trigger_dag_id='Cleanup_Minio',  # ton DAG de nettoyage
     wait_for_completion=True,               # True si tu veux attendre la fin
 )
     transform_spark >> trigger_cleanup
