@@ -107,97 +107,107 @@ services:
     restart: "no"
 
 
-
-  # ---------- Spark ----------
+  # ==========================================
+  # SPARK MASTER
+  # ==========================================
   spark-master:
-    build: ./spark
+    build: 
+      context: ./spark
+      dockerfile: Dockerfile
     container_name: spark-master
     networks:
-      - traefik-public
-    user: root
+      - traefik-public    
     environment:
-      USER: root
-      SPARK_USER: root
-      HADOOP_USER_NAME: root
-      SPARK_METRICS_CONF: "/opt/spark/conf/metrics.properties"
-      SPARK_MASTER_OPTS: "-Dspark.metrics.conf=/opt/spark/conf/metrics.properties -DmetricsServlet.port=8090"
-      SPARK_SUBMIT_OPTS: >-
-        -Dspark.eventLog.enabled=true
-        -Dspark.eventLog.dir=file:///opt/spark/events
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_MASTER_OPTS=-Dspark.metrics.conf=/opt/spark/conf/metrics.properties -DmetricsServlet.port=8090
+      - SPARK_DAEMON_JAVA_OPTS=-Dspark.eventLog.enabled=true -Dspark.eventLog.dir=file:///opt/spark/events
+    
     ports:
-      - "${SPARK_MASTER_UI_PORT}:${SPARK_MASTER_UI_PORT}"
-      - "${SPARK_MASTER_PORT}:${SPARK_MASTER_PORT}"
-    command: >
-      /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
-      --host spark-master --port 7077
+      - "${SPARK_MASTER_UI_PORT}:8080"
+      - "${SPARK_MASTER_PORT}:7077"
+      - "8090:8090"
+    
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master --host spark-master --port 7077 --webui-port 8080
+
     volumes:
-      - ${MINIO_RAW_PATH}:/data/raw
-      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
-      - ${MINIO_REFINED_PATH}:/data/refined
+      # 1. Volume pour les logs d'événements (interne)
+      - spark-events-data:/opt/spark/events
+      
+      # 2. Volume pour VOS SCRIPTS (externe)
+      # C'est ici que le conteneur va lire votre code Python
       - ${SPARK_JOBS_PATH}:/opt/spark/jobs
-      - ${SPARK_EVENT_PATH}:/opt/spark/events
-      - ${SPARK_PROPERTIES_PATH}:/opt/spark/conf/metrics.properties
-      - ./spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      
     restart: always
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.spark.rule=Host(`spark.itceq.tn`)"
-      - "traefik.http.routers.spark.entrypoints=web"
-      - "traefik.http.services.spark.loadbalancer.server.port=8080"
 
+  # ==========================================
+  # SPARK WORKER
+  # ==========================================
   spark-worker:
-    build: ./spark
+    build: 
+      context: ./spark
+      dockerfile: Dockerfile
     container_name: spark-worker
     networks:
       - traefik-public
     depends_on:
       - spark-master
+    
     environment:
-      USER: root
-      SPARK_USER: root
-      HADOOP_USER_NAME: root
-      SPARK_MASTER_URL: spark://spark-master:7077
-      SPARK_METRICS_CONF: "/opt/spark/conf/metrics.properties"
-      SPARK_WORKER_OPTS: "-Dspark.metrics.conf=/opt/spark/conf/metrics.properties -DmetricsServlet.port=8091"
-      SPARK_SUBMIT_OPTS: >-
-        -Dspark.eventLog.enabled=true
-        -Dspark.eventLog.dir=file:///opt/spark/events
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      # Métriques
+      - SPARK_WORKER_OPTS=-Dspark.metrics.conf=/opt/spark/conf/metrics.properties -DmetricsServlet.port=8091
+    
     ports:
-      - "${SPARK_WORKER_UI_PORT}:${SPARK_WORKER_UI_PORT}"
+      - "${SPARK_WORKER_UI_PORT}:8081"
+      - "8091:8091"
 
-    command: >
-      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
-      spark://spark-master:7077
+    # COMMANDE OBLIGATOIRE
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077 --webui-port 8081
+
     volumes:
-      - ${MINIO_RAW_PATH}:/data/raw
-      - ${MINIO_TRANSFORMED_PATH}:/data/transformed
-      - ${MINIO_REFINED_PATH}:/data/refined
-      - ${SPARK_JOBS_PATH}:/opt/spark/jobs
-      - ${SPARK_EVENT_PATH}:/opt/spark/events
-      - ${SPARK_PROPERTIES_PATH}:/opt/spark/conf/metrics.properties
-      - ./spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - spark-events-data:/opt/spark/events
+      - /tmp/spark-temp:/opt/spark/work
+      
     restart: always
 
+  # ==========================================
+  # SPARK HISTORY SERVER
+  # ==========================================
   spark-history-server:
-    build: ./spark
+    build: 
+      context: ./spark
+      dockerfile: Dockerfile
     container_name: spark-history-server
     networks:
       - traefik-public
+    depends_on:
+      - spark-master
+      
     environment:
-      SPARK_HISTORY_OPTS: >-
-        -Dspark.history.fs.logDirectory=file:///opt/spark/events
-    command: >
-      /opt/spark/bin/spark-class org.apache.spark.deploy.history.HistoryServer
+      - SPARK_NO_DAEMONIZE=true
+      - SPARK_HISTORY_OPTS=-Dspark.history.fs.logDirectory=file:///opt/spark/events
+    
+    # COMMANDE OBLIGATOIRE
+    command: /opt/spark/bin/spark-class org.apache.spark.deploy.history.HistoryServer
+
     volumes:
-      - ${SPARK_EVENT_PATH}:/opt/spark/events
-      - ./spark/conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+      - spark-events-data:/opt/spark/events
+      
     ports:
       - "18080:18080"
+      
     restart: always
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.spark-history.rule=Host(`spark-history.itceq.tn`)"
       - "traefik.http.routers.spark-history.entrypoints=web"
+      - "traefik.http.services.spark-history.loadbalancer.server.port=18080"
+
 
   spark-exporter:
     build: ./spark/spark-exporter
@@ -752,6 +762,7 @@ volumes:
   marquez_pg_data:
   minio-data:
   trino_data:
+  spark-events-data:
 
 
 # ------------------------ Networks ------------------------

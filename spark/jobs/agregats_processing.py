@@ -1,13 +1,14 @@
+import sys
+import logging
+import traceback
+from typing import List, Optional, Tuple
+from functools import reduce
+
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import (
     col, lit, regexp_replace, current_timestamp, 
-    input_file_name, trim
+    trim, input_file_name
 )
-from functools import reduce
-from typing import List, Optional, Tuple
-import sys
-import traceback
-import logging
 
 # =========================================================
 # Configuration du logging
@@ -19,290 +20,241 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # =========================================================
-# Configuration Spark optimisée
+# Configuration Spark
 # =========================================================
+# NOTE: En prod, évitez de hardcoder les configs mémoire/shuffle ici.
+# Passez-les via spark-submit (--conf spark.sql.shuffle.partitions=200)
 spark = (
     SparkSession.builder
     .appName("transform_aggregats_ins")
-    .config("spark.sql.adaptive.enabled", "true")
-    .config("spark.sql.adaptive.coalescePartitions.enabled", "true")
-    .config("spark.sql.files.maxPartitionBytes", "134217728")  # 128MB
-    .config("spark.sql.shuffle.partitions", "200")
+    # On garde l'adaptive execution qui est cruciale
+    .config("spark.sql.adaptive.enabled", "true") 
     .getOrCreate()
 )
-
-logger.info("=" * 60)
-logger.info("🚀 JOB SPARK - TRANSFORMATION AGRÉGATS INS")
-logger.info(f"✅ Spark version: {spark.version}")
-logger.info("=" * 60)
-
 
 # =========================================================
 # Fonctions utilitaires
 # =========================================================
-def find_latest_files(
-    spark: SparkSession, 
-    base_path: str, 
-    specific_folder: str
-) -> Tuple[List[str], Optional[str]]:
+
+def find_latest_files(spark: SparkSession, base_path: str, specific_folder: str) -> Tuple[List[str], Optional[str]]:
     """
-    Recherche les fichiers Excel dans le dossier le plus récent.
-    
-    Args:
-        spark: Session Spark active
-        base_path: Chemin S3 de base (ex: s3a://01-raw)
-        specific_folder: Sous-dossier spécifique (ex: INS/agregats)
-        
-    Returns:
-        Tuple (liste des chemins des fichiers Excel, année du dossier)
+    Recherche les fichiers Excel dans le dossier le plus récent via Hadoop FS API.
     """
     sc = spark.sparkContext
-    Path = sc._jvm.org.apache.hadoop.fs.Path
-    FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
-    URI = sc._jvm.java.net.URI
-
-    if not base_path.startswith("s3a://"):
-        raise ValueError("base_path must start with s3a://")
-
-    # Extraction bucket et préfixe
-    parts = base_path.replace("s3a://", "").split("/", 1)
-    bucket = parts[0]
-    prefix = "/" + parts[1] if len(parts) > 1 else "/"
-
-    fs = FileSystem.get(URI(f"s3a://{bucket}"), sc._jsc.hadoopConfiguration())
-
-    def list_dirs(path_str):
-        """Liste les répertoires triés par ordre décroissant."""
-        p = Path(path_str)
-        if not fs.exists(p):
-            return []
-        return sorted(
-            [x.getPath() for x in fs.listStatus(p) if x.isDirectory()],
-            key=lambda x: x.getName(),
-            reverse=True
-        )
-
-    # Navigation Année/Mois
-    years = list_dirs(prefix)
-    if not years:
-        logger.warning(f"Aucune année trouvée dans {prefix}")
-        return [], None
-
-    # Extraction de l'année du dossier
-    annee_dossier = years[0].getName()
-    logger.info(f"📅 Année du dossier: {annee_dossier}")
-
-    months = list_dirs(years[0].toString())
-    if not months:
-        logger.warning(f"Aucun mois trouvé dans {years[0]}")
-        return [], None
-
-    target = Path(months[0].toString() + "/" + specific_folder)
-    if not fs.exists(target):
-        logger.warning(f"Dossier cible non trouvé: {target}")
-        return [], None
-
-    logger.info(f"📁 Dossier cible: {target}")
-
-    # Recherche récursive des fichiers Excel
-    files = []
-    stack = [target]
-    while stack:
-        p = stack.pop()
-        for s in fs.listStatus(p):
-            if s.isDirectory():
-                stack.append(s.getPath())
-            elif s.isFile() and s.getPath().getName().endswith(".xlsx"):
-                files.append(s.getPath().toString())
-
-    return files, annee_dossier
-
-
-def process_excel_file(spark, file_path, annee_dossier):
-    """
-    Traite un fichier Excel et le transforme en format long.
-    
-    Args:
-        spark: Session Spark active
-        file_path: Chemin du fichier Excel
-        annee_dossier: Année extraite du chemin du dossier
+    # Utilisation de l'URI Java pour gérer correctement les schémas s3a/hdfs/file
+    try:
+        Path = sc._jvm.org.apache.hadoop.fs.Path
+        FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
+        URI = sc._jvm.java.net.URI
         
-    Returns:
-        DataFrame transformé ou None en cas d'erreur
+        # Gestion propre de l'URI
+        uri_path = URI(base_path)
+        fs = FileSystem.get(uri_path, sc._jsc.hadoopConfiguration())
+        
+        # Construction du chemin de base sans le préfixe s3a://bucket pour la navigation relative si besoin
+        # Mais ici on travaille avec des Path objects complets, c'est plus sûr.
+        base_p = Path(base_path)
+
+        def list_dirs_sorted(p_obj):
+            if not fs.exists(p_obj): return []
+            status_list = fs.listStatus(p_obj)
+            dirs = [s.getPath() for s in status_list if s.isDirectory()]
+            # Tri décroissant (lexicographique)
+            return sorted(dirs, key=lambda x: x.getName(), reverse=True)
+
+        # 1. Lister les années (ex: 2024, 2023...)
+        years_dirs = list_dirs_sorted(base_p)
+        if not years_dirs:
+            logger.warning(f"Aucune année trouvée dans {base_path}")
+            return [], None
+        
+        latest_year_path = years_dirs[0]
+        annee_dossier = latest_year_path.getName()
+        logger.info(f"📅 Année la plus récente détectée: {annee_dossier}")
+
+        # 2. Lister les mois dans l'année la plus récente
+        months_dirs = list_dirs_sorted(latest_year_path)
+        if not months_dirs:
+            logger.warning(f"Aucun mois trouvé dans {latest_year_path}")
+            return [], None
+        
+        latest_month_path = months_dirs[0]
+        
+        # 3. Construire le chemin cible complet
+        target_path = Path(latest_month_path, specific_folder)
+        
+        if not fs.exists(target_path):
+            logger.warning(f"Dossier cible non trouvé: {target_path}")
+            return [], None
+
+        logger.info(f"📁 Dossier cible: {target_path}")
+
+        # 4. Récupérer les fichiers Excel (.xlsx)
+        files = []
+        remote_iter = fs.listFiles(target_path, True) # True = récursif
+        while remote_iter.hasNext():
+            file_status = remote_iter.next()
+            path_str = file_status.getPath().toString()
+            if path_str.endswith(".xlsx") and not file_status.getPath().getName().startswith("~$"):
+                files.append(path_str)
+
+        return files, annee_dossier
+
+    except Exception as e:
+        logger.error(f"Erreur lors du listing des fichiers: {str(e)}")
+        traceback.print_exc()
+        return [], None
+
+
+def process_excel_file(spark, file_path):
+    """
+    Traite un fichier Excel : Pivot -> Format Long.
+    Note: On ne passe plus annee_dossier ici car elle est écrasée par la logique interne.
     """
     try:
-        logger.info(f"📖 Lecture: {file_path}")
+        # Optimisation : Si possible, définir un schema manuel pour éviter inferSchema=True
+        # Ici on garde inferSchema pour la flexibilité, mais c'est un goulot d'étranglement.
         
-        # Lecture Excel avec gestion des erreurs
         df = (
             spark.read
             .format("com.crealytics.spark.excel")
             .option("header", True)
-            .option("inferSchema", True)
+            .option("inferSchema", True) 
             .option("treatEmptyValuesAsNulls", True)
             .option("usePlainNumberFormat", True)
             .load(file_path)
         )
 
-        # Identification des colonnes
-        colonnes_annees = [c for c in df.columns if c and c.strip().isdigit()]
+        # Nettoyage des noms de colonnes (trim whitespace)
+        cleaned_columns = [c.strip() for c in df.columns]
+        df = df.toDF(*cleaned_columns)
+
+        # Identification dynamique des colonnes
+        # On suppose que les colonnes 'années' sont composées uniquement de chiffres (ex: "2010", "2011")
+        colonnes_annees = [c for c in df.columns if c.isdigit()]
         colonnes_meta = [c for c in df.columns if c not in colonnes_annees]
 
         if not colonnes_annees:
-            logger.warning(f"⚠️ Fichier ignoré (pas de colonnes années): {file_path}")
+            logger.warning(f"⚠️ Fichier ignoré (pas de colonnes années trouvées): {file_path}")
             return None
 
-        logger.info(f"   → {len(colonnes_annees)} années trouvées: {min(colonnes_annees)} - {max(colonnes_annees)}")
-
-        # Transformation pivot → long format
+        # Transformation Stack (Unpivot)
         stack_expr = ", ".join([f"'{c}', `{c}`" for c in colonnes_annees])
         
         df_long = df.selectExpr(
             *[f"`{c}`" for c in colonnes_meta],
-            f"stack({len(colonnes_annees)}, {stack_expr}) as (annee, valeur)"
+            f"stack({len(colonnes_annees)}, {stack_expr}) as (annee_col, valeur)"
         )
 
-        # Création de la colonne indicateur
-        if len(colonnes_meta) == 1:
+        # Gestion de la colonne indicateur
+        if not colonnes_meta:
+            # Cas rare où il n'y a que des années ?
+            df_long = df_long.withColumn("indicateur", lit("Inconnu"))
+        elif len(colonnes_meta) == 1:
             df_long = df_long.withColumnRenamed(colonnes_meta[0], "indicateur")
         else:
-            # Concaténation avec trim pour éviter les espaces multiples
-            df_long = df_long.withColumn(
-                "indicateur",
-                trim(col(colonnes_meta[0]).cast("string"))
+            # Concaténation propre
+            concat_cols = [trim(col(c).cast("string")) for c in colonnes_meta]
+            # Utilisation de concat_ws pour gérer proprement les séparateurs
+            from pyspark.sql.functions import concat_ws
+            df_long = df_long.select(
+                concat_ws(" | ", *concat_cols).alias("indicateur"),
+                col("annee_col"), 
+                col("valeur")
             )
-            for c in colonnes_meta[1:]:
-                df_long = df_long.withColumn(
-                    "indicateur",
-                    col("indicateur") + lit(" | ") + trim(col(c).cast("string"))
-                )
-            df_long = df_long.drop(*colonnes_meta)
 
-        # Nettoyage et typage des données
-        df_long = (
+        # Nom du fichier pour le lignage (lineage)
+        file_name = file_path.split("/")[-1]
+
+        df_final = (
             df_long
-            # Nettoyage valeur: suppression espaces et remplacement virgule par point
+            # Nettoyage valeur : suppression espaces et conversion locale (virgule -> point)
             .withColumn(
                 "valeur",
                 regexp_replace(
-                    regexp_replace(col("valeur").cast("string"), "\\s+", ""),
-                    ",", 
-                    "."
+                    regexp_replace(col("valeur").cast("string"), "\\s+", ""), # Remove spaces
+                    ",", "."
                 ).cast("double")
             )
-            # Typage annee
-            .withColumn("annee", col("annee").cast("int"))
-            # Duplication de la colonne annee en annee_dossier
-            .withColumn("annee_dossier", col("annee"))
-            # Ajout métadonnées
+            .withColumn("annee", col("annee_col").cast("int"))
+            # On renomme pour être cohérent avec la partition de sortie
+            .withColumn("annee_dossier", col("annee")) 
             .withColumn("date_traitement", current_timestamp())
-            .withColumn("fichier_source", lit(file_path.split("/")[-1]))
-            # Filtrage des lignes nulles
-            .filter(
-                col("indicateur").isNotNull() & 
-                col("annee").isNotNull()
-            )
-            # Sélection finale
+            .withColumn("fichier_source", lit(file_name))
+            
+            .filter(col("indicateur").isNotNull() & col("annee").isNotNull())
             .select("indicateur", "valeur", "annee_dossier", "date_traitement", "fichier_source")
         )
-
-        nb_rows = df_long.count()
-        logger.info(f"   ✅ {nb_rows:,} lignes extraites")
         
-        return df_long
+        # RETRAIT DU .count() ICI -> Performance gain
+        return df_final
 
     except Exception as e_file:
         logger.error(f"⚠️ Erreur lors du traitement de {file_path}: {str(e_file)}")
         return None
 
-
 # =========================================================
 # MAIN
 # =========================================================
 def main():
-    """Fonction principale du job."""
-    try:
-        # Configuration des chemins
-        base_path = "s3a://01-raw"
-        specific_folder = "INS/agregats"
-        output_path = "s3a://02-transformed/INS/agregats"
+    base_path = "s3a://01-raw"
+    specific_folder = "INS/agregats"
+    output_path = "s3a://02-transformed/INS/agregats"
 
-        # Recherche des fichiers et extraction de l'année du dossier
-        files, annee_dossier = find_latest_files(spark, base_path, specific_folder)
+    # 1. Trouver les fichiers
+    files, _ = find_latest_files(spark, base_path, specific_folder)
 
-        if not files or annee_dossier is None:
-            logger.error("❌ Aucun fichier trouvé ou année du dossier non identifiable")
-            return 1
-
-        logger.info(f"✅ {len(files)} fichier(s) trouvé(s) pour l'année {annee_dossier}")
-
-        # Traitement de chaque fichier
-        dfs = []
-        for file_path in files:
-            df = process_excel_file(spark, file_path, annee_dossier)
-            if df is not None:
-                dfs.append(df)
-
-        if not dfs:
-            logger.error("❌ Aucun dataframe valide généré")
-            return 1
-
-        # Union de tous les dataframes
-        logger.info("🔄 Union des dataframes...")
-        final_df = reduce(lambda df1, df2: df1.unionByName(df2, allowMissingColumns=True), dfs)
-        
-        # Statistiques finales
-        total_rows = final_df.count()
-        logger.info(f"📊 Total: {total_rows:,} lignes")
-        
-        # Dédoublonnage (optionnel mais recommandé)
-        final_df = final_df.dropDuplicates(["indicateur", "annee_dossier", "fichier_source"])
-        
-        final_rows = final_df.count()
-        if final_rows < total_rows:
-            logger.info(f"🧹 {total_rows - final_rows:,} doublons supprimés")
-
-        # Obtenir les années uniques pour créer les dossiers manuellement
-        annees_list = [row.annee_dossier for row in final_df.select("annee_dossier").distinct().collect()]
-        logger.info(f"📂 Années à traiter: {sorted(annees_list)}")
-
-        # Écriture Parquet par année SANS partitionBy
-        for annee in annees_list:
-            annee_df = final_df.filter(col("annee_dossier") == annee)
-            annee_output_path = f"{output_path}/{annee}"
-            
-            logger.info(f"💾 Écriture année {annee} vers {annee_output_path}...")
-            (
-                annee_df
-                .coalesce(1)  # Optionnel: un seul fichier par année
-                .write
-                .mode("overwrite")
-                .option("compression", "snappy")
-                .parquet(annee_output_path)
-            )
-            logger.info(f"✅ Année {annee} écrite")
-        
-        logger.info(f"✅ Écriture terminée: {output_path}")
-        
-        # Statistiques finales par année
-        logger.info("📈 Distribution par année:")
-        final_df.groupBy("annee_dossier").count().orderBy("annee_dossier").show()
-
-        return 0
-
-    except Exception as e:
-        logger.error("❌ ERREUR FATALE")
-        logger.error(str(e))
-        traceback.print_exc()
+    if not files:
+        logger.error("❌ Aucun fichier trouvé.")
         return 1
 
+    logger.info(f"✅ {len(files)} fichiers identifiés pour traitement.")
+
+    # 2. Création de la liste des DataFrames (Lazy)
+    dfs = []
+    for file_path in files:
+        # Note : process_excel_file ne lance plus d'action immédiate
+        df = process_excel_file(spark, file_path)
+        if df is not None:
+            dfs.append(df)
+
+    if not dfs:
+        logger.error("❌ Aucun dataframe valide généré après lecture.")
+        return 1
+
+    # 3. Union
+    # Pour beaucoup de fichiers, reduce/union peut créer un plan logique profond (StackOverflow).
+    # Mais pour des fichiers Excel, on dépasse rarement quelques dizaines/centaines, donc c'est OK.
+    logger.info("🔄 Préparation du plan d'exécution (Union)...")
+    final_df = reduce(lambda df1, df2: df1.unionByName(df2, allowMissingColumns=True), dfs)
+
+    # 4. Transformations finales
+    final_df = final_df.dropDuplicates(["indicateur", "annee_dossier", "fichier_source"])
+
+    # 5. Écriture Optimisée (PartitionBy)
+    logger.info(f"💾 Écriture en cours vers {output_path} (partitionné par annee_dossier)...")
+    
+    (
+        final_df
+        # Repartitionner assure qu'on écrit des fichiers de taille correcte par dossier
+        # et évite d'ouvrir trop de fichiers simultanés si les données sont mélangées.
+        .repartition("annee_dossier") 
+        .write
+        .mode("overwrite")
+        .partitionBy("annee_dossier") # La méthode Spark native
+        .option("compression", "snappy")
+        .parquet(output_path)
+    )
+
+    logger.info("✅ Job terminé avec succès.")
+    return 0
 
 if __name__ == "__main__":
     try:
-        exit_code = main()
-        spark.stop()
-        sys.exit(exit_code)
+        sys.exit(main())
     except Exception as e:
-        logger.error(f"Erreur inattendue: {str(e)}")
-        spark.stop()
+        logger.critical(f"❌ ERREUR FATALE GLOBALE: {str(e)}")
+        traceback.print_exc()
         sys.exit(1)
+    finally:
+        spark.stop()

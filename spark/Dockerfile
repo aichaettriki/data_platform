@@ -7,7 +7,7 @@ RUN apt-get update && apt-get install -y python3-pip curl procps && apt-get clea
 
 # 2. Setup Work Directory
 # Note : L'image apache/spark utilise l'UID 185 par défaut, pas 1001.
-RUN mkdir -p /opt/spark/work /opt/spark/conf /opt/spark/jars && \
+RUN mkdir -p /opt/spark/work /opt/spark/conf /opt/spark/jars /opt/spark/events /opt/spark/logs && \
     chown -R 185:185 /opt/spark
 
 # 3. Install Python requirements
@@ -28,7 +28,23 @@ RUN curl -fL -o postgresql.jar https://jdbc.postgresql.org/download/postgresql-4
     curl -fL -o hadoop-aws.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar && \
     curl -fL -o aws-sdk-bundle.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.262/aws-java-sdk-bundle-1.12.262.jar
 
+
+# C. Spark Excel (CRITIQUE : Manquait dans votre version)
+# Sans ça, votre code Python plantera immédiatement.
+RUN curl -fL -o spark-excel.jar \
+    https://repo1.maven.org/maven2/com/crealytics/spark-excel_2.12/3.3.1_0.18.7/spark-excel_2.12-3.3.1_0.18.7.jar
+
+
 RUN chmod 644 /opt/spark/jars/*.jar
+
+# --- CONFIGURATION SECTION ---
+
+COPY conf/spark-defaults.conf /opt/spark/conf/spark-defaults.conf
+COPY conf/metrics.properties /opt/spark/conf/metrics.properties
+
+
+RUN chown -R 185:185 /opt/spark/conf /opt/spark/work /opt/spark/events /opt/spark/logs
+
 
 # Revenir à l'utilisateur Spark par défaut pour la sécurité
 USER 185
