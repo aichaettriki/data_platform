@@ -249,6 +249,91 @@ def delete_all_marker_files(**context):
     context['ti'].xcom_push(key='total_deleted_marker_files', value=total_deleted)
     return total_deleted
 
+# =========================================================
+# Fonctions pour .spark-staging
+# =========================================================
+def find_spark_staging_folders(**context):
+    """Trouve tous les dossiers .spark-staging dans tous les buckets"""
+
+    s3_client = get_minio_client()
+    print("🔍 Recherche des dossiers '.spark-staging-'")
+
+    buckets = [b['Name'] for b in s3_client.list_buckets()['Buckets']]
+    staging_folders = []
+
+    for bucket_name in buckets:
+        print(f"\n🔎 Bucket: {bucket_name}")
+        found_paths = set()
+        paginator = s3_client.get_paginator('list_object_versions')
+
+        for page in paginator.paginate(Bucket=bucket_name):
+            for obj in page.get('Versions', []):
+                key = obj['Key']
+                if '.spark-staging-' in key:
+                    path = key.split('.spark-staging-')[0] + '.spark-staging-'
+                    if path not in found_paths:
+                        found_paths.add(path)
+                        staging_folders.append({'bucket': bucket_name, 'path': path})
+                        print(f"   ✅ Trouvé: {path}")
+
+            for marker in page.get('DeleteMarkers', []):
+                key = marker['Key']
+                if '.spark-staging-' in key:
+                    path = key.split('.spark-staging-')[0] + '.spark-staging-'
+                    if path not in found_paths:
+                        found_paths.add(path)
+                        staging_folders.append({'bucket': bucket_name, 'path': path})
+                        print(f"   ✅ Trouvé (delete marker): {path}")
+
+    context['ti'].xcom_push(key='spark_staging_folders', value=staging_folders)
+    return staging_folders
+
+def delete_spark_staging_folders(**context):
+    """Supprime tous les dossiers .spark-staging"""
+
+    s3_client = get_minio_client()
+    staging_folders = context['ti'].xcom_pull(
+        task_ids='find_spark_staging_folders',
+        key='spark_staging_folders'
+    )
+
+    if not staging_folders:
+        print("ℹ️ Aucun dossier '.spark-staging' à supprimer")
+        return 0
+
+    total_deleted = 0
+
+    for idx, item in enumerate(staging_folders, 1):
+        bucket_name = item['bucket']
+        prefix = item['path']
+
+        print(f"\n[{idx}/{len(staging_folders)}] Suppression: {bucket_name}/{prefix}")
+
+        paginator = s3_client.get_paginator('list_object_versions')
+        delete_count = 0
+
+        for page in paginator.paginate(Bucket=bucket_name, Prefix=prefix):
+
+            objects_to_delete = [
+                {'Key': v['Key'], 'VersionId': v['VersionId']}
+                for v in page.get('Versions', [])
+            ]
+
+            objects_to_delete += [
+                {'Key': m['Key'], 'VersionId': m['VersionId']}
+                for m in page.get('DeleteMarkers', [])
+            ]
+
+            for i in range(0, len(objects_to_delete), 1000):
+                chunk = objects_to_delete[i:i+1000]
+                s3_client.delete_objects(Bucket=bucket_name, Delete={'Objects': chunk})
+                delete_count += len(chunk)
+
+        total_deleted += delete_count
+        print(f"   ✅ {delete_count} supprimés")
+
+    context['ti'].xcom_push(key='total_deleted_spark_staging', value=total_deleted)
+    return total_deleted
 
 # =========================================================
 # DAG Airflow
@@ -307,5 +392,19 @@ with DAG(
     trigger_rule='all_done',
 )
     
+    find_spark_staging = PythonOperator(
+        task_id='find_spark_staging_folders',
+        python_callable=find_spark_staging_folders,
+        provide_context=True,
+    )
+
+    cleanup_spark_staging = PythonOperator(
+        task_id='delete_spark_staging_folders',
+        python_callable=delete_spark_staging_folders,
+        provide_context=True,
+    )
+
+
+    
     # Dépendances
-    find_temporary >> cleanup_temporary  >> find_temp_write >> cleanup_temp_write >> find_marker_files >> cleanup_marker_files
+    find_temporary >> cleanup_temporary  >> find_temp_write >> cleanup_temp_write >> find_marker_files >> cleanup_marker_files >> find_spark_staging >> cleanup_spark_staging

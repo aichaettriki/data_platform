@@ -36,6 +36,12 @@ spark = (
 # Fonctions utilitaires
 # =========================================================
 
+def normalize_s3_path(path: str) -> str:
+    if path.startswith("s3a://") and not path.endswith("/"):
+        return path + "/"
+    return path
+
+
 def find_latest_files(spark: SparkSession, base_path: str, specific_folder: str) -> Tuple[List[str], Optional[str]]:
     """
     Recherche les fichiers Excel dans le dossier le plus récent via Hadoop FS API.
@@ -60,7 +66,8 @@ def find_latest_files(spark: SparkSession, base_path: str, specific_folder: str)
             status_list = fs.listStatus(p_obj)
             dirs = [s.getPath() for s in status_list if s.isDirectory()]
             # Tri décroissant (lexicographique)
-            return sorted(dirs, key=lambda x: x.getName(), reverse=True)
+            return sorted(dirs, key=lambda x: int(x.getName()), reverse=True)
+
 
         # 1. Lister les années (ex: 2024, 2023...)
         years_dirs = list_dirs_sorted(base_p)
@@ -193,13 +200,16 @@ def process_excel_file(spark, file_path):
         logger.error(f"⚠️ Erreur lors du traitement de {file_path}: {str(e_file)}")
         return None
 
+
 # =========================================================
 # MAIN
 # =========================================================
 def main():
     base_path = "s3a://01-raw"
+    base_path = normalize_s3_path(base_path)
+
     specific_folder = "INS/agregats"
-    output_path = "s3a://02-transformed/INS/agregats"
+    output_path = "s3a://02-transformed/INS/agregats/"
 
     # 1. Trouver les fichiers
     files, _ = find_latest_files(spark, base_path, specific_folder)
@@ -232,19 +242,23 @@ def main():
     final_df = final_df.dropDuplicates(["indicateur", "annee_dossier", "fichier_source"])
 
     # 5. Écriture Optimisée (PartitionBy)
-    logger.info(f"💾 Écriture en cours vers {output_path} (partitionné par annee_dossier)...")
-    
-    (
-        final_df
-        # Repartitionner assure qu'on écrit des fichiers de taille correcte par dossier
-        # et évite d'ouvrir trop de fichiers simultanés si les données sont mélangées.
-        .repartition("annee_dossier") 
-        .write
-        .mode("overwrite")
-        .partitionBy("annee_dossier") # La méthode Spark native
-        .option("compression", "snappy")
-        .parquet(output_path)
-    )
+    logger.info("💾 Écriture par année (structure dossier métier)...")
+
+    years = [row["annee_dossier"] for row in final_df.select("annee_dossier").distinct().collect()]
+
+    for year in years:
+        logger.info(f"📁 Écriture année {year}")
+
+        (
+            final_df
+            .filter(col("annee_dossier") == year)
+            .drop("annee_dossier")
+            .write
+            .mode("overwrite")
+            .option("compression", "snappy")
+            .parquet(f"{output_path}/{year}")
+        )
+
 
     logger.info("✅ Job terminé avec succès.")
     return 0

@@ -78,22 +78,27 @@ with DAG(
     # Task : Spark Submit
     # ===============================
     run_spark_job = SparkSubmitOperator(
-        task_id="run_competitif_scores_spark_job",
-        application=SPARK_APP_PATH,
-        name="competitif_scores_processor",
-        conn_id="spark_standalone",  # connexion Airflow Spark
-        verbose=True,
-        application_args=[year, month, day],
-        conf={
-            "spark.executor.memory": "4g",
-            "spark.driver.memory": "4g",
-        },
-        env_vars={
-            "MINIO_ENDPOINT": MINIO_ENDPOINT,
-            "MINIO_ROOT_USER": MINIO_ROOT_USER,
-            "MINIO_ROOT_PASSWORD": MINIO_PASSWORD,
-        },
-    )
+    task_id="run_competitif_scores_spark_job",
+    application=SPARK_APP_PATH,
+    name="competitif_scores_processor",
+    conn_id="spark_standalone",
+    verbose=True,
+    application_args=[year, month, day],
+    conf={
+        "spark.dynamicAllocation.enabled": "false",
+        "spark.sql.shuffle.partitions": "4",
+    },
+    env_vars={
+        "MINIO_ENDPOINT": MINIO_ENDPOINT,
+        "MINIO_ROOT_USER": MINIO_ROOT_USER,
+        "MINIO_ROOT_PASSWORD": MINIO_PASSWORD,
+    },
+    retries=2,  # retry si erreur temporaire
+    retry_delay=timedelta(minutes=5),
+    do_xcom_push=False,  # évite surcharge XCom en prod
+    
+)
+    
     trigger_cleanup = TriggerDagRunOperator(
     task_id='trigger_cleanup_minio',
     trigger_dag_id='Cleanup_Minio',  # ton DAG de nettoyage
