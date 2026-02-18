@@ -157,8 +157,8 @@ services:
     
     environment:
       - SPARK_NO_DAEMONIZE=true
-      - SPARK_WORKER_MEMORY=2G
-      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=6G
+      - SPARK_WORKER_CORES=12
       # Métriques
       - SPARK_WORKER_OPTS=-Dspark.metrics.conf=/opt/spark/conf/metrics.properties -DmetricsServlet.port=8091
     
