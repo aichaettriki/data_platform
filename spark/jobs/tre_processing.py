@@ -8,7 +8,7 @@ import openpyxl
 
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
-from pyspark.sql.types import StructType, StructField, StringType, DateType
+from common.spark_session import create_spark_session, stop_spark_session
 
 # ──────────────────────────────────────────────────────────────────────────────
 # LOGGING
@@ -22,221 +22,186 @@ logger = logging.getLogger(__name__)
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# SPARK SESSION
-# ──────────────────────────────────────────────────────────────────────────────
-def create_spark_session(app_name: str = "ETL INS TRE MERGE") -> SparkSession:
-    spark = (
-        SparkSession.builder
-        .appName(app_name)
-        .config("spark.hadoop.fs.s3a.access.key",
-                os.getenv("MINIO_ROOT_USER", "minioadmin"))
-        .config("spark.hadoop.fs.s3a.secret.key",
-                os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"))
-        .config("spark.hadoop.fs.s3a.endpoint",
-                os.getenv("MINIO_ENDPOINT", "http://minio:9000"))
-        .config("spark.hadoop.fs.s3a.path.style.access", "true")
-        .config("spark.hadoop.fs.s3a.impl",
-                "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
-        # Dynamic partition overwrite so we only rewrite the partitions we touch
-        .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
-        .getOrCreate()
-    )
-    spark.sparkContext.setLogLevel("WARN")
-    return spark
-
-
-# ──────────────────────────────────────────────────────────────────────────────
 # S3 FILE DISCOVERY
 # ──────────────────────────────────────────────────────────────────────────────
-def _get_hadoop_fs(spark: SparkSession, base_uri: str):
-    """Return a (FileSystem, Path class, URI class) tuple."""
+def find_latest_files_recursive(spark, base_path, specific_folder=""):
+    """
+    FIXED: This function now handles the structure: s3a://01-raw/YEAR/MONTH/SOURCE_FOLDER/...
+    Instead of the previous assumption: s3a://01-raw/YEAR/MONTH/DAY/...
+    """
+    print(f"Searching for latest data starting at: {base_path}")
     sc = spark.sparkContext
-    Path = sc._jvm.org.apache.hadoop.fs.Path
-    FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
-    URI = sc._jvm.java.net.URI
-    conf = sc._jsc.hadoopConfiguration()
-    fs = FileSystem.get(URI(base_uri), conf)
-    return fs, Path, URI
-
-
-def _sorted_subdirs(fs, Path, parent_str: str) -> list:
-    """Return subdirectories of *parent_str* sorted descending by name."""
-    p = Path(parent_str)
-    if not fs.exists(p):
-        return []
-    stats = fs.listStatus(p)
-    dirs = [s.getPath() for s in stats if s.isDirectory()]
-    dirs.sort(key=lambda x: x.getName(), reverse=True)
-    return dirs
-
-
-def find_latest_xlsx_files(spark: SparkSession, base_path: str,
-                           specific_folder: str = "") -> list:
-    """
-    Discover the latest .xlsx files under:
-        {base_path}/{YEAR}/{MONTH}/{specific_folder}/...
-
-    Returns a list of fully-qualified s3a:// paths.
-    """
-    logger.info(f"🔍 Scanning for latest files under: {base_path}")
-    fs, Path, _ = _get_hadoop_fs(spark, base_path)
-
-    years = _sorted_subdirs(fs, Path, base_path)
-    if not years:
-        logger.error("No year folders found.")
-        return []
-    latest_year = years[0]
-    logger.info(f"  Latest year : {latest_year.getName()}")
-
-    months = _sorted_subdirs(fs, Path, latest_year.toString())
-    if not months:
-        logger.error("No month folders found.")
-        return []
-    latest_month = months[0]
-    logger.info(f"  Latest month: {latest_month.getName()}")
-
-    search_root = latest_month.toString()
-    if specific_folder:
-        candidate = f"{search_root}/{specific_folder}"
-        if fs.exists(Path(candidate)):
-            search_root = candidate
-            logger.info(f"  Scoping search to: {search_root}")
-        else:
-            logger.warning(
-                f"  Folder '{specific_folder}' not found – scanning full month.")
-
-    # BFS to collect every .xlsx that is not a temp file
-    files_found = []
-    stack = [Path(search_root)]
-    while stack:
-        current = stack.pop()
-        try:
-            for item in fs.listStatus(current):
-                if item.isDirectory():
-                    stack.append(item.getPath())
-                elif item.isFile():
-                    name = item.getPath().getName()
-                    if name.endswith(".xlsx") and not name.startswith("~"):
-                        full = item.getPath().toString()
-                        files_found.append(full)
-                        logger.info(f"  ✓ {full}")
-        except Exception as exc:
-            logger.warning(f"  Could not read {current}: {exc}")
-
-    logger.info(f"  Total files found: {len(files_found)}")
-    return files_found
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# S3 FILE DOWNLOAD (Hadoop copyToLocalFile)
-# ──────────────────────────────────────────────────────────────────────────────
-def download_from_s3(spark: SparkSession, s3_path: str, local_path: str) -> bool:
-    safe_path = s3_path.replace(" ", "%20")
-    logger.info(f"  ⬇  Downloading {s3_path}")
-    fs, Path, URI = _get_hadoop_fs(spark, safe_path)
     try:
-        uri = URI(safe_path)
+        Path = sc._jvm.org.apache.hadoop.fs.Path
+        FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
+        conf = sc._jsc.hadoopConfiguration()
+        fs = FileSystem.get(sc._jvm.java.net.URI(base_path), conf)
+       
+        def get_sorted_subdirs(parent_path_str):
+            p = Path(parent_path_str)
+            if not fs.exists(p): return []
+            stats = fs.listStatus(p)
+            dirs = [s.getPath() for s in stats if s.isDirectory()]
+            dirs.sort(key=lambda x: x.getName(), reverse=True)
+            return dirs
+ 
+        # Get latest year
+        years = get_sorted_subdirs(base_path)
+        if not years:
+            print("  ❌ No year folders found!")
+            return []
+        latest_year = years[0]
+        print(f"  > Latest Year: {latest_year.getName()}")
+       
+        # Get latest month
+        months = get_sorted_subdirs(latest_year.toString())
+        if not months:
+            print("  ❌ No month folders found!")
+            return []
+        latest_month = months[0]
+        print(f"  > Latest Month: {latest_month.getName()}")
+       
+        # Now we're at: s3a://01-raw/2026/02/
+        # The next level contains source folders like: INS, ITCEQ, etc.
+        # We need to search for the specific_folder path within this structure
+       
+        search_start_path = Path(latest_month.toString())
+       
+        if specific_folder:
+            # If specific_folder is "INS/TRE", we navigate to that path
+            target_path = Path(f"{latest_month.toString()}/{specific_folder}")
+            if fs.exists(target_path):
+                search_start_path = target_path
+                print(f"  > Found target folder: {search_start_path.toString()}")
+            else:
+                print(f"  ⚠️  Warning: Specific folder '{specific_folder}' not found, searching entire month...")
+       
+        print(f"  > Searching from: {search_start_path.toString()}")
+ 
+        # Recursively find all .xlsx files
+        files_found = []
+        stack = [search_start_path]
+        while stack:
+            current_path = stack.pop()
+            try:
+                contents = fs.listStatus(current_path)
+                for item in contents:
+                    if item.isDirectory():
+                        stack.append(item.getPath())
+                    elif item.isFile():
+                        fname = item.getPath().getName()
+                        if fname.endswith(".xlsx") and not fname.startswith("~"):
+                            full_path = item.getPath().toString()
+                            files_found.append(full_path)
+                            print(f"  ✓ Found file: {full_path}")
+            except Exception as e:
+                print(f"  ! Error reading {current_path}: {e}")
+                pass
+       
+        return files_found
+    except Exception as e:
+        print(f"❌ Error traversing directory: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+ 
+def download_from_s3(spark, full_s3_path, local_path):
+    safe_s3_path = full_s3_path.replace(" ", "%20")
+    print(f"  Downloading {full_s3_path}...")
+    sc = spark.sparkContext
+    try:
+        Path = sc._jvm.org.apache.hadoop.fs.Path
+        FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
+        conf = sc._jsc.hadoopConfiguration()
+        URI = sc._jvm.java.net.URI
+        uri = URI(safe_s3_path)
+        fs = FileSystem.get(uri, conf)
         fs.copyToLocalFile(False, Path(uri), Path(local_path), True)
         return True
-    except Exception as exc:
-        logger.error(f"  Download failed: {exc}")
+    except Exception as e:
+        print(f"  Error downloading: {e}")
         return False
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# EXCEL PARSING HELPERS
-# ──────────────────────────────────────────────────────────────────────────────
-def _is_numeric_string(s) -> bool:
-    if not isinstance(s, str):
+ 
+def extract_tables_from_sheet(wb, sheet_name):
+    ws = wb[sheet_name]
+    max_row = ws.max_row
+    max_col = ws.max_column
+   
+    # Find the data start row (skip title and unit rows)
+    data_start_row = None
+    header_row = None
+   
+    for row_idx in range(1, min(15, max_row + 1)):
+        first_cell = ws.cell(row=row_idx, column=1).value
+        if first_cell:
+            first_cell_str = str(first_cell).strip()
+            if any(k in first_cell_str for k in ["TABLEAUX", "Unité", "millions", "Source", "MATRICE"]):
+                continue
+            if len(first_cell_str) <= 3 and (first_cell_str.isdigit() or first_cell_str.upper() in ["CR1", "CR2", "CR3", "CR"]):
+                data_start_row = row_idx
+                header_row = row_idx - 1
+                break
+   
+    if data_start_row is None:
+        return []
+   
+    all_data = []
+    for row_idx in range(header_row, max_row + 1):
+        first_cell = ws.cell(row=row_idx, column=1).value
+        if first_cell and row_idx > data_start_row:
+            first_str = str(first_cell).strip().lower()
+            if any(keyword in first_str for keyword in ["total", "totaux", "somme", "equilibre", "emplois totaux", "ressources totales"]):
+                break
+       
+        row_data = []
+        for col_idx in range(1, max_col + 1):
+            cell_val = ws.cell(row=row_idx, column=col_idx).value
+            row_data.append(cell_val)
+        all_data.append(row_data)
+   
+    return [{'data': all_data, 'sheet': sheet_name}]
+ 
+def is_numeric_string(s):
+    """Check if a string represents a number (int or float)"""
+    if not s or not isinstance(s, str):
         return False
+    s = s.strip()
     try:
-        float(s.strip())
+        float(s)
         return True
     except (ValueError, OverflowError):
         return False
+ 
 
-
-def extract_tables_from_sheet(wb, sheet_name: str) -> list:
-    """
-    Locate the data block inside *sheet_name* and return it as
-    [{'data': [[...], ...], 'sheet': sheet_name}].
-    """
-    ws = wb[sheet_name]
-    max_row, max_col = ws.max_row, ws.max_column
-
-    data_start_row = None
-    header_row = None
-
-    for row_idx in range(1, min(15, max_row + 1)):
-        first = ws.cell(row=row_idx, column=1).value
-        if not first:
-            continue
-        first_str = str(first).strip()
-        second = ws.cell(row=row_idx, column=2).value
-        second_str = str(second).strip() if second else ""
-
-        if any(k in first_str for k in
-               ["TABLEAUX", "Unité", "millions", "Source", "MATRICE"]):
-            continue
-
-        if (len(first_str) <= 4
-                and (first_str.isdigit()
-                     or first_str.upper() in ["CR1", "CR2", "CR3", "CR"])
-                and len(second_str) > 5):
-            data_start_row = row_idx
-            header_row = row_idx - 1
-            break
-
-    if data_start_row is None:
-        return []
-
-    all_data = []
-    for row_idx in range(header_row, max_row + 1):
-        first = ws.cell(row=row_idx, column=1).value
-        if first and row_idx > data_start_row:
-            first_low = str(first).strip().lower()
-            if any(kw in first_low for kw in
-                   ["total", "totaux", "somme", "equilibre",
-                    "emplois totaux", "ressources totales"]):
-                break
-        all_data.append(
-            [ws.cell(row=row_idx, column=c).value for c in range(1, max_col + 1)]
-        )
-
-    return [{"data": all_data, "sheet": sheet_name}] if all_data else []
-
-
-def clean_table(data_rows: list):
-    """
-    Parse raw rows into a tidy Pandas DataFrame.
-    CI (Matrice) columns are renamed to CI_XX.
-    """
-    if not data_rows:
-        return None
-
-    # --- Find data start ---
+def clean_table(data_rows):
+    if not data_rows: return None
+ 
+    # --- 1. FIND DATA START ---
     data_start_idx = 0
     for i in range(min(len(data_rows), 15)):
         row = data_rows[i]
-        if not row:
+        if not row: continue
+        first_cell = str(row[0]).strip() if row[0] else ""
+        second_cell = str(row[1]).strip() if len(row) > 1 and row[1] else ""
+ 
+        if any(k in first_cell for k in ["Unité", "TABLEAUX", "millions", "Source"]):
             continue
-        first = str(row[0]).strip() if row[0] else ""
-        second = str(row[1]).strip() if len(row) > 1 and row[1] else ""
-        if any(k in first for k in ["Unité", "TABLEAUX", "millions", "Source"]):
-            continue
-        if (len(first) <= 4
-                and (first.isdigit() or first.upper() in ["CR1", "CR2", "CR3", "CR"])
-                and len(second) > 5):
+ 
+        if (len(first_cell) <= 4 and (first_cell.isdigit() or first_cell.upper() in ["CR1", "CR2", "CR3", "CR"]) and len(second_cell) > 5):
             data_start_idx = i
             break
-
-    header_row_idx = max(0, data_start_idx - 1)
-    raw_headers = (data_rows[header_row_idx]
-                   if header_row_idx < len(data_rows) else data_rows[0])
-
-    # --- Locate MATRICE CI region ---
+ 
+    header_row_idx = data_start_idx - 1 if data_start_idx > 0 else 0
+    raw_headers = data_rows[header_row_idx] if header_row_idx < len(data_rows) else data_rows[0]
+ 
+    # --- DYNAMIC CI DETECTION: scan ALL rows above data for a "MATRICE" label ---
+    # The Excel has a merged cell saying "MATRICE CI" or "MATRICE" somewhere above the header row
+    # We find which column index it appears at, then every column from that index onward is CI
+    print(f"  🔍 Detecting CI matrix region from header structure...")
+ 
     matrice_start_col = None
+ 
+    # Scan every row above the data row looking for a cell containing "MATRICE"
     for row_idx in range(min(data_start_idx, len(data_rows))):
         row = data_rows[row_idx]
         if not row:
@@ -244,250 +209,243 @@ def clean_table(data_rows: list):
         for col_idx, cell in enumerate(row):
             if cell and "MATRICE" in str(cell).strip().upper():
                 matrice_start_col = col_idx
+                print(f"     ✓ Found 'MATRICE' label at row {row_idx}, column {col_idx} → all columns from here are CI")
                 break
         if matrice_start_col is not None:
             break
-
-    matrice_ci_cols: set = set()
+ 
+    # Build the CI column set from the header row
+    matrice_ci_columns = set()
+ 
     if matrice_start_col is not None:
+        # Every column from matrice_start_col onward whose header is a number (sector code) is CI
+        # If header is empty (merged cell spill), also include it — it's under the MATRICE span
         for col_idx in range(matrice_start_col, len(raw_headers)):
             h = raw_headers[col_idx]
-            h_str = str(h).strip() if h else ""
-            if not h_str or _is_numeric_string(h_str):
-                matrice_ci_cols.add(col_idx)
-            elif len(matrice_ci_cols) >= 2:
-                break
+            header_str = str(h).strip() if h else ""
+            # Include if numeric sector code OR empty (merged cell) OR looks like a sector code
+            if not header_str or is_numeric_string(header_str):
+                matrice_ci_columns.add(col_idx)
+            else:
+                # Stop if we hit a clearly named non-CI column (e.g. "Emplois totaux")
+                # but only after we've collected at least a few CI columns
+                if len(matrice_ci_columns) >= 2:
+                    break
+ 
     else:
-        # Fallback: purely numeric headers in [1, 99]
-        non_id_seen = ci_started = False
+        # Fallback: if no "MATRICE" label found, detect purely by numeric header in range [1,99]
+        # This handles files where the merged cell label wasn't captured by openpyxl
+        print(f"     ⚠️  No 'MATRICE' label found — falling back to numeric header detection")
+        non_id_seen = False
+        ci_started = False
         consecutive = 0
+ 
         for col_idx, h in enumerate(raw_headers):
             if col_idx < 2:
                 continue
-            h_str = str(h).strip() if h else ""
-            if _is_numeric_string(h_str):
+            header_str = str(h).strip() if h else ""
+            if is_numeric_string(header_str):
                 try:
-                    num = float(h_str)
-                    if 1 <= num < 100 and float(num).is_integer():
+                    num_val = float(header_str)
+                    if 1 <= num_val < 100 and float(num_val).is_integer():
                         if non_id_seen:
                             ci_started = True
                         if ci_started:
-                            matrice_ci_cols.add(col_idx)
+                            matrice_ci_columns.add(col_idx)
                             consecutive += 1
                     else:
                         if ci_started and consecutive >= 2:
                             break
                 except (ValueError, OverflowError):
                     pass
-            elif h_str:
+            elif header_str:
                 non_id_seen = True
                 if ci_started and consecutive >= 2:
                     break
                 elif ci_started:
-                    matrice_ci_cols.clear()
+                    # false start
+                    matrice_ci_columns.clear()
                     ci_started = False
                     consecutive = 0
-
-    # --- Build header names ---
+ 
+    print(f"     → Found {len(matrice_ci_columns)} CI columns")
+ 
+    # --- 2. GENERATE HEADERS WITH CI_ PREFIX ---
     headers = []
-    header_counts: dict = {}
+    header_counts = {}
+ 
     for i, h in enumerate(raw_headers):
         if h is None or str(h).strip() == "" or h is False:
-            base = f"Col_{i}"
+            base_name = f"Col_{i}"
         else:
-            base = " ".join(str(h).replace("\n", " ").split())
-            if "Unité" in base or "millions" in base:
-                base = f"Col_{i}"
-
-        if i in matrice_ci_cols:
-            h_str = str(h).strip() if h else ""
+            base_name = " ".join(str(h).replace("\n", " ").split())
+            if "Unité" in base_name or "millions" in base_name:
+                base_name = f"Col_{i}"
+ 
+        if i in matrice_ci_columns:
+            header_str = str(h).strip() if h else ""
             try:
-                base = f"CI_{int(float(h_str)):02d}"
+                num_val = float(header_str)
+                base_name = f"CI_{int(num_val):02d}"
+                print(f"     → Renaming column {i}: '{header_str}' → '{base_name}'")
             except (ValueError, OverflowError):
-                base = f"CI_col{i}"
-
-        if base in header_counts:
-            header_counts[base] += 1
-            unique = f"{base}_{header_counts[base]}"
+                # Header is empty or non-numeric (merged cell spill) — use position
+                base_name = f"CI_col{i}"
+ 
+        # Handle duplicate names
+        if base_name in header_counts:
+            header_counts[base_name] += 1
+            unique_name = f"{base_name}_{header_counts[base_name]}"
         else:
-            header_counts[base] = 0
-            unique = base
-        headers.append(unique)
-
-    # --- Extract body rows ---
+            header_counts[base_name] = 0
+            unique_name = base_name
+ 
+        headers.append(unique_name)
+ 
+    # --- 3. EXTRACT BODY ---
     body = []
     for i in range(data_start_idx, len(data_rows)):
         row = data_rows[i]
-        if not row:
-            continue
-        first = str(row[0]).strip().lower() if row[0] else ""
-        if "totaux" in first or "total" in first:
+        if not row: continue
+        first_cell = str(row[0]).strip().lower() if row[0] else ""
+        if "totaux" in first_cell or "total" in first_cell:
             break
         body.append(row)
-
-    if not body:
-        return None
-
+ 
+    if not body: return None
+ 
     df = pd.DataFrame(body, columns=headers)
-
+ 
+    # --- 4. STANDARD CLEANUP ---
     if df.shape[1] >= 2:
         headers[0] = "code_secteur"
         headers[1] = "lib_secteur"
         df.columns = headers
+ 
         df = df[df["code_secteur"].astype(str) != "None"]
-        df = df[~df["code_secteur"].astype(str).str.contains(
-            "Unité|TABLEAUX|millions|Source", case=False, na=False)]
+        df = df[~df["code_secteur"].astype(str).str.contains("Unité|TABLEAUX|millions|Source", case=False, na=False)]
+ 
         df["code_secteur"] = df["code_secteur"].astype(str).str.strip()
         df["lib_secteur"] = df["lib_secteur"].astype(str).str.strip()
-        df = df.dropna(how="all")
-
-    df = df.dropna(axis=1, how="all").reset_index(drop=True)
-
-    # Drop spacer columns (columns that mirror code_secteur or lib_secteur)
+ 
+        df = df.dropna(how='all')
+ 
+    df = df.dropna(axis=1, how='all')
+    df = df.reset_index(drop=True)
+ 
+    # --- 5. SPACER REMOVAL ---
     cols_to_drop = []
     if "code_secteur" in df.columns and "lib_secteur" in df.columns:
-        ref_code = df["code_secteur"].astype(str).str.strip()
-        ref_label = df["lib_secteur"].astype(str).str.strip()
+        ref_code = df["code_secteur"]
+        ref_label = df["lib_secteur"]
+ 
         for col in df.columns:
-            if col in ("code_secteur", "lib_secteur") or col.startswith("CI_"):
-                continue
-            curr = df[col].astype(str).str.strip()
-            if curr.equals(ref_code) or curr.equals(ref_label):
+            if col in ["code_secteur", "lib_secteur"]: continue
+            if col.startswith("CI_"): continue  # never remove CI columns
+ 
+            curr_col_data = df[col].astype(str).str.strip()
+            if curr_col_data.equals(ref_code): cols_to_drop.append(col)
+            elif curr_col_data.equals(ref_label): cols_to_drop.append(col)
+            elif str(col).startswith("Col_") and len(df) > 0 and str(df[col].iloc[0]) == str(df["code_secteur"].iloc[0]):
                 cols_to_drop.append(col)
-            elif (str(col).startswith("Col_") and len(df) > 0
-                  and str(df[col].iloc[0]) == str(df["code_secteur"].iloc[0])):
-                cols_to_drop.append(col)
-
+ 
     if cols_to_drop:
+        print(f"     → Removing {len(cols_to_drop)} spacer columns")
         df = df.drop(columns=cols_to_drop)
-
+ 
     if not df.columns.is_unique:
-        from pandas.io.parsers.readers import ParserBase
-        df.columns = ParserBase({"names": df.columns})._maybe_dedup_names(
-            df.columns)
-
+        df.columns = pd.io.parsers.ParserBase({'names': df.columns})._maybe_dedup_names(df.columns)
+ 
     return df
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# METADATA HELPERS
-# ──────────────────────────────────────────────────────────────────────────────
-def extract_year_version(sheet_name: str) -> tuple:
-    clean = sheet_name.strip()
-    m = re.search(r"(20\d{2})", clean)
-    if m:
-        year = m.group(1)
-        suffix = clean.split(year)[-1].strip()
-        version = suffix if suffix else "C"
+ 
+def merge_sheet_tables_horizontally(table_list):
+    if not table_list: return None
+    return clean_table(table_list[0]['data'])
+ 
+def to_long_format_spark(df):
+    id_vars = ["code_secteur", "lib_secteur", "Annee", "Version", "Date_de_Chargement"]
+    value_columns = [c for c in df.columns if c not in id_vars]
+   
+    if not value_columns: return df
+   
+    stack_parts = [f"'{c}', CAST(`{c}` AS STRING)" for c in value_columns]
+    stack_expr = f"stack({len(value_columns)}, {', '.join(stack_parts)}) as (Variable, Valeur)"
+   
+    long_df = df.select(
+        F.col("code_secteur"),
+        F.col("lib_secteur"),
+        F.col("Annee"),
+        F.col("Version"),
+        F.col("Date_de_Chargement"),
+        F.expr(stack_expr)
+    )
+    return long_df.where(F.col("Valeur").isNotNull())
+ 
+def extract_year_version_from_sheet(sheet_name):
+    clean_name = sheet_name.strip()
+    match_year = re.search(r'(20\d{2})', clean_name)
+    if match_year:
+        year = match_year.group(1)
+        parts = clean_name.split(year)
+        version = parts[-1].strip() if len(parts) > 1 and parts[-1].strip() else "C"
         return year, version
     return "Unknown", "Unknown"
-
-
-def extract_category_path(full_s3_path: str, raw_bucket_root: str) -> str:
+ 
+def extract_category_path(full_s3_path, raw_bucket_root):
     """
-    s3a://01-raw/2026/02/INS/TRE/file.xlsx → INS/TRE
+    FIXED: Extract category from the actual S3 structure
+    Example: s3a://01-raw/2026/02/INS/TRE/file.xlsx → INS/TRE
     """
     clean_path = full_s3_path.replace("s3a://", "").strip("/")
     clean_root = raw_bucket_root.replace("s3a://", "").strip("/")
+   
     if clean_path.startswith(clean_root):
-        relative = clean_path[len(clean_root):].strip("/")
-        parts = relative.split("/")
+        relative_path = clean_path[len(clean_root):].strip("/")
+        parts = relative_path.split("/")
+       
+        # Structure: YEAR/MONTH/SOURCE/SUBSOURCE/.../filename.xlsx
+        # We want: SOURCE/SUBSOURCE/...
+        # Skip YEAR (parts[0]) and MONTH (parts[1]), take everything except the last part (filename)
         if len(parts) > 3:
-            return "/".join(parts[2:-1])  # skip YEAR, MONTH, filename
+            category_parts = parts[2:-1]  # Skip year, month, and filename
+            return "/".join(category_parts)
+   
     return "UNKNOWN_CATEGORY"
-
-
-def _format_code_secteur(val) -> str:
-    if val is None or pd.isna(val) or str(val).strip().lower() in ("nan", "none", ""):
+ 
+def format_code_secteur(val):
+    """Format code_secteur preserving leading zeros like '01', '06', etc."""
+    if val is None or pd.isna(val) or str(val).strip().lower() in ["nan", "none", ""]:
         return "0"
-    s = str(val).strip()
+    s_val = str(val).strip()
+   
     try:
-        f = float(s)
+        f = float(s_val)
         if f.is_integer():
-            return f"{int(f):02d}" if s.startswith("0") else str(int(f))
+            if s_val.startswith("0") or (s_val.replace(".", "").replace("-", "").startswith("0")):
+                return f"{int(f):02d}"
+            else:
+                return str(int(f))
     except (ValueError, OverflowError):
         pass
-    return s
-
-
-def _format_value(val) -> str:
-    if val is None or pd.isna(val) or str(val).strip().lower() in ("nan", "none", ""):
+   
+    return s_val
+ 
+def format_excel_value(val):
+    """Format regular Excel values, removing .0 from whole numbers."""
+    if val is None or pd.isna(val) or str(val).strip().lower() in ["nan", "none", ""]:
         return "0"
-    s = str(val).strip()
+    s_val = str(val).strip()
+   
     try:
-        f = float(s)
+        f = float(s_val)
         if f.is_integer():
             return str(int(f))
     except (ValueError, OverflowError):
         pass
-    return s
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# PIVOT  →  LONG FORMAT  (pure Spark stack())
-# ──────────────────────────────────────────────────────────────────────────────
-def to_long_format(spark_df):
-    id_vars = {"code_secteur", "lib_secteur", "Annee", "Version",
-               "Date_de_Chargement"}
-    value_cols = [c for c in spark_df.columns if c not in id_vars]
-    if not value_cols:
-        return spark_df
-
-    stack_expr = (
-        f"stack({len(value_cols)}, "
-        + ", ".join(f"'{c}', CAST(`{c}` AS STRING)" for c in value_cols)
-        + ") as (Variable, Valeur)"
-    )
-
-    return (
-        spark_df
-        .select(
-            "code_secteur", "lib_secteur", "Annee", "Version",
-            "Date_de_Chargement",
-            F.expr(stack_expr),
-        )
-        .where(F.col("Valeur").isNotNull())
-        # Clean up residual ".0" suffixes on numeric variable names
-        .withColumn(
-            "Variable",
-            F.trim(F.regexp_replace(F.col("Variable"), r"^(\d+)\.0$", "$1")),
-        )
-    )
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# WRITE HELPERS  –  100 % Spark, no manual Parquet / rename tricks
-# ──────────────────────────────────────────────────────────────────────────────
-def _path_exists(spark: SparkSession, path: str) -> bool:
-    """Return True if *path* exists in the object store (even if empty-ish)."""
-    try:
-        spark.read.parquet(path).limit(1).count()
-        return True
-    except Exception:
-        return False
-
-
-def _write_year(spark: SparkSession,
-                df_to_write,
-                output_path: str,
-                compression: str = "snappy") -> None:
-    """
-    Write *df_to_write* to *output_path* as Parquet.
-    Spark decides the number of output files based on its own parallelism.
-    """
-    (
-        df_to_write
-        .write
-        .mode("overwrite")
-        .option("compression", compression)
-        .parquet(output_path)
-    )
-    logger.info(f"  ✅ Written → {output_path}")
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# SINGLE-FILE PROCESSOR
-# ──────────────────────────────────────────────────────────────────────────────
+   
+    return s_val
+ 
+ 
 def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket):
     file_name = full_s3_file_path.split("/")[-1]
     local_tmp_path = f"/tmp/{file_name}"
@@ -512,7 +470,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
             if not tables: continue
             sheet_df = merge_sheet_tables_horizontally(tables)
             if sheet_df is not None and not sheet_df.empty:
-                year, version = extract_year_version(sheet_name)
+                year, version = extract_year_version_from_sheet(sheet_name)
                 sheet_df['Annee'] = year
                 sheet_df['Version'] = version
                 sheet_df = sheet_df.astype(str)
@@ -703,46 +661,39 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
             os.remove(local_tmp_path)
  
  
-
-
-# ──────────────────────────────────────────────────────────────────────────────
-# PIPELINE ENTRY POINT
-# ──────────────────────────────────────────────────────────────────────────────
-def run_etl_pipeline(spark: SparkSession,
-                     raw_bucket: str,
-                     target_bucket: str,
-                     target_folder: str = "INS/TRE") -> None:
-    logger.info("#" * 72)
-    logger.info("# ETL PIPELINE START")
-    logger.info(f"# Source     : {raw_bucket}")
-    logger.info(f"# Destination: {target_bucket}")
-    logger.info(f"# Folder     : {target_folder}")
-    logger.info("#" * 72)
-
-    files = find_latest_xlsx_files(spark, raw_bucket,
-                                   specific_folder=target_folder)
+def run_etl_pipeline(spark, raw_bucket, target_bucket, target_folder="INS/TRE"):
+    print(f"\n{'#'*80}")
+    print(f"# ETL PIPELINE STARTED - IMPROVED CI COLUMN DETECTION")
+    print(f"# Target Folder: {target_folder}")
+    print(f"{'#'*80}\n")
+   
+    files = find_latest_files_recursive(spark, raw_bucket, specific_folder=target_folder)
+   
     if not files:
-        logger.error("❌ No .xlsx files found – pipeline aborted.")
+        print(f"❌ No .xlsx files found in the target folder.")
         return
-
-    logger.info(f"\n✅ {len(files)} file(s) to process.\n")
-    for path in files:
-        process_single_file(spark, path, raw_bucket, target_bucket)
-
-    logger.info("#" * 72)
-    logger.info("# ETL PIPELINE COMPLETE")
-    logger.info("#" * 72)
+ 
+    print(f"\n✅ Found {len(files)} file(s) to process.\n")
+ 
+    for full_path in files:
+        process_single_file(spark, full_path, raw_bucket, target_bucket)
+   
+    print(f"\n{'#'*80}")
+    print(f"# ETL PIPELINE COMPLETED")
+    print(f"{'#'*80}\n")
 
 
 # ──────────────────────────────────────────────────────────────────────────────
 # MAIN
 # ──────────────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
-    _spark = create_spark_session()
-    run_etl_pipeline(
-        spark=_spark,
-        raw_bucket="s3a://01-raw/",
-        target_bucket="s3a://02-transformed",
-        target_folder="INS/TRE",
-    )
-    _spark.stop()
+    _spark = create_spark_session("ETL INS TRE MERGE")
+    try:
+        run_etl_pipeline(
+            spark=_spark,
+            raw_bucket="s3a://01-raw/",
+            target_bucket="s3a://02-transformed",
+            target_folder="INS/TRE",
+        )
+    finally:
+        stop_spark_session(_spark)
