@@ -4,7 +4,7 @@ from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 import zipfile, os, tempfile, shutil
 from airflow.operators.python import PythonOperator
 
-
+RAW_BUCKET = os.getenv("RAW_BUCKET", "s3a://01-raw")
 SPARK_COMMON_ZIP = "/tmp/common.zip"
 # dags/common/dag_helpers.py
 SPARK_S3_CONF = {

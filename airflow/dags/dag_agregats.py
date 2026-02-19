@@ -2,23 +2,9 @@ from airflow import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from datetime import datetime
-import os
-from dotenv import load_dotenv
+from common.dag_helpers import create_zip_task, create_cleanup_task, RAW_BUCKET    
+from common.dag_helpers import make_spark_conf
 
-# =========================================================
-# Chargement des variables d’environnement
-# =========================================================
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env'))
-
-def get_env_var(name, default=None, required=False):
-    value = os.getenv(name, default)
-    if required and value is None:
-        raise ValueError(f"Missing required environment variable: {name}")
-    return value
-
-MINIO_ENDPOINT = get_env_var("MINIO_ENDPOINT", required=True)
-MINIO_USER = get_env_var("MINIO_ROOT_USER", required=True)
-MINIO_PASSWORD = get_env_var("MINIO_ROOT_PASSWORD", required=True)
 
 JOB_PATH = "/opt/spark/jobs/agregats_processing.py"
 
@@ -31,43 +17,15 @@ with DAG(
     catchup=False,
     tags=["spark", "minio", "parquet"],
 ) as dag:
-
+    zip_common = create_zip_task(dag)
     transform_spark = SparkSubmitOperator(
         task_id="transform_aggregats",
         application=JOB_PATH,
         conn_id="spark_standalone",
         verbose=True,
         packages="com.crealytics:spark-excel_2.12:3.5.1_0.20.4",
-        conf={
-            # =============================
-            # MinIO / S3A
-            # =============================
-            "spark.hadoop.fs.s3a.endpoint": MINIO_ENDPOINT,
-            "spark.hadoop.fs.s3a.path.style.access": "true",
-            "spark.hadoop.fs.s3a.connection.ssl.enabled": "false",
-
-            "spark.hadoop.fs.s3a.access.key": MINIO_USER,
-            "spark.hadoop.fs.s3a.secret.key": MINIO_PASSWORD,
-            "spark.hadoop.fs.s3a.aws.credentials.provider":
-                "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider",
-
-            # =============================
-            # Committer STABLE (OBLIGATOIRE)
-            # =============================
-            "spark.sql.sources.commitProtocolClass":
-                "org.apache.spark.sql.execution.datasources.SQLHadoopMapReduceCommitProtocol",
-            "spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version": "1",
-
-            # =============================
-            # Optimisation
-            # =============================
-            "spark.sql.shuffle.partitions": "8",
-            "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
-        },
+        conf=make_spark_conf(),
     )
-    trigger_cleanup = TriggerDagRunOperator(
-    task_id='trigger_cleanup_minio',
-    trigger_dag_id='Cleanup_Minio',  # ton DAG de nettoyage
-    wait_for_completion=True,               # True si tu veux attendre la fin
-)
-    transform_spark >> trigger_cleanup
+    cleanup = create_cleanup_task(dag, source_bucket=RAW_BUCKET, triggered_by="Transform_Agregats")
+
+    zip_common >> transform_spark >> cleanup

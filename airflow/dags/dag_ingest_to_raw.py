@@ -4,24 +4,14 @@ from datetime import datetime
 import os
 from minio import Minio
 from dotenv import load_dotenv
-
-# Charger les variables d'environnement
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '../../.env'))
-
-def get_env_var(name, default=None, required=False):
-    value = os.getenv(name, default)
-    if required and value is None:
-        raise ValueError(f"Missing required environment variable: {name}")
-    return value
-
-# 🔧 Config
-MINIO_ENDPOINT = get_env_var("MINIO_ENDPOINT", required=True)
-MINIO_ACCESS_KEY = get_env_var("MINIO_ROOT_USER", required=True)
-MINIO_SECRET_KEY = get_env_var("MINIO_ROOT_PASSWORD", required=True)
+from common.dag_helpers import RAW_BUCKET
+from common.minio_utils import (
+    MINIO_ENDPOINT,
+    MINIO_ROOT_USER,
+    MINIO_PASSWORD,
+    )
 
 LOCAL_INPUT_DIR = "/opt/airflow/data"
-RAW_BUCKET = "01-raw"
-
 
 def upload_files_to_raw(**context):
     execution_date = context["ds"]  # yyyy-mm-dd
@@ -29,8 +19,8 @@ def upload_files_to_raw(**context):
 
     client = Minio(
         MINIO_ENDPOINT.replace("http://", "").replace("https://", ""),
-        access_key=MINIO_ACCESS_KEY,
-        secret_key=MINIO_SECRET_KEY,
+        access_key=MINIO_ROOT_USER,
+        secret_key=MINIO_PASSWORD,
         secure=False
     )
 

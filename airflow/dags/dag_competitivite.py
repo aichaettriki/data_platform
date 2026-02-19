@@ -9,21 +9,13 @@ import os
 from airflow import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from common.dag_helpers import create_zip_task, create_cleanup_task, SPARK_COMMON_ZIP, make_spark_conf, RAW_BUCKET
+from common.minio_utils import (
+    MINIO_ENDPOINT,
+    MINIO_ROOT_USER,
+    MINIO_PASSWORD,
+    )
 
-# ──────────────────────────────────────────────────────────────────────────────
-# ENV VARS  — injectées par Docker Compose / Airflow Connections
-# Pas de dotenv en production (le scheduler Airflow ne charge pas .env)
-# ──────────────────────────────────────────────────────────────────────────────
-def _require_env(name: str) -> str:
-    value = os.getenv(name)
-    if not value:
-        raise EnvironmentError(f"Required env var missing: {name}")
-    return value
-
-
-MINIO_ENDPOINT = _require_env("MINIO_ENDPOINT")
-MINIO_USER     = _require_env("MINIO_ROOT_USER")
-MINIO_PASSWORD = _require_env("MINIO_ROOT_PASSWORD")
 
 SPARK_APP_PATH = "/opt/spark/jobs/competitivite_processing.py"
 
@@ -41,21 +33,7 @@ default_args = {
     "execution_timeout": timedelta(hours=2),
 }
 
-# ──────────────────────────────────────────────────────────────────────────────
-# SPARK CONF
-# ──────────────────────────────────────────────────────────────────────────────
-SPARK_CONF = {
-    "spark.hadoop.fs.s3a.impl":                   "org.apache.hadoop.fs.s3a.S3AFileSystem",
-    "spark.hadoop.fs.s3a.path.style.access":      "true",
-    "spark.hadoop.fs.s3a.endpoint":               MINIO_ENDPOINT,
-    "spark.hadoop.fs.s3a.access.key":             MINIO_USER,
-    "spark.hadoop.fs.s3a.secret.key":             MINIO_PASSWORD,
-    "spark.hadoop.fs.s3a.connection.ssl.enabled": "false",
-    "spark.sql.sources.partitionOverwriteMode":   "dynamic",
-    "spark.sql.adaptive.enabled":                 "true",
-    "spark.dynamicAllocation.enabled":            "false",
-    "spark.sql.shuffle.partitions":               "4",
-}
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # DAG
@@ -69,7 +47,7 @@ with DAG(
     max_active_runs=1,
     tags=["ITCEQ", "competitivite", "Spark", "ETL"],
 ) as dag:
-
+    zip_common = create_zip_task(dag)
     # ── Spark job ─────────────────────────────────────────────────────────────
     run_spark_job = SparkSubmitOperator(
         task_id="run_competitif_scores_spark_job",
@@ -78,11 +56,6 @@ with DAG(
         name="competitif_scores_processor",
         verbose=True,
         do_xcom_push=False,
-
-        # ── FIX PRINCIPAL : flags nommés pour argparse ────────────────────────
-        # Avant : application_args=[year, month, day]   → args positionnels
-        #         → erreur "the following arguments are required: --year …"
-        # Après : flags explicites alignés sur argparse du job Python
         application_args=[
             "--year",  "{{ ds.split('-')[0] }}",
             "--month", "{{ ds.split('-')[1] }}",
@@ -91,21 +64,14 @@ with DAG(
 
         env_vars={
             "MINIO_ENDPOINT":      MINIO_ENDPOINT,
-            "MINIO_ROOT_USER":     MINIO_USER,
+            "MINIO_ROOT_USER":     MINIO_ROOT_USER,
             "MINIO_ROOT_PASSWORD": MINIO_PASSWORD,
         },
 
-        conf=SPARK_CONF,
+        conf=make_spark_conf(),  
+        py_files=SPARK_COMMON_ZIP,
     )
 
-    # ── Cleanup trigger ───────────────────────────────────────────────────────
-    trigger_cleanup = TriggerDagRunOperator(
-        task_id="trigger_cleanup_minio",
-        trigger_dag_id="Cleanup_Minio",
-        wait_for_completion=True,
-        poke_interval=30,
-        reset_dag_run=False,
-        conf={"triggered_by": "Transform_Competitivite"},
-    )
+    cleanup = create_cleanup_task(dag, source_bucket=RAW_BUCKET, triggered_by="Transform_Competitivite")
 
-    run_spark_job >> trigger_cleanup
+    zip_common >> run_spark_job >> cleanup

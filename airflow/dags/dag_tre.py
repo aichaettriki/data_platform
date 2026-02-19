@@ -8,11 +8,10 @@ from common.dag_helpers import create_zip_task, create_cleanup_task, SPARK_COMMO
 
 
 
-RAW_BUCKET         = os.getenv("RAW_BUCKET",         "s3a://01-raw")
+RAW_BUCKET = os.getenv("RAW_BUCKET", "s3a://01-raw")
 TRANSFORMED_BUCKET = os.getenv("TRANSFORMED_BUCKET", "s3a://02-transformed")
 
 SPARK_SCRIPT_PATH = "/opt/spark/jobs/tre_processing.py"
-
 SPARK_PY_FILES = "/opt/spark/common.zip"
 
 # ──────────────────────────────────────────────────────────────────────────────
