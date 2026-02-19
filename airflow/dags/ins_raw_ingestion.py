@@ -20,7 +20,11 @@ MINIO_SECRET_KEY = "minio123"
 BUCKET = "01-raw"
 
 today = datetime.today()
-DATE_PATH = today.strftime("%Y/%m/%d")
+YEAR = today.strftime("%Y")
+MONTH = today.strftime("%m")
+
+BASE_PATH = f"{YEAR}/{MONTH}/INS"
+
 
 # =====================================================
 # HELPERS
@@ -41,13 +45,13 @@ def post_xml(endpoint, body):
         BASE_URL + endpoint,
         data=body,
         headers={"Content-Type": "application/xml"},
-        timeout=60,
+        timeout=120,
     )
     r.raise_for_status()
     return r.text
 
 # =====================================================
-# TASK 1 : INGEST SOURCES
+# TASK 1 : INGEST SOURCES (DYNAMIQUE)
 # =====================================================
 def ingest_sources():
     client = get_minio_client()
@@ -61,31 +65,52 @@ def ingest_sources():
 
     sources = {}
 
+    # 🔥 Récupération dynamique des métadonnées
     for src in root.findall(".//Source"):
         src_id = src.attrib.get("Id")
-        src_name = src.attrib.get("Name")
 
-        if src_id in SOURCES:
-            sources[src_id] = src_name
+        if src_id not in SOURCES:
+            continue
+
+        full_name = src.attrib.get("FullName") or src.attrib.get("Name")
+
+        start_year_el = src.find("./Period/StartYear")
+        finish_year_el = src.find("./Period/FinishYear")
+
+        start_year = start_year_el.text if start_year_el is not None else "1990"
+        finish_year = finish_year_el.text if finish_year_el is not None else str(datetime.today().year)
+
+        sources[src_id] = {
+            "full_name": full_name,
+            "start_year": start_year,
+            "finish_year": finish_year,
+        }
 
     print(f"✅ Sources detected: {sources}")
 
-    for source_id, source_name in sources.items():
+    # 🔥 Appel dynamique GetData
+    for source_id, meta in sources.items():
+        source_name = meta["full_name"]
+        start_year = meta["start_year"]
+        finish_year = meta["finish_year"]
+
         print(f"\n📡 GetData → {source_id} | {source_name}")
+        print(f"📅 Period: {start_year} → {finish_year}")
 
         body = f"""
         <QueryMessage SourceId='{source_id}'>
-            <Period From='1997' To='2019' Frequency='Y'></Period>
+            <Period From='{start_year}' To='{finish_year}' Frequency='Y'></Period>
             <DataWhere></DataWhere>
         </QueryMessage>
         """
 
         xml = post_xml("GetData", body)
-        root = ET.fromstring(xml)
+        root_data = ET.fromstring(xml)
 
         rows = []
-        for s in root.findall(".//Set"):
-            period = s.attrib.get("Period")
+
+        for s in root_data.findall(".//Set"):
+            period = s.attrib.get("Period", "")
 
             for dimension_id, element_key in s.attrib.items():
                 if dimension_id == "Period":
@@ -95,35 +120,33 @@ def ingest_sources():
                     period,
                     dimension_id,
                     element_key,
-                    s.text
+                    s.text.strip() if s.text else ""
                 ))
 
-
         print(f"✅ Rows collected: {len(rows)}")
-        print("🔍 Preview:")
-        for r in rows[:5]:
-            print(r)
 
         buffer = io.StringIO()
         writer = csv.writer(buffer)
-        writer.writerow(["period", "indicator_id","indicator_key", "value"])
+        writer.writerow(["period", "dimension_id", "dimension_key", "value"])
         writer.writerows(rows)
 
         filename = f"{source_id}-{sanitize(source_name)}.csv"
-        object_path = f"{DATE_PATH}/INS/Source/Agregat/{filename}"
+        object_path = f"{BASE_PATH}/Source/Agregat/{filename}"
+
+        data_bytes = buffer.getvalue().encode("utf-8")
 
         client.put_object(
             BUCKET,
             object_path,
-            io.BytesIO(buffer.getvalue().encode()),
-            length=len(buffer.getvalue()),
+            io.BytesIO(data_bytes),
+            length=len(data_bytes),
             content_type="text/csv",
         )
 
         print(f"📦 Written → s3://{BUCKET}/{object_path}")
 
 # =====================================================
-# TASK 2 : INGEST DIMENSIONS PER SOURCE
+# TASK 2 : INGEST DIMENSIONS (FullName)
 # =====================================================
 def ingest_dimensions():
     client = get_minio_client()
@@ -134,16 +157,17 @@ def ingest_dimensions():
 
     for src in root.findall(".//Source"):
         source_id = src.attrib.get("Id")
-        source_name = src.attrib.get("Name")
 
         if source_id not in SOURCES:
             continue
+
+        source_name = src.attrib.get("FullName") or src.attrib.get("Name")
 
         print(f"\n📂 Source {source_id} | {source_name}")
 
         for dim in src.findall("./Dimensions/Dimension"):
             dim_id = dim.attrib.get("Id")
-            dim_name = dim.attrib.get("Name")
+            dim_name = dim.attrib.get("FullName") or dim.attrib.get("Name")
 
             print(f"🔎 Dimension {dim_id} | {dim_name}")
 
@@ -157,13 +181,12 @@ def ingest_dimensions():
 
             xml = post_xml("GetDimensionElements", body)
             root_dim = ET.fromstring(xml)
-            # 1. récupérer dynamiquement les attributs décrits par l'API
+
             attribute_ids = [
                 attr.attrib["Id"]
                 for attr in root_dim.findall("./Attributes/Attribute")
             ]
 
-            # 2. construire les lignes (1 ligne = 1 Element)
             rows = []
 
             for el in root_dim.findall(".//Element"):
@@ -178,30 +201,25 @@ def ingest_dimensions():
                 rows.append(row)
 
             print(f"✅ Elements: {len(rows)}")
-            print("🔍 Preview:")
-            for r in rows[:2]:
-                print(r)
 
-            # 3. header dynamique FINAL
             headers = ["dimension_id", "dimension_name"] + attribute_ids
 
-            # 4. écriture CSV CORRECTE
             buffer = io.StringIO()
             writer = csv.DictWriter(buffer, fieldnames=headers)
             writer.writeheader()
             writer.writerows(rows)
 
-
             filename = f"{dim_id}-{sanitize(dim_name)}.csv"
-            object_path = (
-                f"{DATE_PATH}/INS/Dimension/Agregat/{source_id}/{filename}"
-            )
+            object_path = f"{BASE_PATH}/Dimension/Agregat/{source_id}/{filename}"
+
+
+            data_bytes = buffer.getvalue().encode("utf-8")
 
             client.put_object(
                 BUCKET,
                 object_path,
-                io.BytesIO(buffer.getvalue().encode()),
-                length=len(buffer.getvalue()),
+                io.BytesIO(data_bytes),
+                length=len(data_bytes),
                 content_type="text/csv",
             )
 

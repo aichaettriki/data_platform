@@ -102,12 +102,13 @@ dim_lookup = (
     .select(
         col("dimension_id"),
         col("KEY").alias("dim_indicator_key"),
-        col("NAME").alias("indicator_name")
+        col("FULLNAME").alias("indicator_name")
     )
     .dropDuplicates()
 )
 
 log.info(f"📘 DIMENSION lookup rows = {dim_lookup.count()}")
+log.info(f"DIM columns = {dim_df.columns}")
 log.info("📘 Dimension sample:")
 dim_lookup.show(5, truncate=False)
 
@@ -142,13 +143,20 @@ for fact_file in fact_files:
         .join(
             dim_lookup.alias("d"),
             on=[
-                col("f.indicator_id") == col("d.dimension_id"),
-                col("f.indicator_key") == col("d.dim_indicator_key"),
+                col("f.dimension_id") == col("d.dimension_id"),
+                col("f.dimension_key") == col("d.dim_indicator_key"),
             ],
             how="left"
         )
-        .drop("dimension_id", "dim_indicator_key")
     )
+
+    # Drop colonnes dupliquées venant de la dimension
+    enriched_df = enriched_df.drop(
+        col("d.dimension_id")
+    ).drop(
+        col("d.dim_indicator_key")
+    )
+
     enriched_df = enriched_df.withColumn(
     "date_chargement",
     current_timestamp()
@@ -164,8 +172,35 @@ for fact_file in fact_files:
     log.info(f"🔗 Sample enriched {file_name}:")
     enriched_df.show(5, truncate=False)
 
+    # =====================================================
+    # FINAL STRUCTURE (DROP + RENAME + REORDER)
+    # =====================================================
+
+    enriched_df = (
+        enriched_df
+        .drop("period")  # supprimer period
+        .withColumnRenamed("dimension_id", "dim_id")
+        .withColumnRenamed("dimension_key", "dim_key")
+        .select(
+            "year",
+            "dim_id",
+            "dim_key",
+            "indicator_name",
+            "value",
+            "date_chargement"
+        )
+    )
+    log.info(f"************************ FINAL ENRICHED ******************")
+    log.info(f"🔗 Sample enriched {file_name}:")
+    enriched_df.show(5, truncate=False)
+
     # DATA QUALITY CHECK
     missing = enriched_df.filter(col("indicator_name").isNull()).count()
+    if missing > 0:
+        raise RuntimeError(
+            f"MISSING_DIMENSIONS::{file_name}::{missing}"
+        )
+
     log.warning(f"⚠️ {file_name} missing indicator_name = {missing}")
 
     # WRITE OUTPUT (ONE FOLDER PER FILE)

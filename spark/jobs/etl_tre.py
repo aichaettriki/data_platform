@@ -109,7 +109,6 @@ def download_from_s3(spark, full_s3_path, local_path):
         return False
  
  
- 
 def extract_tables_from_sheet(wb, sheet_name):
     """
     Extract the entire sheet as a single wide table.
@@ -311,9 +310,7 @@ def merge_sheet_tables_horizontally(table_list):
         print(f"    Columns: {list(df.columns[:10])}... (showing first 10)")
    
     return df
- 
- 
- 
+  
  
 def to_long_format_spark(df):
     id_vars = ["code_secteur", "lib_secteur", "Annee", "Version", "Date_de_Chargement"]
