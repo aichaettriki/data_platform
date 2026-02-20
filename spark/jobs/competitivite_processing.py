@@ -1,7 +1,9 @@
 import pandas as pd
 import logging
 from openpyxl import load_workbook
-from pyspark.sql import SparkSession
+from common.spark_session import create_spark_session, stop_spark_session
+from common.minio_utils import MinIOConfig, get_minio_client
+from common.parquet_writer import atomic_write_parquet, build_delta_query
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 import re
@@ -16,27 +18,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
  
-def create_spark_session(app_name="Competitif Scores Processor"):
-    """Create Spark session with optimized MinIO settings for consistency"""
-    spark = (
-        SparkSession.builder
-        .appName(app_name)
-        .config("spark.hadoop.fs.s3a.access.key", os.getenv("MINIO_ROOT_USER", "minioadmin"))
-        .config("spark.hadoop.fs.s3a.secret.key", os.getenv("MINIO_ROOT_PASSWORD", "minioadmin"))
-        .config("spark.hadoop.fs.s3a.endpoint", os.getenv("MINIO_ENDPOINT", "http://minio:9000"))
-        .config("spark.hadoop.fs.s3a.path.style.access", "true")
-        .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
-        .config("spark.hadoop.fs.s3a.connection.ssl.enabled", "false")
-        # --- CRITICAL FIXES FOR MINIO CONSISTENCY ---
-        .config("spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version", "2")
-        .config("spark.speculation", "false")
-        # --------------------------------------------
-        .config("spark.sql.sources.partitionOverwriteMode", "dynamic")
-        .config("spark.driver.memory", "1g")
-        .config("spark.executor.memory", "1g")
-        .getOrCreate()
-    )
-    return spark
+
  
 def find_latest_files_in_minio(minio_client, bucket, base_folder):
     objects = minio_client.list_objects(bucket, prefix=base_folder, recursive=True)
@@ -50,29 +32,16 @@ def clean_roman_prefix(text: str) -> str:
     roman_pattern = r'^\s*(?P<roman>M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3}))[\s\-\.\:\/]+'
     return re.sub(roman_pattern, '', text, flags=re.IGNORECASE).strip()
  
-class MinIOConfig:
-    def __init__(self):
-        self.endpoint = os.getenv("MINIO_ENDPOINT", "http://minio:9000")
-        self.access_key = os.getenv("MINIO_ROOT_USER", "minioadmin")
-        self.secret_key = os.getenv("MINIO_ROOT_PASSWORD", "minioadmin")
-        self.bucket_raw = "01-raw"
-        self.bucket_transformed = "02-transformed"
- 
 class CompetitifScoresProcessor:
     def __init__(self, year, month, day):
         self.year, self.month, self.day = year, month, day
         self.minio_config = MinIOConfig()
+        self.minio_client = get_minio_client(self.minio_config)
         self.input_path = f"{year}/{month}/ITCEQ/competitivite/positionnement/"
         self.output_path = "ITCEQ/competitivite/Positionnement/"
         self.detection_config = {'excluded_texts': ['Score', 'Rang', 'Pays', 'Rank', 'Country', 'Year'], 'min_text_length': 3}
         self.spark = create_spark_session()
-        self._init_minio_client()
- 
-    def _init_minio_client(self):
-        from minio import Minio
-        endpoint = self.minio_config.endpoint.replace("http://", "").replace("https://", "")
-        self.minio_client = Minio(endpoint, access_key=self.minio_config.access_key, secret_key=self.minio_config.secret_key, secure=False)
- 
+        
     def run(self):
         try:
             self.find_excel_file()
@@ -80,12 +49,12 @@ class CompetitifScoresProcessor:
             self.identify_titles()
             self.transform_data()
             self.calculate_rankings()
-            save_results = self.save_to_minio()
+            result = self.save_to_minio()
             self.validate_minio_output()
-            return {'status': 'success', 'output_path': save_results['path'], 'years': save_results['years']}
+            return result
         finally:
-            self.spark.stop()
- 
+            self.stop_spark_session()
+
     def find_excel_file(self):
         self.input_file_key = find_latest_files_in_minio(self.minio_client, self.minio_config.bucket_raw, self.input_path)
         return self.input_file_key

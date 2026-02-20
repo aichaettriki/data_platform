@@ -2,10 +2,8 @@ import sys
 import os
 import logging
 import re
-
 import pandas as pd
 import openpyxl
-
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from common.spark_session import create_spark_session, stop_spark_session

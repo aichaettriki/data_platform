@@ -2,11 +2,10 @@ from airflow import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from datetime import datetime
-from common.dag_helpers import create_zip_task, create_cleanup_task, RAW_BUCKET    
-from common.dag_helpers import make_spark_conf
-
+from common.dag_helpers import create_zip_task, create_cleanup_task, SPARK_COMMON_ZIP, make_spark_conf, RAW_BUCKET
 
 JOB_PATH = "/opt/spark/jobs/agregats_processing.py"
+
 
 # =========================================================
 # DAG
@@ -21,6 +20,7 @@ with DAG(
     transform_spark = SparkSubmitOperator(
         task_id="transform_aggregats",
         application=JOB_PATH,
+        py_files=SPARK_COMMON_ZIP, 
         conn_id="spark_standalone",
         verbose=True,
         packages="com.crealytics:spark-excel_2.12:3.5.1_0.20.4",

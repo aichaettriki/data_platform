@@ -17,12 +17,19 @@ def upload_files_to_raw(**context):
     execution_date = context["ds"]  # yyyy-mm-dd
     year, month, day = execution_date.split("-")
 
+    # On nettoie le nom du bucket pour enlever s3a:// ou s3://
+    bucket_name = RAW_BUCKET.replace("s3a://", "").replace("s3://", "")
+
     client = Minio(
         MINIO_ENDPOINT.replace("http://", "").replace("https://", ""),
         access_key=MINIO_ROOT_USER,
         secret_key=MINIO_PASSWORD,
         secure=False
     )
+
+    # Vérifier si le bucket existe, sinon le créer (optionnel mais recommandé)
+    if not client.bucket_exists(bucket_name):
+        client.make_bucket(bucket_name)
 
     # Parcourir récursivement tous les fichiers dans LOCAL_INPUT_DIR
     for root, dirs, files in os.walk(LOCAL_INPUT_DIR):
@@ -36,13 +43,12 @@ def upload_files_to_raw(**context):
             object_path = f"{year}/{month}/{relative_path}"
 
             client.fput_object(
-                bucket_name=RAW_BUCKET,
+                bucket_name=bucket_name,  # Utilisation du nom nettoyé
                 object_name=object_path,
                 file_path=local_path
             )
 
-            print(f"✅ Uploaded {relative_path} → s3a://{RAW_BUCKET}/{object_path}")
-
+            print(f"✅ Uploaded {relative_path} → s3a://{bucket_name}/{object_path}")
 
 with DAG(
     dag_id="Ingest_to_Raw",

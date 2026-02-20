@@ -12,7 +12,7 @@ RAW_BUCKET = os.getenv("RAW_BUCKET", "s3a://01-raw")
 TRANSFORMED_BUCKET = os.getenv("TRANSFORMED_BUCKET", "s3a://02-transformed")
 
 SPARK_SCRIPT_PATH = "/opt/spark/jobs/tre_processing.py"
-SPARK_PY_FILES = "/opt/spark/common.zip"
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # DEFAULT ARGS

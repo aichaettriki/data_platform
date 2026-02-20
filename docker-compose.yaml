@@ -769,7 +769,6 @@ volumes:
   mb_internal_data:
   marquez_pg_data:
   minio-data:
-  trino_data:
   spark-events-data:
   spark-work:
 
