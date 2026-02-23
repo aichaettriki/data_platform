@@ -175,13 +175,15 @@ for fact_file in fact_files:
     # --------------------------------------------------
     # JOIN WITH DIMENSION
     # --------------------------------------------------
+    fact_dim_id_col  = f"{DIMENSION_ID}_id"
+    fact_dim_key_col = f"{DIMENSION_ID}_key"
     enriched_df = (
         fact_df.alias("f")
         .join(
             dim_lookup.alias("d"),
             on=[
-                col("f.dimension_id") == col("d.dimension_id"),
-                col("f.dimension_key") == col("d.dim_indicator_key"),
+                col(f"f.{fact_dim_id_col}") == col("d.dimension_id"),
+                col(f"f.{fact_dim_key_col}") == col("d.dim_indicator_key"),
             ],
             how="left"
         )
@@ -196,10 +198,10 @@ for fact_file in fact_files:
 
     # Ajout timestamps et année
     enriched_df = enriched_df.withColumn("date_chargement", current_timestamp())
-    enriched_df = enriched_df.withColumn(
-        "year",
-        regexp_extract(col("period"), r"YEARS:(\d{4})", 1).cast("int")
-    )
+    # enriched_df = enriched_df.withColumn(
+    #     "year",
+    #     regexp_extract(col("period"), r"YEARS:(\d{4})", 1).cast("int")
+    # )
 
     log.info(f"🔗 {file_name} enriched rows = {enriched_df.count()}")
     log.info(f"🔗 Sample enriched {file_name}:")
@@ -210,9 +212,9 @@ for fact_file in fact_files:
     # --------------------------------------------------
     enriched_df = (
         enriched_df
-        .drop("period")
-        .withColumnRenamed("dimension_id",  "dim_id")
-        .withColumnRenamed("dimension_key", "dim_key")
+        # .drop("period")
+        .withColumnRenamed(fact_dim_id_col,  "dim_id")
+        .withColumnRenamed(fact_dim_key_col, "dim_key")
         .withColumnRenamed("year",          "annee")
         .withColumnRenamed("value",         "valeur")
         .withColumnRenamed("indicator_name","Variable")
