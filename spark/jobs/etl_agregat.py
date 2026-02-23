@@ -4,6 +4,7 @@ import logging
 from pyspark.sql.functions import current_timestamp
 from pyspark.sql.functions import regexp_extract
 from common import create_spark_session, stop_spark_session
+
 # =====================================================
 # LOGGING
 # =====================================================
@@ -17,7 +18,6 @@ log = logging.getLogger("INS_ENRICH")
 # SPARK SESSION
 # =====================================================
 spark = create_spark_session(app_name="INS_Agregat_ETL")
-
 spark.sparkContext.setLogLevel("WARN")
 
 # =====================================================
@@ -70,11 +70,36 @@ def list_csv_files(spark, base_path):
 
     return sorted(files)
 
+
+def rename_year_partitions(spark, base_path):
+    """
+    Renomme les dossiers 'year=2015' en '2015' directement sous base_path.
+    Fonctionne avec S3A via l'API Hadoop FileSystem (rename = move).
+    """
+    sc = spark.sparkContext
+    Path = sc._jvm.org.apache.hadoop.fs.Path
+    FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
+    URI = sc._jvm.java.net.URI
+
+    fs = FileSystem.get(URI(base_path), sc._jsc.hadoopConfiguration())
+
+    for status in fs.listStatus(Path(base_path)):
+        if status.isDirectory():
+            p = status.getPath().toString()
+            folder_name = p.split("/")[-1]
+            if folder_name.startswith("year="):
+                year_value = folder_name.replace("year=", "")
+                new_path = p.replace(folder_name, year_value)
+                fs.rename(status.getPath(), Path(new_path))
+                log.info(f"🔄 Renamed: {folder_name} → {year_value}")
+
+
 # =====================================================
 # PATH RESOLUTION
 # =====================================================
 RAW_ROOT = "s3a://01-raw"
 SILVER_BASE = "s3a://02-transformed/INS/Agregat"
+TEMP_BASE = "s3a://02-transformed/INS/Agregat_tmp"   # dossier temporaire
 
 log.info("🔍 Searching for INS Source / Dimension folders...")
 FACT_BASE, DIM_BASE = find_ins_paths(spark, RAW_ROOT)
@@ -109,10 +134,12 @@ log.info("📘 Dimension sample:")
 dim_lookup.show(5, truncate=False)
 
 # =====================================================
-# PROCESS EACH FACT FILE
+# PROCESS EACH FACT FILE → accumulate enriched DataFrames
 # =====================================================
 fact_files = list_csv_files(spark, FACT_BASE)
 log.info(f"📄 Found {len(fact_files)} FACT files")
+
+all_enriched = []   # ← on accumule tous les DataFrames ici
 
 for fact_file in fact_files:
 
@@ -130,8 +157,6 @@ for fact_file in fact_files:
 
     fact_count = fact_df.count()
     log.info(f"📥 {file_name} rows = {fact_count}")
-    log.info(f"📄 Sample of {file_name}:")
-    fact_df.show(5, truncate=False)
 
     # JOIN WITH DIMENSION
     enriched_df = (
@@ -146,35 +171,19 @@ for fact_file in fact_files:
         )
     )
 
-    # Drop colonnes dupliquées venant de la dimension
-    enriched_df = enriched_df.drop(
-        col("d.dimension_id")
-    ).drop(
-        col("d.dim_indicator_key")
-    )
+    enriched_df = enriched_df.drop(col("d.dimension_id")).drop(col("d.dim_indicator_key"))
 
-    enriched_df = enriched_df.withColumn(
-    "date_chargement",
-    current_timestamp()
-    )
-    # EXTRACT YEAR FROM period (ex: YEARS:2015 -> 2015)
+    enriched_df = enriched_df.withColumn("date_chargement", current_timestamp())
+
     enriched_df = enriched_df.withColumn(
         "year",
         regexp_extract(col("period"), r"YEARS:(\d{4})", 1).cast("int")
     )
 
-    enriched_count = enriched_df.count()
-    log.info(f"🔗 {file_name} enriched rows = {enriched_count}")
-    log.info(f"🔗 Sample enriched {file_name}:")
-    enriched_df.show(5, truncate=False)
-
-    # =====================================================
-    # FINAL STRUCTURE (DROP + RENAME + REORDER)
-    # =====================================================
-
+    # FINAL STRUCTURE
     enriched_df = (
         enriched_df
-        .drop("period")  # supprimer period
+        .drop("period")
         .withColumnRenamed("dimension_id", "dim_id")
         .withColumnRenamed("dimension_key", "dim_key")
         .select(
@@ -186,35 +195,69 @@ for fact_file in fact_files:
             "date_chargement"
         )
     )
-    log.info(f"************************ FINAL ENRICHED ******************")
-    log.info(f"🔗 Sample enriched {file_name}:")
-    enriched_df.show(5, truncate=False)
 
     # DATA QUALITY CHECK
     missing = enriched_df.filter(col("indicator_name").isNull()).count()
     if missing > 0:
-        raise RuntimeError(
-            f"MISSING_DIMENSIONS::{file_name}::{missing}"
-        )
+        raise RuntimeError(f"MISSING_DIMENSIONS::{file_name}::{missing}")
 
-    log.warning(f"⚠️ {file_name} missing indicator_name = {missing}")
+    log.info(f"✅ {file_name} enriched OK ({enriched_df.count()} rows)")
 
-    # WRITE OUTPUT (ONE FOLDER PER FILE)
-    output_path = f"{SILVER_BASE}/{file_name}_transformed"
-    log.info(f"💾 Writing output to {output_path}")
+    all_enriched.append(enriched_df)   # ← on accumule, on n'écrit pas encore
 
-    (
-        enriched_df
-        .repartition("year")          # contrôle du nombre de fichiers par année
-        .write
-        .mode("overwrite")
-        .partitionBy("year")          # création des dossiers year=2015, year=2016, etc.
-        .option("header", True)
-        .parquet(output_path)
-    )
+# =====================================================
+# UNION DE TOUS LES FICHIERS → WRITE UNIQUE EN SILVER_BASE
+# =====================================================
+from functools import reduce
+from pyspark.sql import DataFrame
 
+log.info("🔀 Union de tous les DataFrames enrichis...")
+merged_df = reduce(DataFrame.unionByName, all_enriched)
 
-    log.info(f"✅ Finished processing {file_name}")
+log.info(f"📊 Total rows après union = {merged_df.count()}")
+
+# Écriture dans un dossier temporaire (Spark génère year=2015 par défaut)
+log.info(f"💾 Écriture temporaire dans {TEMP_BASE}")
+(
+    merged_df
+    .repartition("year")
+    .write
+    .mode("overwrite")
+    .partitionBy("year")
+    .option("header", True)
+    .parquet(TEMP_BASE)
+)
+
+# Renommage des dossiers year=XXXX → XXXX puis déplacement vers SILVER_BASE
+log.info("🔄 Renommage des partitions year=XXXX → XXXX...")
+
+sc = spark.sparkContext
+Path = sc._jvm.org.apache.hadoop.fs.Path
+FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
+URI = sc._jvm.java.net.URI
+fs = FileSystem.get(URI(TEMP_BASE), sc._jsc.hadoopConfiguration())
+
+# Supprimer la destination finale si elle existe déjà (overwrite global)
+silver_path = Path(SILVER_BASE)
+if fs.exists(silver_path):
+    fs.delete(silver_path, True)
+    log.info(f"🗑️ Ancien {SILVER_BASE} supprimé")
+
+fs.mkdirs(silver_path)
+
+# Déplacer chaque partition year=XXXX → SILVER_BASE/XXXX
+for status in fs.listStatus(Path(TEMP_BASE)):
+    if status.isDirectory():
+        folder_name = status.getPath().toString().split("/")[-1]
+        if folder_name.startswith("year="):
+            year_value = folder_name.replace("year=", "")
+            dest = Path(f"{SILVER_BASE}/{year_value}")
+            fs.rename(status.getPath(), dest)
+            log.info(f"📁 Moved & renamed: {folder_name} → {SILVER_BASE}/{year_value}")
+
+# Nettoyage du dossier temporaire
+fs.delete(Path(TEMP_BASE), True)
+log.info(f"🗑️ Dossier temporaire {TEMP_BASE} supprimé")
 
 # =====================================================
 # STOP SPARK

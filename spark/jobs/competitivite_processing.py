@@ -3,7 +3,6 @@ import logging
 from openpyxl import load_workbook
 from common.spark_session import create_spark_session, stop_spark_session
 from common.minio_utils import MinIOConfig, get_minio_client
-from common.parquet_writer import atomic_write_parquet, build_delta_query
 from pyspark.sql import functions as F
 from pyspark.sql.window import Window
 import re
@@ -40,7 +39,7 @@ class CompetitifScoresProcessor:
         self.input_path = f"{year}/{month}/ITCEQ/competitivite/positionnement/"
         self.output_path = "ITCEQ/competitivite/Positionnement/"
         self.detection_config = {'excluded_texts': ['Score', 'Rang', 'Pays', 'Rank', 'Country', 'Year'], 'min_text_length': 3}
-        self.spark = create_spark_session()
+        self.spark = create_spark_session("Competitivite_Scores_Processor")
         
     def run(self):
         try:
@@ -53,7 +52,7 @@ class CompetitifScoresProcessor:
             self.validate_minio_output()
             return result
         finally:
-            self.stop_spark_session()
+            stop_spark_session(self.spark)
 
     def find_excel_file(self):
         self.input_file_key = find_latest_files_in_minio(self.minio_client, self.minio_config.bucket_raw, self.input_path)
@@ -132,8 +131,29 @@ class CompetitifScoresProcessor:
         logger.info("="*80)
  
         spark_df_new = self.spark.createDataFrame(self.ranked_data)
-        spark_df_new = spark_df_new.withColumn("valeur", F.col("valeur").cast("double")) \
-                                   .withColumn("rang", F.col("rang").cast("int"))
+        spark_df_new = (
+        spark_df_new
+
+        # Cast des colonnes originales
+        .withColumn("valeur", F.col("valeur").cast("double"))
+        .withColumn("rang", F.col("rang").cast("int"))
+
+        # ==============================
+        # 🔥 STANDARDISATION (sans supprimer anciennes colonnes)
+        # ==============================
+
+        .withColumn("Annee", F.col("annee"))
+        .withColumn("Variable", F.col("indicateur"))
+        .withColumn("Dimension", F.col("pays"))
+        .withColumn("Valeur", F.col("valeur"))
+        .withColumn("Rang", F.col("rang"))
+
+        .withColumn("Version", F.lit("1"))
+        .withColumn("date_ingestion", F.current_timestamp())
+        .withColumn("Source", F.lit(self.input_file_key))
+    )
+
+
  
         years = sorted([int(row) for row in self.ranked_data['annee'].unique()])
         sc = self.spark.sparkContext

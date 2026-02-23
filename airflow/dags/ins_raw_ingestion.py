@@ -19,12 +19,9 @@ MINIO_ACCESS_KEY = "minio"
 MINIO_SECRET_KEY = "minio123"
 BUCKET = "01-raw"
 
-today = datetime.today()
-YEAR = today.strftime("%Y")
-MONTH = today.strftime("%m")
-
-BASE_PATH = f"{YEAR}/{MONTH}/INS"
-
+# Note : La date et le BASE_PATH sont maintenant calculés
+# dynamiquement à l'intérieur des fonctions pour correspondre 
+# au moment de l'exécution du DAG.
 
 # =====================================================
 # HELPERS
@@ -50,15 +47,25 @@ def post_xml(endpoint, body):
     r.raise_for_status()
     return r.text
 
+def get_base_path():
+    """Génère le chemin YYYY/MM/INS basé sur la date d'exécution actuelle."""
+    now = datetime.now()
+    year = now.strftime("%Y")
+    month = now.strftime("%m")
+    # Pas de jour ici, seulement Année/Mois
+    return f"{year}/{month}/INS"
+
 # =====================================================
 # TASK 1 : INGEST SOURCES (DYNAMIQUE)
 # =====================================================
-def ingest_sources():
+def ingest_sources(**kwargs):
     client = get_minio_client()
+    base_path = get_base_path() # Calcul du chemin (ex: 2024/05/INS)
 
     if not client.bucket_exists(BUCKET):
         client.make_bucket(BUCKET)
 
+    print(f"📂 Target Base Path: {base_path}")
     print("📡 Calling GetStructure")
     structure_xml = post_xml("GetStructure", "<QueryMessage></QueryMessage>")
     root = ET.fromstring(structure_xml)
@@ -131,7 +138,8 @@ def ingest_sources():
         writer.writerows(rows)
 
         filename = f"{source_id}-{sanitize(source_name)}.csv"
-        object_path = f"{BASE_PATH}/Source/Agregat/{filename}"
+        # Utilisation du base_path (sans day)
+        object_path = f"{base_path}/Source/Agregat/{filename}"
 
         data_bytes = buffer.getvalue().encode("utf-8")
 
@@ -148,9 +156,11 @@ def ingest_sources():
 # =====================================================
 # TASK 2 : INGEST DIMENSIONS (FullName)
 # =====================================================
-def ingest_dimensions():
+def ingest_dimensions(**kwargs):
     client = get_minio_client()
+    base_path = get_base_path() # Calcul du chemin (ex: 2024/05/INS)
 
+    print(f"📂 Target Base Path: {base_path}")
     print("📡 Calling GetStructure")
     structure_xml = post_xml("GetStructure", "<QueryMessage></QueryMessage>")
     root = ET.fromstring(structure_xml)
@@ -210,8 +220,8 @@ def ingest_dimensions():
             writer.writerows(rows)
 
             filename = f"{dim_id}-{sanitize(dim_name)}.csv"
-            object_path = f"{BASE_PATH}/Dimension/Agregat/{source_id}/{filename}"
-
+            # Utilisation du base_path (sans day)
+            object_path = f"{base_path}/Dimension/Agregat/{source_id}/{filename}"
 
             data_bytes = buffer.getvalue().encode("utf-8")
 
@@ -239,11 +249,13 @@ with DAG(
     ingest_sources_task = PythonOperator(
         task_id="ingest_ins_sources",
         python_callable=ingest_sources,
+        provide_context=True,
     )
 
     ingest_dimensions_task = PythonOperator(
         task_id="ingest_ins_dimensions",
         python_callable=ingest_dimensions,
+        provide_context=True,
     )
 
     ingest_sources_task >> ingest_dimensions_task
