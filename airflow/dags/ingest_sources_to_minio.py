@@ -20,8 +20,12 @@ MINIO_ACCESS_KEY = "minio"
 MINIO_SECRET_KEY = "minio123"
 BUCKET = "01-raw"
 
-DATE_PATH = datetime.today().strftime("%Y/%m/%d")
+# DATE_PATH = datetime.today().strftime("%Y/%m/%d")
+today = datetime.today()
+YEAR = today.strftime("%Y")
+MONTH = today.strftime("%m")
 
+DATE_PATH = f"{YEAR}/{MONTH}"
 # =====================================================
 # LOGGING
 # =====================================================
@@ -184,7 +188,7 @@ def ingest_all_sources():
         api_df = fetch_api_data(source)
 
         # Path MinIO
-        object_path = f"{DATE_PATH}/INS/Sources/{source['id']}/{source['id']}-{sanitize(source['name'])}.csv"
+        object_path = f"{DATE_PATH}/INS/API-Sources/{source['id']}-{sanitize(source['name'])}.csv"
         minio_df = read_minio_csv(client, object_path)
 
         # Logs sur nombre de lignes

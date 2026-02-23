@@ -46,7 +46,7 @@ def upload_files_to_raw(**context):
             # Format: year/month/day/SOURCE/relative_path
             object_path = f"{year}/{month}/{day}/{relative_path}"
 
-            client.fput_object(
+            client.fput_object(  
                 bucket_name=RAW_BUCKET,
                 object_name=object_path,
                 file_path=local_path

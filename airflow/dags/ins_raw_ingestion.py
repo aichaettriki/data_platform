@@ -131,7 +131,7 @@ def ingest_sources():
         writer.writerows(rows)
 
         filename = f"{source_id}-{sanitize(source_name)}.csv"
-        object_path = f"{BASE_PATH}/Source/Agregat/{filename}"
+        object_path = f"{BASE_PATH}/Agregat/Source/{filename}"
 
         data_bytes = buffer.getvalue().encode("utf-8")
 
@@ -210,7 +210,7 @@ def ingest_dimensions():
             writer.writerows(rows)
 
             filename = f"{dim_id}-{sanitize(dim_name)}.csv"
-            object_path = f"{BASE_PATH}/Dimension/Agregat/{source_id}/{filename}"
+            object_path = f"{BASE_PATH}/Agregat/Dimension/{source_id}/{filename}"
 
 
             data_bytes = buffer.getvalue().encode("utf-8")

@@ -3,6 +3,11 @@ from pyspark.sql.functions import col
 import logging
 from pyspark.sql.functions import current_timestamp
 from pyspark.sql.functions import regexp_extract
+import os
+from pyspark.sql.functions import lit
+from pyspark.sql.utils import AnalysisException
+from pyspark.sql.window import Window
+from pyspark.sql.functions import row_number, desc
 
 # =====================================================
 # LOGGING
@@ -27,7 +32,8 @@ spark.sparkContext.setLogLevel("WARN")
 # =====================================================
 # HADOOP HELPERS
 # =====================================================
-def find_ins_paths(spark, base_path="s3a://01-raw"):
+def find_ins_paths(spark, base_path, source_id, dimension_id):
+
     sc = spark.sparkContext
     Path = sc._jvm.org.apache.hadoop.fs.Path
     FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
@@ -35,56 +41,80 @@ def find_ins_paths(spark, base_path="s3a://01-raw"):
 
     fs = FileSystem.get(URI(base_path), sc._jsc.hadoopConfiguration())
 
-    source_path = None
-    dimension_path = None
+    source_file = None
+    dimension_file = None
     stack = [Path(base_path)]
 
-    while stack and (not source_path or not dimension_path):
+    while stack:
         current = stack.pop()
         try:
             for status in fs.listStatus(current):
+                p = status.getPath().toString()
+
                 if status.isDirectory():
-                    p = status.getPath().toString()
-                    if p.endswith("/INS/Source/Agregat"):
-                        source_path = p
-                        log.info(f"✅ Found FACT base: {source_path}")
-                    elif p.endswith("/INS/Dimension/Agregat"):
-                        dimension_path = p
-                        log.info(f"✅ Found DIMENSION base: {dimension_path}")
-                    else:
-                        stack.append(status.getPath())
+                    stack.append(status.getPath())
+
+                elif status.isFile() and p.endswith(".csv"):
+
+                    file_name = p.split("/")[-1]
+
+                    # FACT
+                    if file_name.startswith(source_id):
+                        source_file = p
+                        log.info(f"✅ Found FACT file: {source_file}")
+
+                    # DIMENSION
+                    if file_name.startswith(dimension_id):
+                        dimension_file = p
+                        log.info(f"✅ Found DIMENSION file: {dimension_file}")
+
         except Exception:
             pass
 
-    return source_path, dimension_path
+        if source_file and dimension_file:
+            break
+
+    return source_file, dimension_file
+
+def extract_category_path(full_s3_path, raw_bucket_root):
+    """
+    Extrait le chemin de catégorie depuis le chemin S3 complet.
+    Exemple : s3a://01-raw/2026/02/INS/API-Sources/file.csv → INS/API-Sources
+    """
+    clean_path = full_s3_path.replace("s3a://", "").strip("/")
+    clean_root = raw_bucket_root.replace("s3a://", "").strip("/")
+
+    if clean_path.startswith(clean_root):
+        relative_path = clean_path[len(clean_root):].strip("/")
+        parts = relative_path.split("/")
+        # Structure : YEAR/MONTH/source/SUBsource/.../filename.csv
+        # On garde  : source/SUBsource/... (sans année, mois et nom de fichier)
+        if len(parts) > 3:
+            category_parts = parts[2:-1]
+            return "/".join(category_parts)
+
+    return "UNKNOWN_CATEGORY"
 
 
-def list_csv_files(spark, base_path):
-    sc = spark.sparkContext
-    Path = sc._jvm.org.apache.hadoop.fs.Path
-    FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
-    URI = sc._jvm.java.net.URI
-
-    fs = FileSystem.get(URI(base_path), sc._jsc.hadoopConfiguration())
-    files = []
-
-    for status in fs.listStatus(Path(base_path)):
-        if status.isFile() and status.getPath().toString().endswith(".csv"):
-            files.append(status.getPath().toString())
-
-    return sorted(files)
+# =====================================================
+# IDs DES SOURCES ET DIMENSIONS
+# =====================================================
+SOURCE_ID    = "OBJ11288479"  
+DIMENSION_ID = "OBJ11288499"    
 
 # =====================================================
 # PATH RESOLUTION
 # =====================================================
-RAW_ROOT = "s3a://01-raw"
+RAW_ROOT    = "s3a://01-raw"
 SILVER_BASE = "s3a://02-transformed/INS/Agregat"
 
 log.info("🔍 Searching for INS Source / Dimension folders...")
-FACT_BASE, DIM_BASE = find_ins_paths(spark, RAW_ROOT)
+FACT_FILE, DIM_FILE  = find_ins_paths(spark, RAW_ROOT, SOURCE_ID, DIMENSION_ID)
 
-if not FACT_BASE or not DIM_BASE:
-    raise RuntimeError("❌ INS Source or Dimension folder not found")
+if not FACT_FILE or not DIM_FILE :
+    raise RuntimeError(
+        f"❌ INS Source file (ID={SOURCE_ID}) or Dimension folder not found under {RAW_ROOT}"
+    )
 
 # =====================================================
 # READ DIMENSIONS (ONCE)
@@ -94,7 +124,7 @@ dim_df = (
     spark.read
     .option("header", True)
     .option("inferSchema", True)
-    .csv(f"{DIM_BASE}/*/*.csv")
+    .csv(DIM_FILE)
 )
 
 dim_lookup = (
@@ -113,18 +143,23 @@ log.info("📘 Dimension sample:")
 dim_lookup.show(5, truncate=False)
 
 # =====================================================
-# PROCESS EACH FACT FILE
+# PROCESS FACT FILE
 # =====================================================
-fact_files = list_csv_files(spark, FACT_BASE)
-log.info(f"📄 Found {len(fact_files)} FACT files")
+fact_files = [FACT_FILE]  # on traite le fichier trouvé par ID
+log.info(f"📄 Found 1 FACT file: {FACT_FILE}")
 
 for fact_file in fact_files:
 
-    file_name = fact_file.split("/")[-1].replace(".csv", "")
-    log.info("=" * 80)
-    log.info(f"🚀 Processing FACT file: {file_name}")
+    file_name       = fact_file.split("/")[-1].replace(".csv", "")
+    source_category = extract_category_path(fact_file, RAW_ROOT)
 
-    # READ ONE FACT FILE
+    log.info("=" * 80)
+    log.info(f"🚀 Processing FACT file : {file_name}")
+    log.info(f"📂 Source category     : {source_category}")
+
+    # --------------------------------------------------
+    # READ FACT FILE
+    # --------------------------------------------------
     fact_df = (
         spark.read
         .option("header", True)
@@ -137,7 +172,9 @@ for fact_file in fact_files:
     log.info(f"📄 Sample of {file_name}:")
     fact_df.show(5, truncate=False)
 
+    # --------------------------------------------------
     # JOIN WITH DIMENSION
+    # --------------------------------------------------
     enriched_df = (
         fact_df.alias("f")
         .join(
@@ -151,72 +188,121 @@ for fact_file in fact_files:
     )
 
     # Drop colonnes dupliquées venant de la dimension
-    enriched_df = enriched_df.drop(
-        col("d.dimension_id")
-    ).drop(
-        col("d.dim_indicator_key")
+    enriched_df = (
+        enriched_df
+        .drop(col("d.dimension_id"))
+        .drop(col("d.dim_indicator_key"))
     )
 
-    enriched_df = enriched_df.withColumn(
-    "date_chargement",
-    current_timestamp()
-    )
-    # EXTRACT YEAR FROM period (ex: YEARS:2015 -> 2015)
+    # Ajout timestamps et année
+    enriched_df = enriched_df.withColumn("date_chargement", current_timestamp())
     enriched_df = enriched_df.withColumn(
         "year",
         regexp_extract(col("period"), r"YEARS:(\d{4})", 1).cast("int")
     )
 
-    enriched_count = enriched_df.count()
-    log.info(f"🔗 {file_name} enriched rows = {enriched_count}")
+    log.info(f"🔗 {file_name} enriched rows = {enriched_df.count()}")
     log.info(f"🔗 Sample enriched {file_name}:")
     enriched_df.show(5, truncate=False)
 
-    # =====================================================
-    # FINAL STRUCTURE (DROP + RENAME + REORDER)
-    # =====================================================
-
+    # --------------------------------------------------
+    # FINAL STRUCTURE
+    # --------------------------------------------------
     enriched_df = (
         enriched_df
-        .drop("period")  # supprimer period
-        .withColumnRenamed("dimension_id", "dim_id")
+        .drop("period")
+        .withColumnRenamed("dimension_id",  "dim_id")
         .withColumnRenamed("dimension_key", "dim_key")
+        .withColumnRenamed("year",          "annee")
+        .withColumnRenamed("value",         "valeur")
+        .withColumnRenamed("indicator_name","Variable")
+        .withColumn("version", lit("N/A"))
+        .withColumn("base",    lit("2015"))
+        .withColumn("source",  lit(source_category))
         .select(
-            "year",
+            "annee",
             "dim_id",
             "dim_key",
-            "indicator_name",
-            "value",
+            "Variable",
+            "valeur",
+            "version",
+            "base",
+            "source",
             "date_chargement"
         )
     )
-    log.info(f"************************ FINAL ENRICHED ******************")
-    log.info(f"🔗 Sample enriched {file_name}:")
+
+    log.info("************************ FINAL ENRICHED ******************")
+    log.info("🔗 Sample enriched:")
     enriched_df.show(5, truncate=False)
 
+    # --------------------------------------------------
     # DATA QUALITY CHECK
-    missing = enriched_df.filter(col("indicator_name").isNull()).count()
+    # --------------------------------------------------
+    missing = enriched_df.filter(col("Variable").isNull()).count()
     if missing > 0:
-        raise RuntimeError(
-            f"MISSING_DIMENSIONS::{file_name}::{missing}"
+        raise RuntimeError(f"MISSING_DIMENSIONS::{file_name}::{missing}")
+    log.warning(f"⚠️ {file_name} missing Variable = {missing}")
+
+    # --------------------------------------------------
+    # WRITE PARQUET PER YEAR
+    # --------------------------------------------------
+    years = [row["annee"] for row in enriched_df.select("annee").distinct().collect()]
+
+    for y in years:
+        df_year     = enriched_df.filter(col("annee") == y)
+        output_path = os.path.join(SILVER_BASE, str(y))
+        log.info(f"💾 Processing year {y}")
+
+        try:
+            existing_df = spark.read.parquet(output_path).cache()
+            existing_df.count()  # force la lecture immédiate
+            log.info(f"📂 Existing file found for year {y}, checking new rows...")
+
+            compare_cols = ["annee", "dim_id", "dim_key", "Variable", "valeur", "base", "source"]
+
+            new_rows = df_year.join(
+                existing_df.select(compare_cols),
+                on=compare_cols,
+                how="left_anti"
+            )
+
+            new_count = new_rows.count()
+            if new_count == 0:
+                log.info(f"✅ No new or changed rows for year {y}")
+                existing_df.unpersist()
+                continue
+
+            log.info(f"🆕 {new_count} new/changed rows detected")
+
+            # Aligner le schéma avant unionByName
+            if "is_latest" in existing_df.columns:
+                new_rows = new_rows.withColumn("is_latest", lit(0).cast("int"))
+
+            final_df = existing_df.unionByName(new_rows)
+            existing_df.unpersist()
+
+        except AnalysisException as e:
+            log.info(f"🆕 No existing file for {y} (AnalysisException: {str(e)[:100]}), writing full dataset")
+            final_df = df_year
+
+        # Recalcul is_latest sur le final_df complet
+        window_spec = Window.partitionBy("annee", "dim_id", "dim_key", "Variable").orderBy(desc("date_chargement"))
+        final_df = (
+            final_df
+            .withColumn("_rank", row_number().over(window_spec))
+            .withColumn("is_latest", (col("_rank") == 1).cast("int"))
+            .drop("_rank")
         )
 
-    log.warning(f"⚠️ {file_name} missing indicator_name = {missing}")
-
-    # WRITE OUTPUT (ONE FOLDER PER FILE)
-    output_path = f"{SILVER_BASE}/{file_name}_transformed"
-    log.info(f"💾 Writing output to {output_path}")
-
-    (
-        enriched_df
-        .repartition("year")          # contrôle du nombre de fichiers par année
-        .write
-        .mode("overwrite")
-        .partitionBy("year")          # création des dossiers year=2015, year=2016, etc.
-        .option("header", True)
-        .csv(output_path)
-    )
-
+        (
+            final_df
+            .repartition(1)
+            .write
+            .mode("overwrite")
+            .parquet(output_path)
+        )
+        log.info(f"💾 Final file written for year {y}")
 
     log.info(f"✅ Finished processing {file_name}")
 
