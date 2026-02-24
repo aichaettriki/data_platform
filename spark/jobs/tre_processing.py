@@ -8,6 +8,8 @@ from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
 from common.spark_session import create_spark_session, stop_spark_session
 from pyspark.sql.types import StringType
+from pyspark.sql.functions import current_timestamp
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # LOGGING
@@ -446,32 +448,7 @@ def format_excel_value(val):
 # CALCUL DE Version_telechargement
 # ──────────────────────────────────────────────────────────────────────────────
 def compute_version_telechargement(df_new, df_history, history_exists):
-    """
-    Calcule Version_telechargement = numéro d'occurrence cumulative de la clé
-    métier dans l'historique complet.
-    
-    ATTENTION : Les colonnes d'entrée doivent être en MINUSCULES car 
-    cette fonction est appelée après la conversion.
-    """
-    key_cols = ["code_secteur", "lib_secteur", "variable", "version", "annee"]
-
-    if not history_exists:
-        # Première ingestion : tout démarre à la version 1
-        return df_new.withColumn("version_telechargement", F.lit(1).cast("int"))
-
-    # Compter combien de fois chaque clé apparaît déjà dans l'historique
-    existing_counts = df_history.groupBy(key_cols).agg(
-        F.count("*").alias("_existing_count")
-    )
-
-    df_joined = df_new.join(existing_counts, on=key_cols, how="left")
-    df_joined = df_joined.withColumn(
-        "version_telechargement",
-        (F.coalesce(F.col("_existing_count"), F.lit(0)) + F.lit(1)).cast("int")
-    ).drop("_existing_count")
-
-    return df_joined
-
+    return df_new.withColumn("version_telechargement", F.lit(1).cast("int"))
 
 # ──────────────────────────────────────────────────────────────────────────────
 # TRAITEMENT D'UN FICHIER
@@ -540,7 +517,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
 
         spark_df = (
             spark_df
-            .withColumn("date_chargement", F.current_date())
+            .withColumn("date_chargement", current_timestamp())
             .withColumn("Pays",   F.lit("Tunisie"))
             .withColumn("Rang", F.lit(None).cast(StringType())) 
             .withColumn("Source", F.lit(relative_source_path))    # <-- Chemin relatif
@@ -662,8 +639,37 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
             if df_to_write is not None:
                 temp_output_path = output_path + "_temp_write"
                 if history_exists and change_count > 0:
-                    df_final = spark.read.parquet(output_path).unionByName(
-                        df_to_write, allowMissingColumns=True
+
+                    df_history_full = spark.read.parquet(output_path)
+
+                    key_cols = ["code_secteur", "lib_secteur", "variable", "version", "annee"]
+
+                    # Clés impactées par les changements
+                    keys_changed = df_to_write.select(key_cols).distinct()
+
+                    # 🔴 Mettre à 0 uniquement les anciennes lignes concernées
+                    df_history_updated = (
+                        df_history_full.alias("h")
+                        .join(keys_changed.alias("k"), on=key_cols, how="left")
+                        .withColumn(
+                            "version_telechargement",
+                            F.when(
+                                F.col("k.code_secteur").isNotNull(),
+                                F.lit(0)
+                            ).otherwise(F.col("h.version_telechargement"))
+                        )
+                        .select("h.*", "version_telechargement")
+                    )
+
+                    # 🟢 S'assurer que les nouvelles lignes sont bien à 1
+                    df_new_clean = df_to_write.withColumn(
+                        "version_telechargement",
+                        F.lit(1)
+                    )
+
+                    # Union final
+                    df_final = df_history_updated.unionByName(
+                        df_new_clean, allowMissingColumns=True
                     )
                 else:
                     df_final = df_to_write
