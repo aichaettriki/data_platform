@@ -445,25 +445,15 @@ def format_excel_value(val):
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# CALCUL DE Version_telechargement
+# CALCUL DE version_active
 # ──────────────────────────────────────────────────────────────────────────────
-def compute_version_telechargement(df_new, df_history, history_exists):
-    return df_new.withColumn("version_telechargement", F.lit(1).cast("int"))
+def compute_version_active(df_new, df_history, history_exists):
+    return df_new.withColumn("version_active", F.lit(1).cast("int"))
 
 # ──────────────────────────────────────────────────────────────────────────────
 # TRAITEMENT D'UN FICHIER
 # ──────────────────────────────────────────────────────────────────────────────
 def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket):
-    # 1. Calcul du chemin relatif pour la colonne Source
-    clean_root = raw_bucket_root.rstrip('/')
-    clean_full_path = full_s3_file_path.rstrip('/')
-    
-    if clean_full_path.startswith(clean_root):
-        # On coupe le début + le slash suivant
-        relative_source_path = clean_full_path[len(clean_root):].strip('/')
-    else:
-        # Fallback si le root ne correspond pas exactement
-        relative_source_path = full_s3_file_path.replace("s3a://", "")
 
     file_name = full_s3_file_path.split("/")[-1]
     local_tmp_path = f"/tmp/{file_name}"
@@ -473,7 +463,6 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
 
     print(f"\n{'='*80}")
     print(f"📁 Processing File : {file_name}")
-    print(f"🔗 Source Path     : {relative_source_path}")
     print(f"{'='*80}")
 
     if not download_from_s3(spark, full_s3_file_path, local_tmp_path): return
@@ -520,7 +509,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
             .withColumn("date_chargement", current_timestamp())
             .withColumn("Pays",   F.lit("Tunisie"))
             .withColumn("Rang", F.lit(None).cast(StringType())) 
-            .withColumn("Source", F.lit(relative_source_path))    # <-- Chemin relatif
+            .withColumn("Source", F.lit("TRE"))
             .withColumn("Base",   F.lit(None).cast(StringType())) # <-- Base à None
             .withColumn("code_secteur", F.trim(F.col("code_secteur")))
             .withColumn("lib_secteur",  F.trim(F.col("lib_secteur")))
@@ -539,7 +528,11 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
         # 🔥🔥🔥 CONVERSION EN MINUSCULE ICI 🔥🔥🔥
         print("  🔧 Converting all columns to lowercase...")
         long_df = long_df.toDF(*[c.lower() for c in long_df.columns])
-
+        long_df = (
+            long_df
+            .withColumn("dim_id", F.lit(None).cast(StringType()))
+            .withColumn("dim_key", F.lit(None).cast(StringType()))
+        )
         # ── F. TRAITEMENT PAR ANNÉE ───────────────────────────────────────────
         # Note : maintenant on utilise 'annee' en minuscule
         unique_years_rows = long_df.select("annee").distinct().collect()
@@ -571,8 +564,8 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
             except Exception:
                 print("  ℹ️  No history found. Treating as new dataset.")
 
-            # ── CALCUL version_telechargement (avec colonnes minuscules) ──────
-            df_new_batch = compute_version_telechargement(
+            # ── CALCUL version_active (avec colonnes minuscules) ──────
+            df_new_batch = compute_version_active(
                 df_new=df_new_batch,
                 df_history=df_history,
                 history_exists=history_exists
@@ -580,9 +573,10 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
 
             # ── ORDRE FINAL DES COLONNES (Minuscules) ─────────────────────────
             ordered_cols = [
-                "annee", "variable", "version", "rang", "base", "valeur",
-                "date_chargement", "source", "version_telechargement", "pays",
-                "code_secteur", "lib_secteur",
+            "annee", "variable", "version", "rang", "base", "valeur",
+            "date_chargement", "source", "version_active", "pays",
+            "code_secteur", "lib_secteur",
+            "dim_id", "dim_key"
             ]
             cols_to_select = [c for c in ordered_cols if c in df_new_batch.columns]
             df_new_batch = df_new_batch.select(cols_to_select)
@@ -606,7 +600,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
                         SELECT *,
                             ROW_NUMBER() OVER (
                                 PARTITION BY code_secteur, lib_secteur, variable, version
-                                ORDER BY date_chargement DESC, version_telechargement DESC
+                                ORDER BY date_chargement DESC, version_active DESC
                             ) as rn
                         FROM v_history
                     )
@@ -652,18 +646,18 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
                         df_history_full.alias("h")
                         .join(keys_changed.alias("k"), on=key_cols, how="left")
                         .withColumn(
-                            "version_telechargement",
+                            "version_active",
                             F.when(
                                 F.col("k.code_secteur").isNotNull(),
                                 F.lit(0)
-                            ).otherwise(F.col("h.version_telechargement"))
+                            ).otherwise(F.col("h.version_active"))
                         )
-                        .select("h.*", "version_telechargement")
+                        .select("h.*", "version_active")
                     )
 
                     # 🟢 S'assurer que les nouvelles lignes sont bien à 1
                     df_new_clean = df_to_write.withColumn(
-                        "version_telechargement",
+                        "version_active",
                         F.lit(1)
                     )
 

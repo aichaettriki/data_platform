@@ -215,6 +215,11 @@ for fact_file in fact_files:
         .withColumnRenamed("value",         "valeur")
         .withColumnRenamed("indicator_name","Variable")
         .withColumn("version", lit("N/A"))
+        .withColumn("pays", lit("Tunisie"))
+        .withColumn("lib_secteur", lit("N/A"))
+        .withColumn("code_secteur", lit("N/A"))
+        .withColumn("rang", lit("N/A"))
+
         .withColumn("base",    lit("2015"))
         .withColumn("source",  lit(source_category))
         .select(
@@ -226,6 +231,10 @@ for fact_file in fact_files:
             "version",
             "base",
             "source",
+            "code_secteur",
+            "lib_secteur",
+            "pays",
+            "rang",
             "date_chargement"
         )
     )
@@ -274,8 +283,8 @@ for fact_file in fact_files:
             log.info(f"🆕 {new_count} new/changed rows detected")
  
             # Aligner le schéma avant unionByName
-            if "is_latest" in existing_df.columns:
-                new_rows = new_rows.withColumn("is_latest", lit(0).cast("int"))
+            if "version_active" in existing_df.columns:
+                new_rows = new_rows.withColumn("version_active", lit(0).cast("int"))
  
             final_df = existing_df.unionByName(new_rows)
             existing_df.unpersist()
@@ -284,12 +293,12 @@ for fact_file in fact_files:
             log.info(f"🆕 No existing file for {y} (AnalysisException: {str(e)[:100]}), writing full dataset")
             final_df = df_year
  
-        # Recalcul is_latest sur le final_df complet
+        # Recalcul version_active sur le final_df complet
         window_spec = Window.partitionBy("annee", "dim_id", "dim_key", "Variable").orderBy(desc("date_chargement"))
         final_df = (
             final_df
             .withColumn("_rank", row_number().over(window_spec))
-            .withColumn("is_latest", (col("_rank") == 1).cast("int"))
+            .withColumn("version_active", (col("_rank") == 1).cast("int"))
             .drop("_rank")
         )
  
