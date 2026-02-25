@@ -141,17 +141,19 @@ class CompetitifScoresProcessor:
        
         # Define window for ranking
         window_spec = Window.partitionBy("variable", "annee").orderBy(F.col("valeur").desc())
-       
+     
         # Apply ranking and add ALL requested columns
         # Using .cast("string") on Nulls prevents the "CANNOT_DETERMINE_TYPE" error
         self.ranked_data = spark_df.withColumn("rang", F.rank().over(window_spec)) \
                            .withColumn("base", F.lit(None).cast("string")) \
                            .withColumn("version", F.lit(None).cast("string")) \
-                           .withColumn("source", F.lit("competitivité positionnelle")) \
+                           .withColumn("source", F.lit("competitivité positionnement")) \
                            .withColumn("dim_id", F.lit(None).cast("string")) \
                            .withColumn("dim_key", F.lit(None).cast("string")) \
                            .withColumn("code_secteur", F.lit(None).cast("string")) \
-                           .withColumn("lib_secteur", F.lit(None).cast("string"))
+                           .withColumn("lib_secteur", F.lit(None).cast("string")) \
+                           .withColumn("annee", F.col("annee").cast("int"))
+        
  
         return self.ranked_data
    
@@ -259,6 +261,16 @@ class CompetitifScoresProcessor:
  
             if df_to_write is not None:
                 df_to_write.coalesce(1).write.mode("overwrite").parquet(temp_output_path)
+                logger.info("📊 FINAL DATAFRAME SCHEMA (Detailed)")
+                
+                for field in df_to_write.schema.fields:
+                    logger.info(
+                                f"Column: {field.name} | "
+                                f"Type: {field.dataType.simpleString()} | "
+                                f"Nullable: {field.nullable}"
+                    )
+                
+                    logger.info(f"📊 Total columns: {len(df_to_write.columns)}")
                 try:
                     target_uri = sc._jvm.java.net.URI(output_path)
                     fs = FileSystem.get(target_uri, conf)

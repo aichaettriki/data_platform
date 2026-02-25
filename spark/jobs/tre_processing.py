@@ -481,6 +481,8 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
                 sheet_df['Annee'] = year
                 sheet_df['Version'] = version
                 sheet_df = sheet_df.astype(str)
+                sheet_df['Annee'] = sheet_df['Annee'].astype(int)
+              
                 all_sheets_data.append(sheet_df)
 
         if not all_sheets_data:
@@ -508,9 +510,9 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
             spark_df
             .withColumn("date_chargement", current_timestamp())
             .withColumn("Pays",   F.lit("Tunisie"))
-            .withColumn("Rang", F.lit(None).cast(StringType())) 
+            .withColumn("Rang", F.lit(None).cast("int")) 
             .withColumn("Source", F.lit("TRE"))
-            .withColumn("Base",   F.lit(None).cast(StringType())) # <-- Base à None
+            .withColumn("Base",   F.lit(None).cast("int")) # <-- Base à None
             .withColumn("code_secteur", F.trim(F.col("code_secteur")))
             .withColumn("lib_secteur",  F.trim(F.col("lib_secteur")))
         )
@@ -530,8 +532,8 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
         long_df = long_df.toDF(*[c.lower() for c in long_df.columns])
         long_df = (
             long_df
-            .withColumn("dim_id", F.lit(None).cast(StringType()))
-            .withColumn("dim_key", F.lit(None).cast(StringType()))
+            .withColumn("dim_id", F.lit("None"))
+            .withColumn("dim_key", F.lit("None"))
         )
         # ── F. TRAITEMENT PAR ANNÉE ───────────────────────────────────────────
         # Note : maintenant on utilise 'annee' en minuscule
@@ -551,7 +553,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
             print(f"  📂 Output path      : {output_path}")
 
             df_new_batch = long_df.filter(F.col("annee") == year)
-
+        
             history_exists = False
             df_history = None
             change_count = 0
@@ -667,9 +669,35 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
                     )
                 else:
                     df_final = df_to_write
+                from pyspark.sql.types import LongType, DoubleType, StringType
 
+                df_final = (
+                    df_final
+                    .withColumn("annee", F.col("annee").cast("int"))
+                    .withColumn("rang", F.col("rang").cast("int"))
+                    .withColumn("base", F.col("base").cast(StringType()))
+                    .withColumn("version_active", F.col("version_active").cast("int"))
+                    .withColumn("valeur", F.col("valeur").cast("double"))
+                    .withColumn("variable", F.col("variable").cast(StringType()))
+                    .withColumn("version", F.col("version").cast(StringType()))
+                    .withColumn("source", F.col("source").cast(StringType()))
+                    .withColumn("pays", F.col("pays").cast(StringType()))
+                    .withColumn("code_secteur", F.col("code_secteur").cast(StringType()))
+                    .withColumn("lib_secteur", F.col("lib_secteur").cast(StringType()))
+                    .withColumn("dim_id", F.col("dim_id").cast(StringType()))
+                    .withColumn("dim_key", F.col("dim_key").cast(StringType()))
+                )
                 df_final.coalesce(1).write.mode("overwrite").parquet(temp_output_path)
-
+                print("📊 FINAL DATAFRAME SCHEMA (Detailed)")
+                
+                for field in df_final.schema.fields:
+                    print(
+                                f"Column: {field.name} | "
+                                f"Type: {field.dataType.simpleString()} | "
+                                f"Nullable: {field.nullable}"
+                    )
+                
+                    print(f"📊 Total columns: {len(df_final.columns)}")
                 try:
                     target_uri = sc._jvm.java.net.URI(output_path)
                     fs = FileSystem.get(target_uri, conf)

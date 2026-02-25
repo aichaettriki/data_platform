@@ -8,6 +8,7 @@ from pyspark.sql.functions import lit
 from pyspark.sql.utils import AnalysisException
 from pyspark.sql.window import Window
 from pyspark.sql.functions import row_number, desc
+from pyspark.sql.types import StringType
 from common.spark_session import create_spark_session, stop_spark_session
  
 # =====================================================
@@ -209,8 +210,8 @@ for fact_file in fact_files:
     enriched_df = (
         enriched_df
         # .drop("period")
-        .withColumnRenamed(fact_dim_id_col,  "dim_id")
-        .withColumnRenamed(fact_dim_key_col, "dim_key")
+        .withColumnRenamed(fact_dim_id_col,  "dim_id").withColumn("dim_id", col("dim_id").cast(StringType()))
+        .withColumnRenamed(fact_dim_key_col, "dim_key").withColumn("dim_key", col("dim_key").cast(StringType()))
         .withColumnRenamed("year",          "annee")
         .withColumnRenamed("value",         "valeur")
         .withColumnRenamed("indicator_name","Variable")
@@ -218,7 +219,7 @@ for fact_file in fact_files:
         .withColumn("pays", lit("Tunisie"))
         .withColumn("lib_secteur", lit("N/A"))
         .withColumn("code_secteur", lit("N/A"))
-        .withColumn("rang", lit("N/A"))
+        .withColumn("rang", lit(None).cast("int"))
 
         .withColumn("base",    lit("2015"))
         .withColumn("source",  lit(source_category))
@@ -240,6 +241,8 @@ for fact_file in fact_files:
     )
  
     log.info("************************ FINAL ENRICHED ******************")
+ 
+
     log.info("🔗 Sample enriched:")
     enriched_df.show(5, truncate=False)
  
@@ -309,6 +312,16 @@ for fact_file in fact_files:
             .mode("overwrite")
             .parquet(output_path)
         )
+        log.info("📊 FINAL DATAFRAME SCHEMA (Detailed)")
+ 
+        for field in final_df.schema.fields:
+            log.info(
+                f"Column: {field.name} | "
+                f"Type: {field.dataType.simpleString()} | "
+                f"Nullable: {field.nullable}"
+            )
+ 
+        log.info(f"📊 Total columns: {len(final_df.columns)}")
         log.info(f"💾 Final file written for year {y}")
  
     log.info(f"✅ Finished processing {file_name}")
