@@ -124,6 +124,7 @@ dim_df = (
     spark.read
     .option("header", True)
     .option("inferSchema", True)
+    .option("delimiter", ";")   
     .csv(DIM_FILE)
 )
 
@@ -198,10 +199,7 @@ for fact_file in fact_files:
 
     # Ajout timestamps et année
     enriched_df = enriched_df.withColumn("date_chargement", current_timestamp())
-    # enriched_df = enriched_df.withColumn(
-    #     "year",
-    #     regexp_extract(col("period"), r"YEARS:(\d{4})", 1).cast("int")
-    # )
+    
 
     log.info(f"🔗 {file_name} enriched rows = {enriched_df.count()}")
     log.info(f"🔗 Sample enriched {file_name}:")
@@ -212,7 +210,6 @@ for fact_file in fact_files:
     # --------------------------------------------------
     enriched_df = (
         enriched_df
-        # .drop("period")
         .withColumnRenamed(fact_dim_id_col,  "dim_id")
         .withColumnRenamed(fact_dim_key_col, "dim_key")
         .withColumnRenamed("year",          "annee")
@@ -220,7 +217,12 @@ for fact_file in fact_files:
         .withColumnRenamed("indicator_name","Variable")
         .withColumn("version", lit("N/A"))
         .withColumn("base",    lit("2015"))
-        .withColumn("source",  lit(source_category))
+        .withColumn("pays",    lit("Tunisie"))
+        .withColumn("source",  lit("Agregat"))
+        .withColumn("rang", lit("N/A"))
+        .withColumn("code_secteur", lit("N/A"))
+        .withColumn("lib_secteur", lit("N/A"))
+
         .select(
             "annee",
             "dim_id",
@@ -229,7 +231,11 @@ for fact_file in fact_files:
             "valeur",
             "version",
             "base",
+            "pays",
             "source",
+            "rang",
+            "code_secteur",	
+            "lib_secteur",
             "date_chargement"
         )
     )
@@ -278,8 +284,8 @@ for fact_file in fact_files:
             log.info(f"🆕 {new_count} new/changed rows detected")
 
             # Aligner le schéma avant unionByName
-            if "is_latest" in existing_df.columns:
-                new_rows = new_rows.withColumn("is_latest", lit(0).cast("int"))
+            if "version_actif" in existing_df.columns:
+                new_rows = new_rows.withColumn("version_actif", lit(0).cast("int"))
 
             final_df = existing_df.unionByName(new_rows)
             existing_df.unpersist()
@@ -288,12 +294,12 @@ for fact_file in fact_files:
             log.info(f"🆕 No existing file for {y} (AnalysisException: {str(e)[:100]}), writing full dataset")
             final_df = df_year
 
-        # Recalcul is_latest sur le final_df complet
+        # Recalcul version_actif sur le final_df complet
         window_spec = Window.partitionBy("annee", "dim_id", "dim_key", "Variable").orderBy(desc("date_chargement"))
         final_df = (
             final_df
             .withColumn("_rank", row_number().over(window_spec))
-            .withColumn("is_latest", (col("_rank") == 1).cast("int"))
+            .withColumn("version_actif", (col("_rank") == 1).cast("int"))
             .drop("_rank")
         )
 
@@ -304,6 +310,18 @@ for fact_file in fact_files:
             .mode("overwrite")
             .parquet(output_path)
         )
+        log.info("📊 FINAL DATAFRAME SCHEMA (Detailed)")
+
+        for field in final_df.schema.fields:
+            log.info(
+                f"Column: {field.name} | "
+                f"Type: {field.dataType.simpleString()} | "
+                f"Nullable: {field.nullable}"
+            )
+
+        log.info(f"📊 Total columns: {len(final_df.columns)}")
+
+
         log.info(f"💾 Final file written for year {y}")
 
     log.info(f"✅ Finished processing {file_name}")

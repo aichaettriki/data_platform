@@ -99,10 +99,12 @@ services:
         mc mb -p myminio/02-transformed;
         mc mb -p myminio/03-refined;
         mc mb -p myminio/90-sandbox;
+        mc version enable myminio/01-raw;
+        mc version enable myminio/02-transformed;
+        mc version enable myminio/03-refined;
         mc ls myminio;
       "
     restart: "no"
-
 
 
   # ---------- Spark ----------
