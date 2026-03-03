@@ -83,80 +83,174 @@ def write_minio_csv(client, df, path):
  
     log.info(f"💾 Written → s3://{BUCKET}/{path}")
  
-def detect_new_dimension_rows(minio_df, api_df):
+# def detect_new_dimension_rows(minio_df, api_df):
  
-    log.info("--------------------------------------------------")
-    log.info("📊 DEBUG DIMENSION COMPARISON")
+#     log.info("--------------------------------------------------")
+#     log.info("📊 DEBUG DIMENSION COMPARISON")
  
-    log.info(f"API rows: {len(api_df)}")
-    log.info(f"MinIO rows: {len(minio_df)}")
+#     log.info(f"API rows: {len(api_df)}")
+#     log.info(f"MinIO rows: {len(minio_df)}")
  
-    if minio_df.empty:
-        log.info("🆕 MinIO vide → insertion complète")
-        return api_df.copy()
+#     if minio_df.empty:
+#         log.info("🆕 MinIO vide → insertion complète")
+#         return api_df.copy()
  
-    # On utilise uniquement la clé métier
-    if "KEY" not in api_df.columns or "KEY" not in minio_df.columns:
-        log.warning("⚠️ Pas de colonne KEY → insertion complète")
-        return api_df.copy()
+#     # On utilise uniquement la clé métier
+#     if "KEY" not in api_df.columns or "KEY" not in minio_df.columns:
+#         log.warning("⚠️ Pas de colonne KEY → insertion complète")
+#         return api_df.copy()
  
-    engine = create_engine("sqlite:///:memory:")
+#     engine = create_engine("sqlite:///:memory:")
  
-    minio_df.to_sql("minio_table", engine, index=False, if_exists="replace")
-    api_df.to_sql("api_table", engine, index=False, if_exists="replace")
+#     minio_df.to_sql("minio_table", engine, index=False, if_exists="replace")
+#     api_df.to_sql("api_table", engine, index=False, if_exists="replace")
  
-    sql_query = """
-    SELECT a.*
-    FROM api_table a
-    LEFT JOIN minio_table m
-        ON a.dimension_id = m.dimension_id
-       AND a.KEY = m.KEY
-    WHERE m.KEY IS NULL
-    """
+#     sql_query = """
+#     SELECT a.*
+#     FROM api_table a
+#     LEFT JOIN minio_table m
+#         ON a.dimension_id = m.dimension_id
+#        AND a.KEY = m.KEY
+#     WHERE m.KEY IS NULL
+#     """
  
-    new_rows_df = pd.read_sql(sql_query, engine)
+#     new_rows_df = pd.read_sql(sql_query, engine)
  
-    log.info(f"🆕 Nouvelles lignes détectées: {len(new_rows_df)}")
-    log.info("--------------------------------------------------")
+#     log.info(f"🆕 Nouvelles lignes détectées: {len(new_rows_df)}")
+#     log.info("--------------------------------------------------")
  
-    return new_rows_df
+#     return new_rows_df
  
  
 # =====================================================
-# MAIN TASK
+# MAIN TASK - with Detection of new rows 
 # =====================================================
  
+# def ingest_all_dimensions():
+ 
+#     client = get_minio_client()
+ 
+#     if not client.bucket_exists(BUCKET):
+#         client.make_bucket(BUCKET)
+ 
+#     # -------------------------------------------------
+#     # 1. GET STRUCTURE
+#     # -------------------------------------------------
+#     log.info("📡 Calling GetStructure")
+#     structure_root = post_xml("GetStructure", "<QueryMessage></QueryMessage>")
+ 
+#     dimensions = {}
+ 
+#     for src in structure_root.findall(".//Source"):
+#         for dim in src.findall("./Dimensions/Dimension"):
+#             dim_id = dim.attrib.get("Id")
+#             dim_name = dim.attrib.get("Name")
+#             dimensions[dim_id] = dim_name
+ 
+#     log.info(f"✅ Total unique dimensions detected = {len(dimensions)}")
+ 
+#     # -------------------------------------------------
+#     # 2. LOOP ON DIMENSIONS
+#     # -------------------------------------------------
+#     for idx, (dim_id, dim_name) in enumerate(dimensions.items(), start=1):
+ 
+#         log.info("=" * 80)
+#         log.info(f"🔎 [{idx}] Processing dimension {dim_id} | {dim_name}")
+ 
+#         body = f"""
+#         <QueryMessage>
+#             <DataWhere>
+#                 <DimensionId WithData='true'>{dim_id}</DimensionId>
+#             </DataWhere>
+#         </QueryMessage>
+#         """
+ 
+#         dim_root = post_xml("GetDimensionElements", body)
+ 
+#         # ATTRIBUTES dynamiques
+#         attributes = [
+#             attr.attrib["Id"]
+#             for attr in dim_root.findall("./Attributes/Attribute")
+#         ]
+ 
+#         rows = []
+ 
+#         for el in dim_root.findall(".//Element"):
+#             row = {
+#                 "dimension_id": dim_id,
+#                 "dimension_name": dim_name,
+#             }
+#             for attr in attributes:
+#                 row[attr] = el.attrib.get(attr, "")
+#             rows.append(row)
+ 
+#         if not rows:
+#             log.warning(f"⚠️ No elements found for {dim_id}")
+#             continue
+ 
+#         headers = ["dimension_id", "dimension_name"] + attributes
+#         api_df = pd.DataFrame(rows, columns=headers)
+ 
+#         object_path = (
+#             f"2026/02/INS/Api-Dimensions/"
+#             # f"{dim_id}-{sanitize(dim_name)}/"
+#             f"{dim_id}-{sanitize(dim_name)}.csv"
+#         )
+ 
+#         # -------------------------------------------------
+#         # INCREMENTAL CHECK
+#         # -------------------------------------------------
+#         minio_df = read_minio_dimension_csv(client, object_path)
+ 
+#         new_rows_df = detect_new_dimension_rows(minio_df, api_df)
+ 
+#         if new_rows_df.empty:
+#             log.info(f"🟢 No new elements for {dim_id}")
+#             continue
+ 
+#         log.info(f"🆕 {len(new_rows_df)} nouvelles lignes détectées")
+ 
+#         final_df = pd.concat([minio_df, new_rows_df], ignore_index=True)
+ 
+#         write_minio_csv(client, final_df, object_path)
+ 
+#     log.info("🎉 INS Dimension ingestion completed successfully")
+ 
+# =====================================================
+# MAIN TASK - SNAPSHOT ONLY
+# =====================================================
+
 def ingest_all_dimensions():
- 
+
     client = get_minio_client()
- 
+
     if not client.bucket_exists(BUCKET):
         client.make_bucket(BUCKET)
- 
+
     # -------------------------------------------------
-    # 1. GET STRUCTURE
+    # 1️⃣ GET STRUCTURE
     # -------------------------------------------------
     log.info("📡 Calling GetStructure")
     structure_root = post_xml("GetStructure", "<QueryMessage></QueryMessage>")
- 
+
     dimensions = {}
- 
+
     for src in structure_root.findall(".//Source"):
         for dim in src.findall("./Dimensions/Dimension"):
             dim_id = dim.attrib.get("Id")
             dim_name = dim.attrib.get("Name")
             dimensions[dim_id] = dim_name
- 
+
     log.info(f"✅ Total unique dimensions detected = {len(dimensions)}")
- 
+
     # -------------------------------------------------
-    # 2. LOOP ON DIMENSIONS
+    # 2️⃣ LOOP ON DIMENSIONS
     # -------------------------------------------------
     for idx, (dim_id, dim_name) in enumerate(dimensions.items(), start=1):
- 
+
         log.info("=" * 80)
         log.info(f"🔎 [{idx}] Processing dimension {dim_id} | {dim_name}")
- 
+
         body = f"""
         <QueryMessage>
             <DataWhere>
@@ -164,17 +258,17 @@ def ingest_all_dimensions():
             </DataWhere>
         </QueryMessage>
         """
- 
+
         dim_root = post_xml("GetDimensionElements", body)
- 
-        # ATTRIBUTES dynamiques
+
+        # Attributs dynamiques
         attributes = [
             attr.attrib["Id"]
             for attr in dim_root.findall("./Attributes/Attribute")
         ]
- 
+
         rows = []
- 
+
         for el in dim_root.findall(".//Element"):
             row = {
                 "dimension_id": dim_id,
@@ -183,46 +277,31 @@ def ingest_all_dimensions():
             for attr in attributes:
                 row[attr] = el.attrib.get(attr, "")
             rows.append(row)
- 
+
         if not rows:
             log.warning(f"⚠️ No elements found for {dim_id}")
             continue
- 
+
         headers = ["dimension_id", "dimension_name"] + attributes
         api_df = pd.DataFrame(rows, columns=headers)
- 
+
+        # ✅ Path dynamique basé sur date
         object_path = (
-            f"2026/02/INS/Api-Dimensions/"
-            # f"{dim_id}-{sanitize(dim_name)}/"
+            f"{DATE_PATH}/INS/Api-Dimensions/"
             f"{dim_id}-{sanitize(dim_name)}.csv"
         )
- 
-        # -------------------------------------------------
-        # INCREMENTAL CHECK
-        # -------------------------------------------------
-        minio_df = read_minio_dimension_csv(client, object_path)
- 
-        new_rows_df = detect_new_dimension_rows(minio_df, api_df)
- 
-        if new_rows_df.empty:
-            log.info(f"🟢 No new elements for {dim_id}")
-            continue
- 
-        log.info(f"🆕 {len(new_rows_df)} nouvelles lignes détectées")
- 
-        final_df = pd.concat([minio_df, new_rows_df], ignore_index=True)
- 
-        write_minio_csv(client, final_df, object_path)
- 
-    log.info("🎉 INS Dimension ingestion completed successfully")
- 
- 
+
+        write_minio_csv(client, api_df, object_path)
+
+        log.info(f"💾 Snapshot dimension écrit → {dim_id}")
+
+    log.info("🎉 INS Dimension ingestion completed successfully (snapshot mode)") 
 # =====================================================
 # DAG
 # =====================================================
  
 with DAG(
-    dag_id="ingest_all_ins_dimensions",
+    dag_id="01-ING__ingest_all_ins_dimensions",
     start_date=datetime(2024, 1, 1),
     schedule_interval=None,
     catchup=False,

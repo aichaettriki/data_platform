@@ -55,7 +55,7 @@ SPARK_APP_PATH = "/opt/spark/jobs/refined_job.py"
 # ===============================
  
 with DAG(
-    dag_id="transformed_to_refined_pipeline",
+    dag_id="03-REF__transformed_to_refined_pipeline",
     default_args=default_args,
     schedule_interval="@daily",
     catchup=False,

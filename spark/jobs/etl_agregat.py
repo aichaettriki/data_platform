@@ -73,6 +73,73 @@ def find_ins_paths(spark, base_path, source_id, dimension_id):
  
     return source_file, dimension_file
  
+# cherce les fichier de plus recent dossier
+def find_latest_ins_paths(spark, base_path, source_id, dimension_id):
+
+    sc = spark.sparkContext
+    Path = sc._jvm.org.apache.hadoop.fs.Path
+    FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
+    URI = sc._jvm.java.net.URI
+
+    fs = FileSystem.get(URI(base_path), sc._jsc.hadoopConfiguration())
+
+    source_candidates = []
+    dimension_candidates = []
+
+    stack = [Path(base_path)]
+
+    while stack:
+        current = stack.pop()
+
+        try:
+            for status in fs.listStatus(current):
+                p = status.getPath().toString()
+
+                if status.isDirectory():
+                    stack.append(status.getPath())
+
+                elif status.isFile() and p.endswith(".csv"):
+
+                    file_name = p.split("/")[-1]
+
+                    # Extraction année / mois depuis path
+                    # Format attendu : s3a://01-raw/YYYY/MM/...
+                    parts = p.replace("s3a://", "").split("/")
+                    if len(parts) >= 4:
+                        year = parts[1]
+                        month = parts[2]
+
+                        try:
+                            year = int(year)
+                            month = int(month)
+                        except:
+                            continue
+
+                        if file_name.startswith(source_id):
+                            source_candidates.append((year, month, p))
+
+                        if file_name.startswith(dimension_id):
+                            dimension_candidates.append((year, month, p))
+
+        except Exception:
+            pass
+
+    # Sélection du plus récent
+    latest_source = max(source_candidates, default=None)
+    latest_dimension = max(dimension_candidates, default=None)
+
+    source_file = latest_source[2] if latest_source else None
+    dimension_file = latest_dimension[2] if latest_dimension else None
+
+    if source_file:
+        log.info(f"✅ Latest FACT file selected: {source_file}")
+
+    if dimension_file:
+        log.info(f"✅ Latest DIMENSION file selected: {dimension_file}")
+
+    return source_file, dimension_file
+
+
 def extract_category_path(full_s3_path, raw_bucket_root):
     """
     Extrait le chemin de catégorie depuis le chemin S3 complet.
@@ -106,8 +173,9 @@ RAW_ROOT    = "s3a://01-raw"
 SILVER_BASE = "s3a://02-transformed/INS/Agregat"
  
 log.info("🔍 Searching for INS Source / Dimension folders...")
-FACT_FILE, DIM_FILE  = find_ins_paths(spark, RAW_ROOT, SOURCE_ID, DIMENSION_ID)
- 
+# FACT_FILE, DIM_FILE  = find_ins_paths(spark, RAW_ROOT, SOURCE_ID, DIMENSION_ID)
+FACT_FILE, DIM_FILE  = find_latest_ins_paths(spark, RAW_ROOT, SOURCE_ID, DIMENSION_ID)
+
 if not FACT_FILE or not DIM_FILE :
     raise RuntimeError(
         f"❌ INS Source file (ID={SOURCE_ID}) or Dimension folder not found under {RAW_ROOT}"

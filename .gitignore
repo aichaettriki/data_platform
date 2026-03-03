@@ -60,7 +60,8 @@ airflow/airflow.cfg.local
 # MinIO
 minio/.minio.sys/
 minio/data/
-
+minio/01-raw/*
+minio/02-transformed/*
 # Docker
 docker-compose.override.yml
 *.env

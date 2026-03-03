@@ -39,7 +39,7 @@ default_args = {
 # DAG
 # ──────────────────────────────────────────────────────────────────────────────
 with DAG(
-    dag_id="Transform_Competitivite",
+    dag_id="02-TRANS__Competitivite",
     default_args=default_args,
     description="ETL Spark — scores de compétitivité ITCEQ",
     schedule_interval=None,

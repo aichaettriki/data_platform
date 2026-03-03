@@ -142,7 +142,7 @@ def ingest_imf_indicator(indicator, folder):
 
 with DAG(
 
-    dag_id="ingest_imf_indicators",
+    dag_id="01-ING__ingest_FMI_indicators",
 
     start_date=datetime(2024,1,1),
 

@@ -745,7 +745,7 @@ services:
     networks:
       - traefik-public
     ports:
-      - "5000:5000"
+      - "5011:5000"
     environment:
       MINIO_ENDPOINT: "minio:9000"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"

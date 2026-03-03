@@ -27,7 +27,7 @@ default_args = {
 # DAG Airflow
 # =========================================================
 with DAG(
-    dag_id='Cleanup_Minio',
+    dag_id='99-Tech__Cleanup_Minio',
     default_args=default_args,
     description='Nettoie TOUS les dossiers _temporary et _temp_write dans TOUS les buckets MinIO',
     schedule_interval='0 2 * * 0',  # Dimanches à 2h

@@ -4,7 +4,7 @@ from datetime import datetime
 from common.dag_helpers import make_spark_conf, create_zip_task, create_cleanup_task, SPARK_COMMON_ZIP, RAW_BUCKET
 
 with DAG(
-    dag_id="transform_world_bank_api",
+    dag_id="02-TRANS__world_bank_data",
     start_date=datetime(2024, 1, 1),
     schedule_interval=None,
     catchup=False,
