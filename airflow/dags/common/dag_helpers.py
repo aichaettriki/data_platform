@@ -52,7 +52,7 @@ def create_zip_task(dag):
 def create_cleanup_task(dag, source_bucket: str, triggered_by: str):
     return TriggerDagRunOperator(
         task_id="trigger_cleanup_minio",
-        trigger_dag_id="Cleanup_Minio",
+        trigger_dag_id="99-Tech__Cleanup_Minio",
         wait_for_completion=True,
         poke_interval=30,
         reset_dag_run=False,
