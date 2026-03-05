@@ -8,14 +8,28 @@ RAW_BUCKET = os.getenv("RAW_BUCKET", "s3a://01-raw")
 SPARK_COMMON_ZIP = "/tmp/common.zip"
 # dags/common/dag_helpers.py
 SPARK_S3_CONF = {
-    "spark.hadoop.fs.s3a.endpoint":   os.getenv("MINIO_ENDPOINT", "http://minio:9000"),
+    # ---------- MinIO ----------
+    "spark.hadoop.fs.s3a.endpoint": os.getenv("MINIO_ENDPOINT", "http://minio:9000"),
     "spark.hadoop.fs.s3a.access.key": os.getenv("MINIO_ROOT_USER"),
     "spark.hadoop.fs.s3a.secret.key": os.getenv("MINIO_ROOT_PASSWORD"),
-    "spark.hadoop.fs.s3a.path.style.access":      "true",
+    "spark.hadoop.fs.s3a.path.style.access": "true",
     "spark.hadoop.fs.s3a.connection.ssl.enabled": "false",
+
+    # ---------- Production Reliability ----------
+    "spark.sql.sources.partitionOverwriteMode": "dynamic",
+    "spark.sql.shuffle.partitions": "200",
+    "spark.speculation": "false",
+
+    # ---------- Performance Upload ----------
+    "spark.hadoop.fs.s3a.fast.upload": "true",
+    "spark.hadoop.fs.s3a.committer.name": "magic",
+
+    # ---------- Serialization ----------
+    "spark.serializer": "org.apache.spark.serializer.KryoSerializer",
 }
 
 def make_spark_conf(extra: dict = None) -> dict:
+    
     conf = dict(SPARK_S3_CONF)
     if extra:
         conf.update(extra)

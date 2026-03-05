@@ -1,0 +1,72 @@
+[
+  {
+    "country_code": "788",
+    "country_name": "Tunisie",
+    "year": 1985.0,
+    "HDI_value": "21.6",
+    "source": "Poverty and Inequality Portal, World Bank"
+  },
+  {
+    "country_code": "788",
+    "country_name": "Tunisie",
+    "year": 1990.0,
+    "HDI_value": "16.3",
+    "source": "Poverty and Inequality Portal, World Bank"
+  },
+  {
+    "country_code": "788",
+    "country_name": "Tunisie",
+    "year": 1995.0,
+    "HDI_value": "17.4",
+    "source": "Poverty and Inequality Portal, World Bank"
+  },
+  {
+    "country_code": "788",
+    "country_name": "Tunisie",
+    "year": 2000.0,
+    "HDI_value": "10.5",
+    "source": "Poverty and Inequality Portal, World Bank"
+  },
+  {
+    "country_code": "788",
+    "country_name": "Tunisie",
+    "year": 2005.0,
+    "HDI_value": "5.9",
+    "source": "Poverty and Inequality Portal, World Bank"
+  },
+  {
+    "country_code": "504",
+    "country_name": "Maroc",
+    "year": 1984.0,
+    "HDI_value": "22.4",
+    "source": "Poverty and Inequality Portal, World Bank"
+  },
+  {
+    "country_code": "504",
+    "country_name": "Maroc",
+    "year": 1990.0,
+    "HDI_value": "11.2",
+    "source": "Poverty and Inequality Portal, World Bank"
+  },
+  {
+    "country_code": "504",
+    "country_name": "Maroc",
+    "year": 1998.0,
+    "HDI_value": "17.5",
+    "source": "Poverty and Inequality Portal, World Bank"
+  },
+  {
+    "country_code": "504",
+    "country_name": "Maroc",
+    "year": 2000.0,
+    "HDI_value": "16.8",
+    "source": "Poverty and Inequality Portal, World Bank"
+  },
+  {
+    "country_code": "504",
+    "country_name": "Maroc",
+    "year": 2000.0,
+    "HDI_value": "14.38273",
+    "source": "Poverty and Inequality Portal, World Bank"
+  }
+]

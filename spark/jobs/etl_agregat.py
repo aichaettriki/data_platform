@@ -222,7 +222,7 @@ for fact_file in fact_files:
         .withColumn("rang", lit(None).cast("int"))
 
         .withColumn("base",    lit("2015"))
-        .withColumn("source",  lit(source_category))
+        .withColumn("source",  lit("Agregat"))
         .select(
             "annee",
             "dim_id",

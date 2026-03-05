@@ -745,7 +745,7 @@ services:
     networks:
       - traefik-public
     ports:
-      - "5000:5000"
+      - "5002:5002"
     environment:
       MINIO_ENDPOINT: "minio:9000"
       MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
@@ -760,8 +760,48 @@ services:
       - "traefik.http.routers.sql-interface.entrypoints=web"
       - "traefik.http.services.sql-interface.loadbalancer.server.port=5000"
 
+  # # ------------------------
+  # # MinerU - Document Parser (Interface Gradio)
+  # # ------------------------
+  # mineru:
+  #   build:
+  #     context: ./mineru
+  #     dockerfile: Dockerfile
+  #   container_name: mineru
+  #   networks:
+  #     - traefik-public
+  #   ports:
+  #     - "7860:7860"
+  #   volumes:
+  #     - ./mineru/models:/root/.cache/huggingface
+  #     - ./data:/data
+  #   environment:
+  #     - HF_HOME=/root/.cache/huggingface
+  #   restart: unless-stopped
+  #   labels:
+  #     - "traefik.enable=true"
+  #     - "traefik.http.routers.mineru.rule=Host(`mineru.itceq.tn`)"
+  #     - "traefik.http.routers.mineru.entrypoints=web"
+  #     - "traefik.http.services.mineru.loadbalancer.server.port=7860"
 
-
+  pdf-extractor:
+    build:
+      context: ./pdf-extractor
+      dockerfile: Dockerfile
+    container_name: pdf-extractor
+    networks:
+      - traefik-public
+    ports:
+      - "7860:7860"
+    volumes:
+      - ./data:/data
+      - ./pdf-extractor/models:/root/.cache/mineru  # cache modèles
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pdf-extractor.rule=Host(`pdf.itceq.tn`)"
+      - "traefik.http.routers.pdf-extractor.entrypoints=web"
+      - "traefik.http.services.pdf-extractor.loadbalancer.server.port=7860"
 
 # ------------------------ Volumes ------------------------
 volumes:
