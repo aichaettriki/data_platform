@@ -131,3 +131,5 @@ secrets/
 test_data/
 marquez_pg_data/
 trino_data/
+test-api/
+minio/

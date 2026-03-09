@@ -1,4 +1,3 @@
-
 """
 Exporter Airflow vers Prometheus/Loki
 -------------------------------------
@@ -25,7 +24,6 @@ app = Flask(__name__)
 # === Configuration & Constantes === #
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 LOG_LEVEL = logging.INFO
-
 
 
 # Chargement .env uniquement si une variable critique est absente (mode local/dev)
@@ -79,7 +77,7 @@ ERROR_TYPES = [
 logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT, stream=sys.stdout, force=True)
 logger = logging.getLogger(__name__)
 
- # ---------------- Metrics ---------------- #
+# ---------------- Metrics ---------------- #
 airflow_up_gauge = Gauge(
     "airflow_up",
     "Etat global d'Airflow (1=up, 0=down)"
@@ -112,13 +110,20 @@ dag_run_status_gauge = Gauge(
 
 dag_run_duration_summary = Summary(
     "airflow_dag_run_duration_seconds",
-    "Durée des DAG runs en secondes",
+    "Durée des DAG runs en secondes (SUCCESS uniquement)",
     ["dag_id"]
 )
 
 dag_run_avg_duration_gauge = Gauge(
     "airflow_dag_avg_duration_seconds",
-    "Durée moyenne des DAG runs par DAG",
+    "Durée moyenne des DAG runs SUCCESS par DAG",
+    ["dag_id"]
+)
+
+# ✅ NOUVEAU : Durée moyenne des runs FAILED
+dag_run_failed_avg_duration_gauge = Gauge(
+    "airflow_dag_failed_avg_duration_seconds",
+    "Durée moyenne des DAG runs FAILED par DAG",
     ["dag_id"]
 )
 
@@ -310,7 +315,6 @@ def get_task_count_for_dag(dag_id):
     return None
 
 
-
 def parse_scheduler_logs():
     """
     Parse les logs du scheduler Airflow pour extraire des métriques sur le nombre de lignes et d'erreurs par DAG et date.
@@ -324,13 +328,13 @@ def parse_scheduler_logs():
 
     try:
         date_folders = [f for f in os.listdir(LOGS_PATH) if os.path.isdir(os.path.join(LOGS_PATH, f))]
-        
+
         for date_folder in date_folders:
             date_path = os.path.join(LOGS_PATH, date_folder)
-            
+
             try:
                 log_files = [f for f in os.listdir(date_path) if f.endswith(".log")]
-                
+
                 for log_file in log_files:
                     dag_id = log_file.replace(".log", "")
                     file_path = os.path.join(date_path, log_file)
@@ -339,7 +343,7 @@ def parse_scheduler_logs():
                         with open(file_path, "r", encoding="utf-8") as f:
                             lines = f.readlines()
                             errors = sum(1 for line in lines if "ERROR" in line or "CRITICAL" in line)
-                            
+
                             dag_log_lines_gauge.labels(date=date_folder, dag_id=dag_id).set(len(lines))
                             dag_log_errors_gauge.labels(date=date_folder, dag_id=dag_id).set(errors)
                     except Exception as e:
@@ -383,25 +387,25 @@ def extract_error_metrics():
     timeout_counts = defaultdict(int)
     import_error_counts = defaultdict(int)
     error_details = defaultdict(lambda: {"tracebacks": 0, "error_types": set()})
-    
+
     error_results = query_loki_errors(hours=2160, level="ERROR")
-    
+
     for result in error_results:
         labels = result.get("stream", {})
         dag_id = labels.get("dag_id", "unknown")
         task_id = labels.get("task_id", "unknown")
         run_id = labels.get("run_id", "unknown")
         dag_file = labels.get("dag_file", "")
-        
+
         values = result.get("values", [])
         for timestamp, log_line in values:
             if dag_id != "unknown" and task_id != "unknown":
                 error_counts[(dag_id, task_id, run_id)] += 1
-                
+
                 key = (dag_id, task_id, run_id)
                 if "traceback" in log_line.lower():
                     error_details[key]["tracebacks"] += 1
-                
+
                 error_types = [
                     "AirflowException", "Py4JJavaError", "AWSS3IOException",
                     "XMinioStorageFull", "ImportError"
@@ -409,28 +413,28 @@ def extract_error_metrics():
                 for error_type in error_types:
                     if error_type in log_line:
                         error_details[key]["error_types"].add(error_type)
-            
+
             if "timed out" in log_line.lower() or "timeout" in log_line.lower():
                 timeout_counts[dag_id] += 1
-            
+
             if "Failed to import" in log_line and dag_file:
                 import_error_counts[dag_file] += 1
-    
+
     critical_results = query_loki_errors(hours=2160, level="CRITICAL")
-    
+
     for result in critical_results:
         labels = result.get("stream", {})
         dag_id = labels.get("dag_id", "unknown")
         task_id = labels.get("task_id", "unknown")
         run_id = labels.get("run_id", "unknown")
-        
+
         values = result.get("values", [])
         for timestamp, log_line in values:
             if dag_id != "unknown" and task_id != "unknown":
                 critical_counts[(dag_id, task_id, run_id)] += 1
-    
+
     logger.info(f"Extracted {len(error_counts)} error counts, {len(critical_counts)} critical counts")
-    
+
     return error_counts, critical_counts, timeout_counts, import_error_counts, error_details
 
 
@@ -464,7 +468,6 @@ def get_scheduler_health():
         scheduler_heartbeat_gauge.set(0)
 
 
-
 def get_pool_metrics():
     """
     Récupère les métriques des pools Airflow (slots ouverts, utilisés, en attente).
@@ -477,17 +480,17 @@ def get_pool_metrics():
         )
         pools_resp.raise_for_status()
         pools = pools_resp.json().get("pools", [])
-        
+
         pool_slots_open_gauge.clear()
         pool_slots_used_gauge.clear()
         pool_slots_queued_gauge.clear()
-        
+
         for pool in pools:
             pool_name = pool["name"]
             pool_slots_open_gauge.labels(pool_name=pool_name).set(pool.get("open_slots", 0))
             pool_slots_used_gauge.labels(pool_name=pool_name).set(pool.get("used_slots", 0))
             pool_slots_queued_gauge.labels(pool_name=pool_name).set(pool.get("queued_slots", 0))
-            
+
     except Exception as e:
         logger.error(f"Error fetching pools: {e}")
 
@@ -505,7 +508,7 @@ def get_import_errors():
         import_errors_resp.raise_for_status()
         errors = import_errors_resp.json().get("import_errors", [])
         dagbag_import_errors_gauge.set(len(errors))
-        
+
     except Exception as e:
         logger.error(f"Error fetching import errors: {e}")
         dagbag_import_errors_gauge.set(0)
@@ -520,12 +523,12 @@ def collect_dag_metrics():
         response = requests.get(
             f"{AIRFLOW_WEBSERVER}/dags",
             auth=(AIRFLOW_USER, AIRFLOW_PASSWORD),
-            params={"limit": 1000}  # Augmenter la limite
+            params={"limit": 1000}
         )
-        
+
         for dag in response.json().get('dags', []):
             dag_id = dag['dag_id']
-            
+
             # Récupérer l'historique complet des runs
             runs_response = requests.get(
                 f"{AIRFLOW_WEBSERVER}/dags/{dag_id}/dagRuns",
@@ -535,26 +538,24 @@ def collect_dag_metrics():
                     "order_by": "-execution_date"
                 }
             )
-            
+
             # Compter par état
             states = {"success": 0, "failed": 0, "running": 0}
             for run in runs_response.json().get('dag_runs', []):
                 state = run['state']
                 if state in states:
                     states[state] += 1
-                
+
                 # Durée
                 if run.get('duration'):
                     dag_duration_seconds.labels(dag_id=dag_id).set(run['duration'])
-            
+
             # Mettre à jour les métriques
             for state, count in states.items():
                 dag_runs_total.labels(dag_id=dag_id, state=state).set(count)
-                
+
     except Exception as e:
         logger.error(f"Error collecting DAG metrics: {e}")
-
-
 
 
 # ---------------- Routes ---------------- #
@@ -575,7 +576,7 @@ def airflow_metrics():
     print("🎯 ENDPOINT: /airflow_metrics appelé")
     print("="*60)
     logger.info("=== Appel /airflow_metrics ===")
-    
+
     # Vérifier la santé d'Airflow en premier pour définir airflow_up
     try:
         get_scheduler_health()
@@ -583,7 +584,7 @@ def airflow_metrics():
         logger.error(f"Erreur lors de la vérification de santé d'Airflow: {e}")
         airflow_up_gauge.set(0)
         scheduler_heartbeat_gauge.set(0)
-    
+
     try:
         # Récupérer TOUS les DAGs (limite augmentée)
         dags_resp = requests.get(
@@ -598,9 +599,10 @@ def airflow_metrics():
         for dag in dags:
             dag_id = dag["dag_id"]
             total_dags_gauge.labels(dag_id=dag_id).set(1)
-            
+
         dag_run_status_gauge.clear()
         dag_run_avg_duration_gauge.clear()
+        dag_run_failed_avg_duration_gauge.clear()  # ✅ Clear la nouvelle métrique
         task_status_gauge.clear()
         task_count_per_dag_gauge.clear()
         task_duration_gauge.clear()
@@ -626,10 +628,11 @@ def airflow_metrics():
         cutoff_date = datetime.now(timezone.utc) - timedelta(days=METRICS_TIME_WINDOW_DAYS)
         cutoff_date_str = cutoff_date.strftime("%Y-%m-%dT%H:%M:%SZ")
         logger.info(f"📅 Filtrage des métriques à partir de: {cutoff_date_str}")
-        
+
         for dag in dags:
             dag_id = dag["dag_id"]
-            durations = []
+            success_durations = []   # ✅ Durées des runs SUCCESS uniquement
+            failed_durations = []    # ✅ Durées des runs FAILED uniquement
 
             # Récupérer l'historique des runs avec filtrage par date via API
             runs_resp = requests.get(
@@ -643,7 +646,7 @@ def airflow_metrics():
             )
             runs_resp.raise_for_status()
             runs = runs_resp.json().get("dag_runs", [])
-            
+
             logger.info(f"DAG {dag_id}: {len(runs)} runs dans les {METRICS_TIME_WINDOW_DAYS} derniers jours")
 
             # Compteurs par état
@@ -654,16 +657,22 @@ def airflow_metrics():
                 state = run.get("state", "unknown")
                 run_counts[state] += 1
 
-                # Durée DAG run
+                # ✅ FIX: Calcul de durée séparé par état (SUCCESS vs FAILED)
+                # On exclut les runs "running" dont end_date est None ou incorrecte
                 start = run.get("start_date")
                 end = run.get("end_date")
-                if start and end:
+                if start and end and state in ("success", "failed"):
                     try:
                         start_dt = parser.isoparse(start)
                         end_dt = parser.isoparse(end)
                         duration = (end_dt - start_dt).total_seconds()
-                        durations.append(duration)
-                        dag_run_duration_summary.labels(dag_id=dag_id).observe(duration)
+
+                        if state == "success":
+                            success_durations.append(duration)
+                            dag_run_duration_summary.labels(dag_id=dag_id).observe(duration)
+                        elif state == "failed":
+                            failed_durations.append(duration)
+
                     except Exception as e:
                         logger.error(f"Erreur parsing dates DAG {dag_id}: {e}")
 
@@ -672,7 +681,7 @@ def airflow_metrics():
                     tasks_resp = requests.get(
                         f"{AIRFLOW_WEBSERVER}/dags/{dag_id}/dagRuns/{run['dag_run_id']}/taskInstances",
                         auth=(AIRFLOW_USER, AIRFLOW_PASSWORD),
-                        params={"limit": 500},  # Augmenté pour avoir tout l'historique
+                        params={"limit": 500},
                         timeout=5
                     )
                     tasks_resp.raise_for_status()
@@ -683,7 +692,7 @@ def airflow_metrics():
                         task_state = task.get("state", "unknown")
                         key = (dag_id, task_id, task_state)
                         task_counts[key] += 1
-                        
+
                         # Durée de la task
                         task_start = task.get("start_date")
                         task_end = task.get("end_date")
@@ -699,7 +708,7 @@ def airflow_metrics():
                                 ).set(task_duration)
                             except Exception as e:
                                 logger.error(f"Erreur parsing dates task {dag_id}/{task_id}: {e}")
-                        
+
                         # Nombre de retries
                         try_number = task.get("try_number", 0)
                         if try_number > 1:
@@ -707,7 +716,7 @@ def airflow_metrics():
                                 dag_id=dag_id,
                                 task_id=task_id
                             ).set(try_number - 1)
-                        
+
                 except Exception as e:
                     logger.error(f"Erreur récupération tasks pour {dag_id}/{run['dag_run_id']}: {e}")
                     continue
@@ -715,7 +724,7 @@ def airflow_metrics():
             # Mettre à jour gauges DAG run - TOUS LES ÉTATS
             for state, count in run_counts.items():
                 dag_run_status_gauge.labels(dag_id=dag_id, state=state).set(count)
-            
+
             # S'assurer que les états avec 0 sont aussi exposés (important pour Grafana)
             all_possible_states = ["success", "failed", "running", "queued", "upstream_failed"]
             for state in all_possible_states:
@@ -726,16 +735,29 @@ def airflow_metrics():
             for (dag_id_key, task_id, state), count in task_counts.items():
                 task_status_gauge.labels(dag_id=dag_id_key, task_id=task_id, state=state).set(count)
 
-            # Durée moyenne
-            if durations:
-                avg_duration = sum(durations) / len(durations)
-                dag_run_avg_duration_gauge.labels(dag_id=dag_id).set(avg_duration)
+            # ✅ FIX: Durée moyenne SUCCESS uniquement
+            if success_durations:
+                avg_success_duration = sum(success_durations) / len(success_durations)
+                dag_run_avg_duration_gauge.labels(dag_id=dag_id).set(avg_success_duration)
+                logger.info(
+                    f"DAG {dag_id}: avg SUCCESS duration = {avg_success_duration:.1f}s "
+                    f"(sur {len(success_durations)} runs)"
+                )
+
+            # ✅ NOUVEAU: Durée moyenne FAILED
+            if failed_durations:
+                avg_failed_duration = sum(failed_durations) / len(failed_durations)
+                dag_run_failed_avg_duration_gauge.labels(dag_id=dag_id).set(avg_failed_duration)
+                logger.info(
+                    f"DAG {dag_id}: avg FAILED duration = {avg_failed_duration:.1f}s "
+                    f"(sur {len(failed_durations)} runs)"
+                )
 
         # Nouvelles métriques
         get_scheduler_health()
         get_pool_metrics()
         get_import_errors()
-        
+
         # Logs scheduler
         parse_scheduler_logs()
 
@@ -745,7 +767,6 @@ def airflow_metrics():
         logger.error(f"Erreur de connexion à Airflow API: {e}")
         airflow_up_gauge.set(0)
         scheduler_heartbeat_gauge.set(0)
-        # Retourner quand même les métriques pour que Prometheus puisse scraper
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
     except Exception as e:
         logger.error(f"Error in /airflow_metrics: {e}", exc_info=True)
@@ -758,7 +779,7 @@ def airflow_metrics():
 def metrics():
     """Main endpoint for Prometheus (Loki errors)"""
     logger.info("[DEBUG] Entrée dans la route /metrics")
-    
+
     # Vérifier la santé d'Airflow en premier
     try:
         get_scheduler_health()
@@ -766,7 +787,7 @@ def metrics():
         logger.error(f"Erreur lors de la vérification de santé d'Airflow dans /metrics: {e}")
         airflow_up_gauge.set(0)
         scheduler_heartbeat_gauge.set(0)
-    
+
     try:
         # --- RAM/CPU Usage --- #
         ram, cpu = get_airflow_resource_usage()
@@ -775,30 +796,30 @@ def metrics():
         if cpu is not None:
             airflow_cpu_usage_gauge.set(cpu)
         error_counts, critical_counts, timeout_counts, import_error_counts, error_details = extract_error_metrics()
-        
+
         airflow_error_count.clear()
         for (dag_id, task_id, run_id), count in error_counts.items():
             airflow_error_count.labels(dag_id=dag_id, task_id=task_id, run_id=run_id).set(count)
-        
+
         airflow_critical_count.clear()
         for (dag_id, task_id, run_id), count in critical_counts.items():
             airflow_critical_count.labels(dag_id=dag_id, task_id=task_id, run_id=run_id).set(count)
-        
+
         airflow_timeout_count.clear()
         for dag_id, count in timeout_counts.items():
             airflow_timeout_count.labels(dag_id=dag_id).set(count)
-        
+
         airflow_import_error_count.clear()
         for dag_file, count in import_error_counts.items():
             airflow_import_error_count.labels(dag_file=dag_file).set(count)
-        
+
         airflow_error_details.clear()
         airflow_traceback_count.clear()
         for (dag_id, task_id, run_id), details in error_details.items():
             traceback_count = details.get("tracebacks", 0)
             airflow_traceback_count.labels(
-                dag_id=dag_id, 
-                task_id=task_id, 
+                dag_id=dag_id,
+                task_id=task_id,
                 run_id=run_id
             ).set(traceback_count)
             error_types = details.get("error_types", set())
@@ -809,15 +830,15 @@ def metrics():
                     run_id=run_id,
                     error_type=error_type
                 ).set(1)
-        
+
         logger.info("[DEBUG] Fin traitement erreurs, début exposition tâches")
-        
+
         # Exposition simplifiée du nombre de tâches via API Airflow
         logger.info("Exposition des métriques de tâches via API")
         try:
             airflow_task_count_gauge.clear()
             total_tasks = 0
-            
+
             # Récupérer la liste des DAGs
             dags_resp = requests.get(
                 f"{AIRFLOW_WEBSERVER}/dags",
@@ -827,7 +848,7 @@ def metrics():
             )
             dags_resp.raise_for_status()
             dags = dags_resp.json().get("dags", [])
-            
+
             for dag in dags:
                 dag_id = dag["dag_id"]
                 try:
@@ -843,12 +864,12 @@ def metrics():
                     total_tasks += num_tasks
                 except Exception as e:
                     logger.error(f"Erreur API tasks pour DAG {dag_id}: {e}")
-            
+
             airflow_task_count_total_gauge.set(total_tasks)
             logger.info(f"Métriques tâches exposées: {total_tasks} tâches totales")
         except Exception as e:
             logger.error(f"Erreur exposition métriques tâches: {e}")
-        
+
         logger.info("Metrics generated successfully")
         return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
     except requests.exceptions.RequestException as e:
