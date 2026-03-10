@@ -132,7 +132,6 @@ function displayResults(data) {
         return;
     }
     
-    // Créer l'info bar
     const infoBar = `
         <div class="results-info">
             <div class="results-info-item">
@@ -150,27 +149,20 @@ function displayResults(data) {
         </div>
     `;
     
-    // Créer le tableau
     let tableHTML = `
         ${infoBar}
-        <div class="results-table-container">
+        <div class="results-table-wrapper">
             <table class="results-table">
                 <thead>
                     <tr>
     `;
     
-    // En-têtes
     data.columns.forEach(col => {
         tableHTML += `<th>${escapeHtml(col)}</th>`;
     });
     
-    tableHTML += `
-                    </tr>
-                </thead>
-                <tbody>
-    `;
+    tableHTML += `</tr></thead><tbody>`;
     
-    // Données
     data.data.forEach(row => {
         tableHTML += '<tr>';
         data.columns.forEach(col => {
@@ -180,15 +172,10 @@ function displayResults(data) {
         tableHTML += '</tr>';
     });
     
-    tableHTML += `
-                </tbody>
-            </table>
-        </div>
-    `;
+    tableHTML += `</tbody></table></div>`;
     
     container.innerHTML = tableHTML;
 }
-
 // Afficher une erreur
 function displayError(error, stackTrace) {
     const container = document.getElementById('resultsContainer');
