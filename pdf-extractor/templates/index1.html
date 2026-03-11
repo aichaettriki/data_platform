@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Data Extractor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="background-animation"></div>
+
+    <div class="app-container">
+        <header>
+            <h1><i class="fa-solid fa-file-pdf"></i> PDF Data Extractor</h1>
+            <p>Upload a PDF to extract tables and charts with AI-powered interpretation.</p>
+        </header>
+
+        <main>
+            <!-- Upload -->
+            <div class="upload-section glass-panel" id="upload-section">
+                <div class="upload-area" id="drop-zone">
+                    <input type="file" id="file-input" accept=".pdf" hidden>
+                    <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                    <h2>Drag & Drop your PDF here</h2>
+                    <p>or click to browse</p>
+                </div>
+                <div class="loading-state hidden" id="loading-state">
+                    <div class="spinner"></div>
+                    <p>Extracting tables & charts, interpreting with AI... This may take a moment.</p>
+                </div>
+                <div class="error-message hidden" id="error-message"></div>
+            </div>
+
+            <!-- Results -->
+            <div class="results-section glass-panel hidden" id="results-section">
+                <div class="controls">
+                    <div class="indicator-select-wrapper">
+                        <label for="item-select">Select an item:</label>
+                        <select id="item-select">
+                            <option value="" disabled selected>Choose a table or chart...</option>
+                        </select>
+                    </div>
+                    <button id="download-csv-btn" class="btn-primary" disabled>
+                        <i class="fa-solid fa-download"></i> Download CSV
+                    </button>
+                    <button id="upload-new-btn" class="btn-secondary">
+                        <i class="fa-solid fa-rotate-right"></i> Upload New
+                    </button>
+                </div>
+
+                <!-- Table display -->
+                <div class="table-scroll-wrapper hidden" id="table-display">
+                    <div class="empty-state">
+                        <i class="fa-solid fa-table"></i>
+                        <p>Select an item from the dropdown above.</p>
+                    </div>
+                </div>
+
+                <!-- Chart display -->
+                <div class="chart-display hidden" id="chart-display">
+                    <div class="chart-image-wrapper">
+                        <img id="chart-image" src="" alt="Chart">
+                    </div>
+                    <div class="ai-description" id="chart-description"></div>
+                    <div class="chart-data-section hidden" id="chart-data-section">
+                        <h4><i class="fa-solid fa-table-cells"></i> AI-Extracted Data</h4>
+                        <div class="ai-table-wrapper" id="chart-table-container"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+
+</html>

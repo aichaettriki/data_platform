@@ -788,7 +788,42 @@ services:
 
 
 
-
+  pdf-extractor:
+    build:
+      context: ./pdf-extractor
+      dockerfile: Dockerfile
+    container_name: pdf-extractor
+    networks:
+      - traefik-public
+    ports:
+      - "5015:5015"
+    deploy:
+      resources:
+        limits:
+          memory: 6G        # raised from 4G — engines alone need ~2.6GB
+        reservations:
+          memory: 3G
+    environment:
+      MINIO_ENDPOINT: "minio:9000"
+      MINIO_ACCESS_KEY: "${MINIO_ROOT_USER}"
+      MINIO_SECRET_KEY: "${MINIO_ROOT_PASSWORD}"
+      MINIO_USE_SSL: "false"
+      PORT: "5015"
+      FLASK_DEBUG: "false"
+      UPLOAD_FOLDER: "/app/uploads"
+    volumes:
+      - pdf_uploads:/app/uploads
+      # !! DO NOT mount /root/.paddleocr — it hides the baked-in models !!
+    depends_on:
+      - minio
+    restart: always
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.pdf-extractor.rule=Host(`pdf.itceq.tn`)"
+      - "traefik.http.routers.pdf-extractor.entrypoints=web"
+      - "traefik.http.services.pdf-extractor.loadbalancer.server.port=5015"
+ 
+ 
 # ------------------------ Volumes ------------------------
 volumes:
   prometheus_data:
@@ -797,6 +832,8 @@ volumes:
   minio-data:
   spark-events-data:
   spark-work:
+  pdf_uploads:        # add this
+ 
 
 
 # ------------------------ Networks ------------------------
