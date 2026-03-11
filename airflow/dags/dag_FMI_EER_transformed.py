@@ -2,6 +2,7 @@ from airflow import DAG
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from datetime import datetime
 from common.dag_helpers import make_spark_conf, create_zip_task, SPARK_COMMON_ZIP
+from common.dag_helpers import create_zip_task, create_cleanup_task, SPARK_COMMON_ZIP, make_spark_conf, RAW_BUCKET
 
 with DAG(
     dag_id="02-TRANS__imf_data",
@@ -22,5 +23,6 @@ with DAG(
         conf=make_spark_conf(),
         py_files=SPARK_COMMON_ZIP,
     )
+    cleanup = create_cleanup_task(dag, source_bucket=RAW_BUCKET, triggered_by="spark_imf_transform")
 
-    zip_common >> transform_imf
+    zip_common >> transform_imf >> cleanup
