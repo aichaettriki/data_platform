@@ -660,7 +660,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
         spark_df = (
             spark_df
             .withColumn("date_chargement", current_timestamp())
-            .withColumn("Pays",   F.lit("Tunisie"))
+            .withColumn("Pays",   F.lit("TUN"))
             .withColumn("Rang",   F.lit(None).cast("int"))
             .withColumn("Source", F.lit("TRE"))
             .withColumn("Base",   F.lit(None).cast("int"))
@@ -981,7 +981,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
                 df_final = (
                     df_final
                     .withColumn("annee",          F.col("annee").cast("int"))
-                    .withColumn("rang",            F.col("rang").cast("int"))
+                    .withColumn("rang",            F.col("rang").cast(StringType()))
                     .withColumn("base",            F.col("base").cast(StringType()))
                     .withColumn("version_active",  F.col("version_active").cast("int"))
                     .withColumn("valeur",          F.col("valeur").cast("double"))

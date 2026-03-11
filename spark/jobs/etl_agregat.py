@@ -284,10 +284,10 @@ for fact_file in fact_files:
         .withColumnRenamed("value",         "valeur")
         .withColumnRenamed("indicator_name","Variable")
         .withColumn("version", lit("N/A"))
-        .withColumn("pays", lit("Tunisie"))
+        .withColumn("pays", lit("TUN"))
         .withColumn("lib_secteur", lit("N/A"))
         .withColumn("code_secteur", lit("N/A"))
-        .withColumn("rang", lit(None).cast("int"))
+        .withColumn("rang", lit(None).cast(StringType()))
 
         .withColumn("base",    lit("2015"))
         .withColumn("source",  lit(source_category))

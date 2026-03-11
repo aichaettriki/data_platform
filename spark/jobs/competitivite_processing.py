@@ -46,7 +46,7 @@ class CompetitifScoresProcessor:
         self.input_path = f"{year}/{month}/ITCEQ/competitivite/positionnement/"
         self.output_path = "ITCEQ/competitivite/Positionnement/"
         self.detection_config = {'excluded_texts': ['Score', 'Rang', 'Pays', 'Rank', 'Country', 'Year'], 'min_text_length': 3}
-        self.spark = create_spark_session("Competitivité Positionnement Processing")
+        self.spark = create_spark_session("Compétitivité Positionnement Processing")
         self._init_minio_client()
  
     def _init_minio_client(self):
@@ -67,9 +67,37 @@ class CompetitifScoresProcessor:
         finally:
             stop_spark_session(self.spark)
  
+    # def find_excel_file(self):
+    #     self.input_file_key = find_latest_files_in_minio(self.minio_client, self.minio_config.bucket_raw, self.input_path)
+    #     return self.input_file_key
+ 
     def find_excel_file(self):
-        self.input_file_key = find_latest_files_in_minio(self.minio_client, self.minio_config.bucket_raw, self.input_path)
+        # Search across all months under the year, not just the passed month
+        base_path = f"{self.year}/"
+        search_prefix = f"{base_path}"
+       
+        objects = self.minio_client.list_objects(
+            self.minio_config.bucket_raw,
+            prefix=f"{self.year}/",
+            recursive=True
+        )
+        excel_files = [
+            obj.object_name for obj in objects
+            if obj.object_name.endswith(('.xlsx', '.xls'))
+            and 'competitivite/positionnement' in obj.object_name
+            and not obj.object_name.split('/')[-1].startswith('~')
+        ]
+       
+        if not excel_files:
+            raise FileNotFoundError(
+                f"No Excel files found under 01-raw/{self.year}/.../competitivite/positionnement/"
+            )
+       
+        excel_files.sort(reverse=True)
+        self.input_file_key = excel_files[0]
+        logger.info(f"✅ Found Excel file: {self.input_file_key}")
         return self.input_file_key
+   
  
     def extract_data_from_minio(self):
         response = self.minio_client.get_object(self.minio_config.bucket_raw, self.input_file_key)
@@ -80,7 +108,6 @@ class CompetitifScoresProcessor:
         self.raw_data = pd.read_excel(self.excel_data_bytes, sheet_name=self.sheet_name, header=None)
         return self.raw_data
  
- 
     def identify_titles(self):
         self.excel_data_bytes.seek(0)
         ws = load_workbook(self.excel_data_bytes)[self.sheet_name]
@@ -90,10 +117,8 @@ class CompetitifScoresProcessor:
             val_a = ws.cell(row=r, column=1).value
             val_b = ws.cell(row=r, column=2).value
  
-            # Clean value for logging and detection
             val_a_clean = clean_roman_prefix(str(val_a).strip()) if isinstance(val_a, str) else ''
  
-            # Logging
             logger.info(f"  ✅ ✅ ℹ️ Row {r}: Column A={repr(val_a)}, Column B={repr(val_b)}, Cleaned Title={repr(val_a_clean)}")
  
             if val_a_clean and (val_b is None or val_b == ''):
@@ -118,55 +143,89 @@ class CompetitifScoresProcessor:
                     years_row_idx = r_idx
                     break
            
-            if years_row_idx is None: continue
+            if years_row_idx is None:
+                continue
+ 
             years = [int(float(y)) for y in sec_df.iloc[years_row_idx, 1:15] if pd.notna(y)]
             countries_data = sec_df.iloc[years_row_idx+1:, :]
  
             for _, row in countries_data.iterrows():
                 country = row[0]
-                if pd.isna(country) or str(country).strip() in self.detection_config['excluded_texts']: continue
+                if pd.isna(country) or str(country).strip() in self.detection_config['excluded_texts']:
+                    continue
                 for year, score in zip(years, row[1:15]):
                     if pd.notna(score):
-                        all_records.append({'pays': str(country).strip(), 'annee': int(year), 'variable': section['title'].strip(), 'valeur': float(score)})
+                        # Label the variable as "- Score" to distinguish from "- Rang"
+                        all_records.append({
+                            'pays': str(country).strip(),
+                            'annee': int(year),
+                            'variable': section['title'].strip() + ' - Score',
+                            'valeur': float(score)
+                        })
        
         self.transformed_data = pd.DataFrame(all_records).drop_duplicates(subset=['pays', 'annee', 'variable'])
         return self.transformed_data
  
     def calculate_rankings(self):
-        """Calculates rankings and adds metadata: Base, version, Source, dim_id, dim_key, code_secteur, lib_secteur"""
         logger.info("STEP 4: CALCULATING RANKINGS (SPARK NATIVE)")
        
-        # Convert initial Pandas extraction to Spark
+        # Convert Pandas DataFrame to Spark
         spark_df = self.spark.createDataFrame(self.transformed_data)
-       
-        # Define window for ranking
-        window_spec = Window.partitionBy("variable", "annee").orderBy(F.col("valeur").desc())
-     
-        # Apply ranking and add ALL requested columns
-        # Using .cast("string") on Nulls prevents the "CANNOT_DETERMINE_TYPE" error
-        self.ranked_data = spark_df.withColumn("rang", F.rank().over(window_spec)) \
-                           .withColumn("base", F.lit(None).cast("string")) \
-                           .withColumn("version", F.lit(None).cast("string")) \
-                           .withColumn("source", F.lit("competitivité positionnement")) \
-                           .withColumn("dim_id", F.lit(None).cast("string")) \
-                           .withColumn("dim_key", F.lit(None).cast("string")) \
-                           .withColumn("code_secteur", F.lit(None).cast("string")) \
-                           .withColumn("lib_secteur", F.lit(None).cast("string")) \
-                           .withColumn("annee", F.col("annee").cast("int"))
-        
  
+        # Extract base indicator name by stripping the " - Score" suffix
+        spark_df = spark_df.withColumn(
+            "base_variable",
+            F.regexp_replace(F.col("variable"), r" - Score$", "")
+        )
+ 
+        # Define ranking window per base indicator and year (descending valeur)
+        window_spec = Window.partitionBy("base_variable", "annee").orderBy(F.col("valeur").desc())
+        spark_df = spark_df.withColumn("rang_value", F.rank().over(window_spec))
+ 
+        # ── Score rows: keep variable as-is (e.g. "Indicateur - Score"), drop helpers
+        df_scores = spark_df.drop("base_variable", "rang_value")
+ 
+        # ── Rang rows: new rows with " - Rang" variable name and rank as valeur
+        df_rangs = spark_df.select(
+            F.col("pays"),
+            F.col("annee"),
+            F.concat(F.col("base_variable"), F.lit(" - Rang")).alias("variable"),
+            F.col("rang_value").cast("double").alias("valeur")
+        )
+ 
+        # Metadata columns applied to both Score and Rang rows
+        meta_cols = {
+            "base":         F.lit(None).cast("string"),
+            "version":      F.lit(None).cast("string"),
+            "source":       F.lit("competitivité positionnement"),
+            "dim_id":       F.lit(None).cast("string"),
+            "dim_key":      F.lit(None).cast("string"),
+            "code_secteur": F.lit(None).cast("string"),
+            "lib_secteur":  F.lit(None).cast("string"),
+        }
+ 
+        for col_name, col_expr in meta_cols.items():
+            df_scores = df_scores.withColumn(col_name, col_expr)
+            df_rangs  = df_rangs.withColumn(col_name, col_expr)
+ 
+        # Cast annee to int on both sides
+        df_scores = df_scores.withColumn("annee", F.col("annee").cast("int"))
+        df_rangs  = df_rangs.withColumn("annee",  F.col("annee").cast("int"))
+ 
+        # Union Score rows and Rang rows into a single DataFrame
+        self.ranked_data = df_scores.unionByName(df_rangs)
+ 
+        logger.info("Rankings calculated and merged into variable column (- Score / - Rang).")
         return self.ranked_data
-   
  
     def save_to_minio(self):
         logger.info("="*80)
         logger.info("STEP 5: SAVING TO MINIO (STRICT AUDIT TRAIL)")
         logger.info("="*80)
  
-        # self.ranked_data is already a Spark DataFrame from calculate_rankings
+        # ranked_data is already a Spark DataFrame — just cast valeur to double
         spark_df_new = self.ranked_data \
-                                   .withColumn("valeur", F.col("valeur").cast("double")) \
-                                   .withColumn("rang", F.col("rang").cast("int"))
+            .withColumn("valeur", F.col("valeur").cast("double"))
  
         # Get unique years using Spark
         years_rows = spark_df_new.select("annee").distinct().collect()
@@ -194,19 +253,19 @@ class CompetitifScoresProcessor:
                 logger.info(f"   ℹ️ No history for {year}.")
  
             if not history_exists:
-                # First load: Add Audit columns
+                # First load: add audit columns
                 df_to_write = df_year_new \
                     .withColumn("date_chargement", F.current_timestamp()) \
                     .withColumn("version_active", F.lit(1).cast("int"))
             else:
-                # Delta detection logic
+                # Delta detection — rang is now encoded in variable, no separate rang comparison needed
                 delta_query = """
                     SELECT
                         n.*,
                         CURRENT_TIMESTAMP as date_chargement
                     FROM v_new_data n
                     LEFT JOIN (
-                        SELECT pays, variable, valeur, rang
+                        SELECT pays, variable, valeur
                         FROM (
                             SELECT *,
                                 ROW_NUMBER() OVER (
@@ -223,7 +282,6 @@ class CompetitifScoresProcessor:
                     OR (ROUND(n.valeur, 5) <> ROUND(h.valeur, 5))
                     OR (n.valeur IS NULL AND h.valeur IS NOT NULL)
                     OR (n.valeur IS NOT NULL AND h.valeur IS NULL)
-                    OR (n.rang <> h.rang)
                 """
  
                 df_changes = self.spark.sql(delta_query)
@@ -252,7 +310,6 @@ class CompetitifScoresProcessor:
                         .otherwise(F.col("h.version_active").cast("int"))
                     ).drop("pays_key", "variable_key")
  
-                    # 🔥 UnionByName with allowMissingColumns=True handles the new schema
                     df_to_write = df_history_updated.unionByName(df_changes_latest, allowMissingColumns=True)
                 else:
                     logger.info("   ✅ Data is identical to history. No file modification.")
@@ -262,27 +319,29 @@ class CompetitifScoresProcessor:
             if df_to_write is not None:
                 df_to_write.coalesce(1).write.mode("overwrite").parquet(temp_output_path)
                 logger.info("📊 FINAL DATAFRAME SCHEMA (Detailed)")
-                
+               
                 for field in df_to_write.schema.fields:
                     logger.info(
-                                f"Column: {field.name} | "
-                                f"Type: {field.dataType.simpleString()} | "
-                                f"Nullable: {field.nullable}"
+                        f"Column: {field.name} | "
+                        f"Type: {field.dataType.simpleString()} | "
+                        f"Nullable: {field.nullable}"
                     )
-                
-                    logger.info(f"📊 Total columns: {len(df_to_write.columns)}")
+                logger.info(f"📊 Total columns: {len(df_to_write.columns)}")
+ 
                 try:
                     target_uri = sc._jvm.java.net.URI(output_path)
                     fs = FileSystem.get(target_uri, conf)
-                    if fs.exists(Path(output_path)): fs.delete(Path(output_path), True)
+                    if fs.exists(Path(output_path)):
+                        fs.delete(Path(output_path), True)
                     fs.rename(Path(temp_output_path), Path(output_path))
-                    logger.info(f"   ✅ Year {year} successfully updated with all 7 new columns.")
+                    logger.info(f"   ✅ Year {year} successfully saved.")
                 except Exception as e:
                     logger.error(f"   ❌ FS Error: {e}")
  
-            # Clean up Views
+            # Clean up temp views
             self.spark.catalog.dropTempView("v_new_data")
-            if history_exists: self.spark.catalog.dropTempView("v_history")
+            if history_exists:
+                self.spark.catalog.dropTempView("v_history")
             try:
                 self.spark.catalog.dropTempView("v_changes")
                 self.spark.catalog.dropTempView("v_outdated_keys")
@@ -290,7 +349,6 @@ class CompetitifScoresProcessor:
                 pass
        
         return {'path': self.output_path, 'years': years}
- 
  
     def validate_minio_output(self):
         logger.info("STEP 6: VALIDATION")
@@ -300,27 +358,34 @@ class CompetitifScoresProcessor:
             total = df_all.count()
             actives = df_all.filter(F.col("version_active") == 1).count()
             historiques = df_all.filter(F.col("version_active") == 0).count()
+ 
+            # Extra breakdown: Score vs Rang rows
+            scores_count = df_all.filter(F.col("variable").endswith("- Score")).count()
+            rangs_count  = df_all.filter(F.col("variable").endswith("- Rang")).count()
+ 
             logger.info(f"✅ Full dataset validated: {total:,} records total.")
-            logger.info(f"   └── 🟢 version_active = 1 : {actives:,} lignes actives")
-            logger.info(f"   └── 🔴 version_active = 0 : {historiques:,} lignes historiques")
+            logger.info(f"   └── 🟢 version_active = 1 : {actives:,} active rows")
+            logger.info(f"   └── 🔴 version_active = 0 : {historiques:,} historical rows")
+            logger.info(f"   └── 📊 Variables ending in '- Score' : {scores_count:,}")
+            logger.info(f"   └── 🏅 Variables ending in '- Rang'  : {rangs_count:,}")
         except:
             logger.warning("⚠️ Validation skipped (dataset might be empty or years missing).")
-
-
+ 
+ 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--year", required=True)
     parser.add_argument("--month", required=True)
     parser.add_argument("--day", required=True)
-
+ 
     args = parser.parse_args()
-
+ 
     processor = CompetitifScoresProcessor(
         year=args.year,
         month=args.month,
         day=args.day
     )
-
+ 
     processor.run()
  
 if __name__ == "__main__":
