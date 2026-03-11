@@ -5,6 +5,7 @@ import zipfile, os, tempfile, shutil
 from airflow.operators.python import PythonOperator
 
 RAW_BUCKET = os.getenv("RAW_BUCKET", "s3a://01-raw")
+TRANSFORMED_BUCKET = os.getenv("TRANSFORMED_BUCKET", "s3a://02-transformed")
 SPARK_COMMON_ZIP = "/tmp/common.zip"
 # dags/common/dag_helpers.py
 SPARK_S3_CONF = {

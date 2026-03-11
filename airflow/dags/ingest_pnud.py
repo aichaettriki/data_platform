@@ -107,7 +107,7 @@ def upload_to_minio(**context):
 
 
 with DAG(
-    dag_id="01-ING__UNDP_HDR_to_Raw",
+    dag_id="01-ING__PNUD_HDI_to_Raw",
     start_date=datetime(2024, 1, 1),
     schedule_interval=None,
     catchup=False,
