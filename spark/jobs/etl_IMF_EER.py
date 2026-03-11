@@ -1,5 +1,7 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, current_timestamp, lit, trim, when, regexp_extract, expr, row_number, desc
+from pyspark.sql.functions import col, current_timestamp, lit, trim, when, regexp_extract, expr, row_number, desc, lpad
+from pyspark.sql.types import DecimalType
+
 from pyspark.sql.window import Window
 from pyspark.sql.utils import AnalysisException
 from pyspark.sql.types import StringType
@@ -86,13 +88,13 @@ df = (
     .option("quote", '"')
     .option("escape", '"')
     .option("multiLine", "true")
-    .option("inferSchema", "true")
+    .option("inferSchema", "false")
     .csv(RAW_FILE)
 )
 
 log.info(f"📊 Rows : {df.count()}")
 log.info(f"📊 Columns : {len(df.columns)}")
-
+df.show(5, False)
 # =====================================================
 # IDENTIFY TIME COLUMNS
 # =====================================================
@@ -124,36 +126,67 @@ long_df = df.select(
     col("`INDICATOR.ID`").alias("variable_id"),
     col("FREQUENCY").alias("freq"),
     expr(stack_expr)
-).filter(col("value").isNotNull())
-
+# ).filter(col("value").isNotNull())
+).filter(col("value").cast("double").isNotNull())
 # =====================================================
 # PERIOD EXTRACTION
 # =====================================================
+from pyspark.sql.functions import col, concat, lpad, floor
 
-long_df = (
-    long_df
-    .withColumn("annee", regexp_extract("period", "(\\d{4})", 1).cast("int"))
-
-    # 🔧 IMPORTANT : remplacer NULL
-    .withColumn(
-        "anneeM",
-        when(col("period").contains("-M"), col("period")).otherwise(lit(""))
+long_df = long_df.withColumn(
+    "periode",
+    when(
+        col("period").rlike(r"\d{4}-M\d{1,2}"),
+        concat(
+            regexp_extract("period", r"(\d{4})-M(\d{1,2})", 1),  # année
+            lpad(
+                (floor((regexp_extract("period", r"(\d{4})-M(\d{1,2})", 2).cast("int") - 1)/3) + 1)
+                .cast("int").cast("string"),
+                2,
+                "0"
+            ),  # trimestre
+            lpad(
+                regexp_extract("period", r"(\d{4})-M(\d{1,2})", 2),  # mois réel
+                2,
+                "0"
+            )
+        )
     )
-
-    .withColumn(
-        "anneeQ",
-        when(col("period").contains("-Q"), col("period")).otherwise(lit(""))
+    .when(
+        col("period").rlike(r"\d{4}-Q\d"),
+        concat(
+            regexp_extract("period", r"(\d{4})-Q(\d)", 1),  # année
+            lpad(regexp_extract("period", r"(\d{4})-Q(\d)", 2), 2, "0")  # trimestre
+        )
+    )
+    .otherwise(
+        regexp_extract("period", r"(\d{4})", 1)  # année
     )
 )
 
+
+log.info("🔎 Sample period transformations")
+
+samples = (
+    long_df
+    .select("period","periode")
+    .distinct()
+    .limit(10)
+    .collect()
+)
+
+for r in samples:
+    log.info(f"   {r['period']}  →  {r['periode']}")
 # =====================================================
 # FINAL STRUCTURE
 # =====================================================
 
 final_df = long_df.select(
     "pays","variable","variable_id","freq",
-    "annee","anneeM","anneeQ",
-    col("value").cast("double").alias("valeur"),
+    "periode",
+    # col("value").cast("double").alias("valeur"),
+
+    col("value").cast(DecimalType(20,15)).alias("valeur"),
     lit(None).cast(StringType()).alias("base"),
     lit(None).cast(StringType()).alias("version"),
     lit(None).cast(StringType()).alias("code_secteur"),
@@ -164,26 +197,30 @@ final_df = long_df.select(
     current_timestamp().alias("date_chargement"),
     lit(1).cast("int").alias("version_active")
 )
+final_df = final_df.withColumn(
+    "year_partition",
+    col("periode").substr(1,4)
+)
 
 # =====================================================
 # DELTA KEYS
 # =====================================================
 
-BUSINESS_KEYS = ["pays","variable_id","freq","annee","anneeM","anneeQ"]
+BUSINESS_KEYS = ["pays","variable_id","freq","periode"]
 
-years = sorted([r["annee"] for r in final_df.select("annee").distinct().collect()])
-
+years = sorted([r["year_partition"] for r in final_df.select("year_partition").distinct().collect()])
 # =====================================================
 # PROCESS YEARS
 # =====================================================
 
 for y in years:
 
-    df_year = final_df.filter(col("annee") == y).cache()
+    df_year = final_df.filter(col("year_partition") == y).cache()
 
     rows_new_file = df_year.count()
 
     output_path = os.path.join(TRANSFORMED_BASE, str(y))
+    
 
     log.info("")
     log.info("===================================================")
@@ -232,7 +269,7 @@ for y in years:
             how="left"
         )
 
-        new_rows = joined.filter(col("old.valeur").isNull()).select("new.*")
+        new_rows = joined.filter(col("old.pays").isNull()).select("new.*")
 
         modified_rows = joined.filter(
             col("old.valeur").isNotNull() &
@@ -253,8 +290,7 @@ for y in years:
             for r in new_rows.limit(5).collect():
 
                 log.info(
-                    f"   🆕 {r['pays']} | {r['variable_id']} | {r['freq']} | "
-                    f"{r['annee']} | {r['anneeM']} | {r['anneeQ']} | value={r['valeur']}"
+                    f"   🆕 {r['pays']} | {r['variable_id']} | {r['freq']} | {r['periode']} | {r['valeur']}"
                 )
 
         # samples modified
@@ -266,8 +302,10 @@ for y in years:
                 col("old.valeur").isNotNull() &
                 (col("new.valeur") != col("old.valeur"))
             ).select(
-                "new.pays","new.variable_id","new.freq",
-                "new.annee","new.anneeM","new.anneeQ",
+                col("new.pays").alias("pays"),
+                col("new.variable_id").alias("variable_id"),
+                col("new.freq").alias("freq"),
+                col("new.periode").alias("periode"),
                 col("old.valeur").alias("old_val"),
                 col("new.valeur").alias("new_val")
             ).limit(5).collect()
@@ -275,9 +313,7 @@ for y in years:
             for r in samples:
 
                 log.info(
-                    f"   ✏️ {r['pays']} | {r['variable_id']} | {r['freq']} | "
-                    f"{r['annee']} | {r['anneeM']} | {r['anneeQ']} | "
-                    f"{r['old_val']} → {r['new_val']}"
+                    f"   ✏️ {r['pays']} | {r['variable_id']} | {r['freq']} | {r['periode']} | {r['old_val']} → {r['new_val']}"
                 )
 
         changed_rows = new_rows.union(modified_rows).cache()
