@@ -124,7 +124,7 @@ long_df = df.select(
     col("`COUNTRY.ID`").alias("pays"),
     col("INDICATOR").alias("variable"),
     col("`INDICATOR.ID`").alias("variable_id"),
-    col("FREQUENCY").alias("freq"),
+    # col("FREQUENCY").alias("freq"),
     expr(stack_expr)
 # ).filter(col("value").isNotNull())
 ).filter(col("value").cast("double").isNotNull())
@@ -182,7 +182,7 @@ for r in samples:
 # =====================================================
 
 final_df = long_df.select(
-    "pays","variable","variable_id","freq",
+    "pays","variable","variable_id",
     "periode",
     # col("value").cast("double").alias("valeur"),
 
@@ -206,7 +206,7 @@ final_df = final_df.withColumn(
 # DELTA KEYS
 # =====================================================
 
-BUSINESS_KEYS = ["pays","variable_id","freq","periode"]
+BUSINESS_KEYS = ["pays","variable_id","periode"]
 
 years = sorted([r["year_partition"] for r in final_df.select("year_partition").distinct().collect()])
 # =====================================================
@@ -215,8 +215,8 @@ years = sorted([r["year_partition"] for r in final_df.select("year_partition").d
 
 for y in years:
 
-    df_year = final_df.filter(col("year_partition") == y).cache()
-
+    df_year = final_df.filter(col("year_partition") == y).drop("year_partition").cache()
+    
     rows_new_file = df_year.count()
 
     output_path = os.path.join(TRANSFORMED_BASE, str(y))
@@ -290,7 +290,7 @@ for y in years:
             for r in new_rows.limit(5).collect():
 
                 log.info(
-                    f"   🆕 {r['pays']} | {r['variable_id']} | {r['freq']} | {r['periode']} | {r['valeur']}"
+                    f"   🆕 {r['pays']} | {r['variable_id']} | {r['periode']} | {r['valeur']}"
                 )
 
         # samples modified
@@ -304,7 +304,7 @@ for y in years:
             ).select(
                 col("new.pays").alias("pays"),
                 col("new.variable_id").alias("variable_id"),
-                col("new.freq").alias("freq"),
+                
                 col("new.periode").alias("periode"),
                 col("old.valeur").alias("old_val"),
                 col("new.valeur").alias("new_val")
@@ -313,7 +313,7 @@ for y in years:
             for r in samples:
 
                 log.info(
-                    f"   ✏️ {r['pays']} | {r['variable_id']} | {r['freq']} | {r['periode']} | {r['old_val']} → {r['new_val']}"
+                    f"   ✏️ {r['pays']} | {r['variable_id']} | {r['periode']} | {r['old_val']} → {r['new_val']}"
                 )
 
         changed_rows = new_rows.union(modified_rows).cache()
@@ -380,214 +380,3 @@ log.info("")
 log.info("✅ Transformation finished")
 
 stop_spark_session(spark)
-
-# from pyspark.sql import SparkSession
-# from pyspark.sql.functions import regexp_extract, expr
-# from pyspark.sql.functions import col, current_timestamp, lit, trim, when, regexp_extract, expr
-# import logging
-# import os
-
-# from common.spark_session import create_spark_session, stop_spark_session
-
-# # =====================================================
-# # LOGGING
-# # =====================================================
-# logging.basicConfig(
-#     level=logging.INFO,
-#     format="%(asctime)s | %(levelname)s | %(message)s"
-# )
-# log = logging.getLogger("IMF_TRANSFORM")
-
-# # =====================================================
-# # SPARK SESSION
-# # =====================================================
-# spark = create_spark_session("IMF-RAW-to-TRANSFORMED")
-# spark.sparkContext.setLogLevel("WARN")
-
-# # =====================================================
-# # PATHS
-# # =====================================================
-# RAW_ROOT = "s3a://01-raw"
-# TRANSFORMED_BASE = "s3a://02-transformed/FMI"
-
-# SOURCE_FILE_PREFIX = "FMI"
-
-# # =====================================================
-# # HADOOP FS HELPERS
-# # =====================================================
-# def find_latest_file(spark, base_path):
-
-#     sc = spark.sparkContext
-#     Path = sc._jvm.org.apache.hadoop.fs.Path
-#     FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
-#     URI = sc._jvm.java.net.URI
-
-#     fs = FileSystem.get(URI(base_path), sc._jsc.hadoopConfiguration())
-
-#     csv_files = []
-#     stack = [Path(base_path)]
-
-#     while stack:
-
-#         current = stack.pop()
-
-#         for status in fs.listStatus(current):
-
-#             if status.isDirectory():
-#                 stack.append(status.getPath())
-
-#             elif status.isFile():
-
-#                 p = status.getPath().toString()
-
-#                 if p.endswith(".csv") and "/FMI/" in p:
-#                     csv_files.append(p)
-
-#     if len(csv_files) == 0:
-#         raise RuntimeError("No FMI CSV file found")
-
-#     latest = sorted(csv_files)[-1]
-
-#     log.info(f"Latest file found : {latest}")
-
-#     return latest
-
-# # =====================================================
-# # FIND SOURCE FILE
-# # =====================================================
-# log.info("Searching raw file")
-
-# RAW_FILE = find_latest_file(
-#     spark,
-#     RAW_ROOT
-# )
-
-# # =====================================================
-# # READ RAW FILE
-# # =====================================================
-# log.info("Reading raw dataset")
-
-# df = (
-#     spark.read
-#     .format("csv")
-#     .option("header", "true")
-#     .option("sep", ";")
-#     .option("quote", '"')
-#     .option("escape", '"')
-#     .option("multiLine", "true")
-#     .option("inferSchema", "true")
-#     .load(RAW_FILE)
-# )
-
-# log.info(f"Rows = {df.count()}")
-# log.info(f"Columns = {len(df.columns)}")
-
-# df.show(5, False)
-
-# # =====================================================
-# # IDENTIFY TIME COLUMNS
-# # =====================================================
-
-# # Colonnes fixes du CSV
-# dimension_cols = [
-#     "DATASET", "SERIES_CODE", "OBS_MEASURE",
-#     "COUNTRY.ID", "COUNTRY",
-#     "INDICATOR.ID", "INDICATOR",
-#     "FREQUENCY.ID", "FREQUENCY",
-#     "SCALE.ID", "SCALE",
-#     "EXRATE.ID", "EXRATE",
-#     "REF_YEAR.ID", "REF_YEAR"
-# ]
-
-# # Colonnes temporelles = tout le reste
-# time_cols = [c for c in df.columns if c not in dimension_cols]
-
-# log.info(f"time columns = {len(time_cols)}")
-
-# # =====================================================
-# # UNPIVOT CORRIGÉ
-# # =====================================================
-
-# stack_expr = "stack({},{}) as (period, value)".format(
-#     len(time_cols),
-#     ",".join([f"'{c}', `{c}`" for c in time_cols])
-# )
-
-# long_df = df.select(
-#     col("`COUNTRY.ID`").alias("pays"),
-#     col("INDICATOR").alias("indicateur"),   # ✅ libellé complet
-#     col("`INDICATOR.ID`").alias("indicator_id"),  # ✅ code court
-#     col("FREQUENCY").alias("freq"),
-#     expr(stack_expr)
-# ).filter(col("value").isNotNull())
-
-# # =====================================================
-# # PERIOD EXTRACTION
-# # =====================================================
-
-# long_df = (
-#     long_df
-#     .withColumn(
-#         "annee",
-#         regexp_extract("period", "(\\d{4})", 1).cast("int")
-#     )
-#     .withColumn(
-#         "anneeM",
-#         when(col("period").contains("-M"), col("period")).otherwise(None)
-#     )
-#     .withColumn(
-#         "anneeQ",
-#         when(col("period").contains("-Q"), col("period")).otherwise(None)
-#     )
-# )
-
-# # =====================================================
-# # STRUCTURE FINALE — PLUS DE JOIN !
-# # =====================================================
-
-# final_df = long_df.select(
-#     col("pays"),
-#     col("indicateur"),
-#     col("indicator_id"),
-#     col("freq"),
-#     col("annee"),
-#     col("anneeM"),
-#     col("anneeQ"),
-#     col("value").cast("double").alias("valeur"),
-#     current_timestamp().alias("date_chargement"),
-#     lit(1).alias("version_active")
-# )
-
-
-
-# log.info("Final schema")
-
-# final_df.printSchema()
-
-# final_df.show(10,False)
-
-# # =====================================================
-# # WRITE BY YEAR
-# # =====================================================
-
-# years = [r["annee"] for r in final_df.select("annee").distinct().collect()]
-
-# for y in years:
-
-#     df_year = final_df.filter(col("annee") == y)
-
-#     path = os.path.join(TRANSFORMED_BASE, str(y))
-
-#     log.info(f"--> Writing year {y}")
-
-#     (
-#         df_year
-#         .coalesce(1)
-#         .write
-#         .mode("overwrite")
-#         .parquet(path)
-#     )
-
-# log.info("Transformation finished")
-
-# stop_spark_session(spark)
