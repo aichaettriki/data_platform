@@ -57,6 +57,10 @@ with DAG(
         verbose=True,
     )
 
-    cleanup = create_cleanup_task(dag, source_bucket=RAW_BUCKET, triggered_by="Transform_TRE")
-
+    cleanup = create_cleanup_task(
+    dag,
+    source_bucket="02-transformed",   # 👈 pas RAW_BUCKET
+    triggered_by="Transform_TRE",
+    target_folder="INS/TRE",     # 👈 dossier dans ce bucket
+)
     zip_common >> transform_tre >> cleanup

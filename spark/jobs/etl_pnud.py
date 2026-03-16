@@ -6,20 +6,10 @@ Conventions du projet :
   - Source  : s3a://01-raw/<year>/<month>/PNUD/hdr/hdr_composite_indices.csv
   - Output  : s3a://02-transformed/PNUD/hdr/hdr_hdi_by_country/  (Parquet, partitionné par year)
   - Colonnes finales :
-      annee, Variable, version, base, valeur, date_chargement, source, version_active,
+      periode, Variable, version, base, valeur, date_chargement, source, version_active,
       pays, code_secteur, lib_secteur, dim_id, dim_key
-  - Delta   : SCD Type 2 — clé (pays, annee, Variable)
+  - Delta   : SCD Type 2 — clé (pays, periode, Variable)
               version_active=1 (actif) / version_active=0 (historique)
-
-  ─── Alignement des types avec le job INS (Job 2) ────────────────────────────
-  | Colonne        | Ancien type (PNUD)        | Nouveau type (aligné INS)       |
-  |----------------|---------------------------|---------------------------------|
-  | version        | null cast StringType()    | lit("N/A") StringType()         |
-  | version_active | lit("1") StringType()     | lit(1).cast(IntegerType())      |
-  | valeur         | FloatType() → StringType()| inchangé (string) ✅            |
-  | annee          | cast("int")               | inchangé (int) ✅               |
-  | dim_id         | null cast StringType()    | inchangé ✅                     |
-  | dim_key        | null cast StringType()    | inchangé ✅                     |
 """
 
 import argparse
@@ -29,7 +19,7 @@ from datetime import datetime
 
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
-from pyspark.sql.types import FloatType, StringType, IntegerType  # ← ajout IntegerType
+from pyspark.sql.types import FloatType, StringType
 from openlineage.client import OpenLineageClient
 from openlineage.client.run import RunEvent, RunState, Run, Job, Dataset
 
@@ -44,10 +34,8 @@ COUNTRY_COL        = "country"
 
 VARIABLE_LABEL  = "Human Development Index (HDI)"
 BASE_VALUE      = "N/A"
-# ↓ MODIFIÉ : aligné sur le job INS — lit("N/A") au lieu de null
 VERSION_VALUE   = "N/A"
-# ↓ MODIFIÉ : version_active est maintenant un int (1) comme dans le job INS
-VERSION_ACTIVE  = 1
+VERSION_ACTIVE  = "1"
 CODE_SECTEUR    = "N/A"
 LIB_SECTEUR     = "N/A"
 DIM_ID_VALUE    = "HDI"
@@ -271,7 +259,7 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
     # ══════════════════════════════════════════════════════════════════════
     # STEP 2 — UNPIVOT wide → long via stack()
     # ══════════════════════════════════════════════════════════════════════
-    print(f"\n[STEP 2] Unpivot — Wide HDI columns → (annee, valeur)")
+    print(f"\n[STEP 2] Unpivot — Wide HDI columns → (periode, valeur)")
 
     stack_expr = ", ".join(f"'{col}', `{col}`" for col in hdi_columns)
     stack_sql  = f"stack({len(hdi_columns)}, {stack_expr}) as (raw_year_col, hdi_value)"
@@ -285,11 +273,11 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
     df_long = (
         df_long
         .withColumn(
-            "annee",
+            "periode",
             F.regexp_extract(F.col("raw_year_col"), r"(\d{4})$", 1).cast("int")
         )
-        # ↓ INCHANGÉ : valeur reste string (FloatType → StringType) — identique au job INS (inféré string)
-        .withColumn("valeur", F.col("hdi_value").cast(FloatType()).cast(StringType()))
+        .withColumn("valeur", F.col("hdi_value").cast(FloatType()))
+        # .withColumn("valeur", F.col("hdi_value").cast(FloatType()).cast(StringType()))
         .drop("raw_year_col", "hdi_value")
     )
 
@@ -308,7 +296,7 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
             "transformationDescription": f"Renamed from '{COUNTRY_COL}' (country name) via .alias('country_name').",
             "transformationType": "DIRECT",
         },
-        "annee": {
+        "periode": {
             "inputFields": [
                 {"namespace": _ns_raw, "name": _RAW_PATH, "field": c}
                 for c in hdi_columns
@@ -337,10 +325,10 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
         spark_df=df_long,
         step_name="02_Unpivot_HDI_Columns",
         description=(
-            f"Unpivoted {len(hdi_columns)} wide HDI columns → long format (annee, valeur) "
+            f"Unpivoted {len(hdi_columns)} wide HDI columns → long format (periode, valeur) "
             f"using Spark stack() expression. "
             f"iso3→country_code, country→country_name. "
-            f"annee extracted via regexp_extract(raw_year_col, r'(\\d{{4}})$', 1).cast('int'). "
+            f"periode extracted via regexp_extract(raw_year_col, r'(\\d{{4}})$', 1).cast('int'). "
             f"valeur cast: string → FloatType() → StringType(). "
             f"Result: {long_count} rows."
         ),
@@ -353,12 +341,6 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
 
     # ══════════════════════════════════════════════════════════════════════
     # STEP 3 — ENRICHISSEMENT + colonnes standardisées
-    #
-    # ─── Alignement des types avec le job INS ────────────────────────────
-    #   • version        : lit(None).cast("string") → lit("N/A")           [MODIFIÉ]
-    #   • version_active : lit("1") string          → lit(1).cast(int)     [MODIFIÉ]
-    #   • base           : lit(None).cast("string") → inchangé (null)      [inchangé]
-    #   • dim_id/dim_key : lit(None).cast("string") → inchangé (null str)  [inchangé]
     # ══════════════════════════════════════════════════════════════════════
     print(f"\n[STEP 3] Enrichment — Filtering, renaming and adding standardised columns")
 
@@ -366,36 +348,35 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
         df_long
         .filter(F.col("valeur").isNotNull())
         .filter(F.col("country_code").isNotNull())
-        .withColumn("dim_key",          F.lit(None).cast(StringType()))
+        .withColumn("dim_key",          F.lit("NA").cast("string"))
         .withColumn("Variable",         F.lit("Human Development Index (HDI)"))
-        # ↓ MODIFIÉ : lit("N/A") au lieu de lit(None).cast("string") — aligné job INS
-        .withColumn("version",          F.lit("N/A"))
-        # ↓ MODIFIÉ : lit(1).cast(IntegerType()) au lieu de lit("1") string — aligné job INS
-        .withColumn("version_active",   F.lit(1).cast(IntegerType()))
-        .withColumn("base",             F.lit(None).cast(StringType()))
+        .withColumn("version",          F.lit("NA").cast("string"))
+        .withColumn("version_active",   F.lit("1"))
+        .withColumn("base",             F.lit("NA").cast("string"))
         .withColumn("source",           F.lit("PNUD"))
-        .withColumn("code_secteur",     F.lit(None).cast(StringType()))
-        .withColumn("lib_secteur",      F.lit(None).cast(StringType()))
-        .withColumn("dim_id",           F.lit(None).cast(StringType()))
-        .withColumn("dim_key",          F.lit(None).cast(StringType()))
+        .withColumn("code_secteur",     F.lit("NA").cast("string"))
+        .withColumn("lib_secteur",      F.lit("NA").cast("string"))
+        .withColumn("dim_id",           F.lit("NA").cast("string"))
+        .withColumn("dim_key",          F.lit("NA").cast("string"))
+        .withColumn("periode",          F.lit("NA").cast("string"))
         .withColumn("date_chargement",  F.current_timestamp())
         .withColumnRenamed("country_name", "pays")
         .select(
-            "annee",           # int
-            "Variable",        # string
-            "version",         # string  ("N/A")    ← MODIFIÉ
-            "base",            # string  (null)
-            "valeur",          # string
-            "date_chargement", # timestamp
-            "source",          # string
-            "version_active",  # int     (1)         ← MODIFIÉ
-            "pays",            # string
-            "code_secteur",    # string  (null)
-            "lib_secteur",     # string  (null)
-            "dim_id",          # string  (null)
-            "dim_key",         # string  (null)
+            "periode",
+            "Variable",
+            "version",
+            "base",
+            "valeur",
+            "date_chargement",
+            "source",
+            "version_active",
+            "pays",
+            "code_secteur",
+            "lib_secteur",
+            "dim_id",
+            "dim_key",
         )
-        .orderBy("pays", "annee")
+        .orderBy("pays", "periode")
     )
 
     df_final.cache()
@@ -407,15 +388,13 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
 
     injected_cols_t3 = {
         "Variable":        f"Pipeline-injected: hardcoded constant = '{VARIABLE_LABEL}'",
-        # ↓ MODIFIÉ dans la description
-        "version":         f"Pipeline-injected: hardcoded constant = 'N/A' (StringType) — aligné job INS",
-        # ↓ MODIFIÉ dans la description
-        "version_active":  f"Pipeline-injected: hardcoded int constant = 1 (IntegerType) — aligné job INS. Will be managed by SCD2 in STEP 4",
-        "base":            f"Pipeline-injected: hardcoded null (StringType)",
+        "version":         f"Pipeline-injected: hardcoded constant = '{VERSION_VALUE}'",
+        "version_active":  f"Pipeline-injected: hardcoded constant = '{VERSION_ACTIVE}' (will be managed by SCD2 in STEP 4)",
+        "base":            f"Pipeline-injected: hardcoded constant = '{BASE_VALUE}'",
         "source":          f"Pipeline-injected: hardcoded constant = '{SOURCE_LABEL}'",
-        "code_secteur":    f"Pipeline-injected: hardcoded null (StringType)",
-        "lib_secteur":     f"Pipeline-injected: hardcoded null (StringType)",
-        "dim_id":          f"Pipeline-injected: hardcoded null (StringType)",
+        "code_secteur":    f"Pipeline-injected: hardcoded constant = '{CODE_SECTEUR}'",
+        "lib_secteur":     f"Pipeline-injected: hardcoded constant = '{LIB_SECTEUR}'",
+        "dim_id":          f"Pipeline-injected: hardcoded constant = '{DIM_ID_VALUE}' cast to StringType()",
         "dim_key":         "Pipeline-injected: hardcoded null (no dimension key for HDI global indicator)",
         "date_chargement": "Pipeline-injected: job execution timestamp (using F.current_timestamp()) — overwritten at write time in STEP 4",
     }
@@ -438,9 +417,9 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
                 ),
                 "transformationType": "DIRECT",
             }
-        elif col_name == "annee":
+        elif col_name == "periode":
             column_lineage_t3[col_name] = {
-                "inputFields": [{"namespace": _ns_long, "name": _LONG_PATH, "field": "annee"}],
+                "inputFields": [{"namespace": _ns_long, "name": _LONG_PATH, "field": "periode"}],
                 "transformationDescription": (
                     "Passed through from long format. "
                     "Rows where valeur IS NULL or country_code IS NULL are filtered out."
@@ -461,11 +440,11 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
             f"Enriched and standardised HDR data ({final_count} rows after filtering). "
             f"Filters applied: valeur IS NOT NULL, country_code IS NOT NULL. "
             f"Renamed: country_name→pays. "
-            f"Added constants: Variable='{VARIABLE_LABEL}', version='N/A' (StringType), "
-            f"version_active=1 (IntegerType), base=null (StringType), source='{SOURCE_LABEL}', "
-            f"code_secteur=null, lib_secteur=null, "
-            f"dim_id=null, dim_key=null, date_chargement=current_timestamp(). "
-            f"Ordered by pays, annee."
+            f"Added constants: Variable='{VARIABLE_LABEL}', version='{VERSION_VALUE}', "
+            f"version_active='{VERSION_ACTIVE}', base='{BASE_VALUE}', source='{SOURCE_LABEL}', "
+            f"code_secteur='{CODE_SECTEUR}', lib_secteur='{LIB_SECTEUR}', "
+            f"dim_id='{DIM_ID_VALUE}', dim_key=null, date_chargement=current_timestamp(). "
+            f"Ordered by pays, periode."
         ),
         trans_type="TRANSFORMATION",
         inputs=[_LONG_PATH],
@@ -477,7 +456,7 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
     # ══════════════════════════════════════════════════════════════════════
     # STEP 4 — DELTA DETECTION SCD2 + WRITE PARQUET per year
     #
-    # Clé de déduplication : (pays, annee, Variable)
+    # Clé de déduplication : (pays, periode, Variable)
     #   • Première exécution (pas d'historique) → écriture complète, version_active=1
     #   • Exécutions suivantes :
     #       - Détection des lignes nouvelles ou modifiées sur valeur
@@ -487,12 +466,12 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
     # ══════════════════════════════════════════════════════════════════════
     print(f"\n{'='*80}")
     print(f"[STEP 4] Delta Detection SCD2 + Write Parquet — Processing by year")
-    print(f"         Clé de déduplication : (pays, annee, Variable)")
+    print(f"         Clé de déduplication : (pays, periode, Variable)")
     print(f"{'='*80}")
 
-    spark_df_new = df_final.withColumn("valeur", F.col("valeur").cast(StringType()))
-
-    distinct_years = [row["annee"] for row in spark_df_new.select("annee").distinct().collect()]
+    # spark_df_new = df_final.withColumn("valeur", F.col("valeur").cast("string"))
+    spark_df_new = df_final.withColumn("valeur", F.col("valeur").cast("double"))
+    distinct_years = [row["periode"] for row in spark_df_new.select("periode").distinct().collect()]
     base_path      = output_path.rstrip("/")
 
     sc         = spark.sparkContext
@@ -505,7 +484,7 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
     for year in sorted(distinct_years):
         print(f"\n  📅 Processing Year  : {year}")
 
-        df_year_new = spark_df_new.filter(F.col("annee") == year)
+        df_year_new = spark_df_new.filter(F.col("periode") == year)
         df_year_new.createOrReplaceTempView("v_new_data")
 
         output_year_path = f"{base_path}/{year}"
@@ -532,19 +511,18 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
             df_to_write = (
                 df_year_new
                 .withColumn("date_chargement", F.current_timestamp())
-                # ↓ MODIFIÉ : cast IntegerType() au lieu de string — aligné job INS
-                .withColumn("version_active",  F.lit(1).cast(IntegerType()))
+                .withColumn("version_active",  F.lit(1).cast("int"))
             )
 
         # ─────────────────────────────────────────────────────────────────
         # CAS 2 : Historique présent → delta SCD2
-        #         Clé : (pays, annee, Variable)
+        #         Clé : (pays, periode, Variable)
         #         Comparaison : valeur (après ROUND pour les numériques)
         # ─────────────────────────────────────────────────────────────────
         else:
             delta_query = """
                 SELECT
-                    n.annee,
+                    n.periode,
                     n.Variable,
                     n.version,
                     n.base,
@@ -559,13 +537,13 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
                     n.dim_key
                 FROM v_new_data n
                 LEFT JOIN (
-                    SELECT pays, annee, Variable, valeur
+                    SELECT pays, periode, Variable, valeur
                     FROM (
                         SELECT *,
                             ROW_NUMBER() OVER (
                                 PARTITION BY
                                     LOWER(TRIM(pays)),
-                                    annee,
+                                    periode,
                                     LOWER(TRIM(Variable))
                                 ORDER BY date_chargement DESC
                             ) AS rn
@@ -574,7 +552,7 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
                     WHERE rn = 1
                 ) h
                 ON  LOWER(TRIM(n.pays))     = LOWER(TRIM(h.pays))
-                AND n.annee                 = h.annee
+                AND n.periode                 = h.periode
                 AND LOWER(TRIM(n.Variable)) = LOWER(TRIM(h.Variable))
                 WHERE
                     h.pays IS NULL
@@ -589,37 +567,39 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
             if change_count > 0:
                 print(f"  🔄 {change_count} changed / new row(s) detected")
 
-                # ↓ MODIFIÉ : cast IntegerType() au lieu de string — aligné job INS
-                df_changes_latest = df_changes.withColumn("version_active", F.lit(1).cast(IntegerType()))
+                # Nouvelles lignes actives
+                df_changes_latest = df_changes.withColumn("version_active", F.lit(1).cast("int"))
                 df_changes_latest.createOrReplaceTempView("v_changes")
 
+                # Clés impactées (pour désactiver les anciens enregistrements)
                 df_outdated_keys = spark.sql("""
                     SELECT
                         LOWER(TRIM(pays))     AS pays_key,
-                        annee                 AS annee_key,
+                        periode                 AS periode_key,
                         LOWER(TRIM(Variable)) AS variable_key
                     FROM v_changes
                 """)
                 df_outdated_keys.createOrReplaceTempView("v_outdated_keys")
 
+                # Mise à jour de l'historique : version_active=0 pour les lignes remplacées
                 df_history_updated = (
                     df_history.alias("h")
                     .join(
                         df_outdated_keys.alias("k"),
-                        (F.lower(F.trim(F.col("h.pays")))       == F.col("k.pays_key"))
-                        & (F.col("h.annee")                     == F.col("k.annee_key"))
+                        (F.lower(F.trim(F.col("h.pays")))     == F.col("k.pays_key"))
+                        & (F.col("h.periode")                   == F.col("k.periode_key"))
                         & (F.lower(F.trim(F.col("h.Variable"))) == F.col("k.variable_key")),
                         how="left",
                     )
                     .withColumn(
                         "version_active",
-                        # ↓ MODIFIÉ : cast IntegerType() partout — aligné job INS
-                        F.when(F.col("k.pays_key").isNotNull(), F.lit(0).cast(IntegerType()))
-                         .otherwise(F.col("h.version_active").cast(IntegerType()))
+                        F.when(F.col("k.pays_key").isNotNull(), F.lit(0).cast("int"))
+                         .otherwise(F.col("h.version_active").cast("int"))
                     )
-                    .drop("pays_key", "annee_key", "variable_key")
+                    .drop("pays_key", "periode_key", "variable_key")
                 )
 
+                # Union : historique mis à jour + nouvelles lignes actives
                 df_to_write = df_history_updated.unionByName(
                     df_changes_latest, allowMissingColumns=True
                 )
@@ -633,6 +613,7 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
         # ── Écriture Parquet (via chemin temporaire pour atomicité) ───────
         if df_to_write is not None:
 
+            # ── Column lineage pour l'étape d'écriture ────────────────────
             column_lineage_t4 = {}
             for field in df_to_write.schema.fields:
                 if field.name == "date_chargement":
@@ -650,14 +631,14 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
                             {"namespace": _ns_final, "name": _FINAL_PATH, "field": "valeur"}
                         ],
                         "transformationDescription": (
-                            "SCD Type 2 flag (IntegerType). "
+                            "SCD Type 2 flag. "
                             + (
-                                f"New/changed rows: version_active=1 (int). "
-                                f"Old rows matching changed keys (pays, annee, Variable): version_active=0 (int) "
+                                f"New/changed rows: version_active=1. "
+                                f"Old rows matching changed keys (pays, periode, Variable): version_active=0 "
                                 f"(LEFT JOIN on v_outdated_keys). "
                                 f"{change_count} changed rows detected for year {year}."
                                 if history_exists
-                                else f"Initial load for year {year}: all rows set to version_active=1 (int)."
+                                else f"Initial load for year {year}: all rows set to version_active=1."
                             )
                         ),
                         "transformationType": "AGGREGATE",
@@ -674,20 +655,21 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
                         "transformationType": "DIRECT",
                     }
 
+            # 📡 MARQUEZ — STEP 4 (per year)
             emit_marquez_step(
                 spark_df=df_to_write,
                 step_name=f"04_Delta_Write_HDR_{year}",
                 description=(
                     f"SCD2 delta detection + Parquet write for HDR UNDP, year {year}. "
-                    f"Key: (pays, annee, Variable). "
+                    f"Key: (pays, periode, Variable). "
                     f"History existed: {history_exists}. "
                     + (
                         f"Changed rows detected: {change_count}. "
-                        f"Old matching rows set version_active=0 (int) via LEFT JOIN on (pays, annee, Variable). "
-                        f"New/changed rows set version_active=1 (int). "
+                        f"Old matching rows set version_active=0 via LEFT JOIN on (pays, periode, Variable). "
+                        f"New/changed rows set version_active=1. "
                         f"Final write = history_updated UNION changed_rows (unionByName)."
                         if history_exists
-                        else f"No history — full write. All rows version_active=1 (int)."
+                        else f"No history — full write. All rows version_active=1."
                     )
                     + f" Output: {output_year_path}."
                 ),
@@ -697,6 +679,7 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
                 column_lineage=column_lineage_t4,
             )
 
+            # Écriture atomique via chemin temporaire
             df_to_write.coalesce(1).write.mode("overwrite").parquet(temp_output_path)
 
             print(f"\n  📊 FINAL DATAFRAME SCHEMA (year {year})")

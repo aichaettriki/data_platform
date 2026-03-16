@@ -25,5 +25,10 @@ with DAG(
             "--target-folder", "INS/Agregats",
         ],
     )
-    cleanup = create_cleanup_task(dag, source_bucket=RAW_BUCKET, triggered_by="transform_agregat_ins_api")
+    cleanup = create_cleanup_task(
+    dag,
+    source_bucket="02-transformed",   # 👈 pas RAW_BUCKET
+    triggered_by="transform_agregat_ins_api",
+    target_folder="INS/Agregats",     # 👈 dossier dans ce bucket
+)
     zip_common >> enrich_ins >> cleanup

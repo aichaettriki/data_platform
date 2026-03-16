@@ -15,6 +15,8 @@
 
     <div class="app-container">
         <header>
+            <img src="{{ url_for('static', filename='logo.webp') }}" alt="Logo"
+                style="max-height: 80px; margin-bottom: 15px; border-radius: 8px;">
             <h1><i class="fa-solid fa-file-pdf"></i> PDF Data Extractor</h1>
             <p>Upload a PDF to extract tables and charts with AI-powered interpretation.</p>
         </header>
@@ -22,6 +24,19 @@
         <main>
             <!-- Upload -->
             <div class="upload-section glass-panel" id="upload-section">
+                <div class="page-range-controls"
+                    style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1.5rem; background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px;">
+                    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem;">
+                        <label for="page-start" style="font-weight: 600; font-size: 0.9rem;">Start Page:</label>
+                        <input type="number" id="page-start" min="1" placeholder="e.g. 1"
+                            style="width: 100px; padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: inherit; font-family: inherit;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-start; gap: 0.5rem;">
+                        <label for="page-end" style="font-weight: 600; font-size: 0.9rem;">End Page:</label>
+                        <input type="number" id="page-end" min="1" placeholder="e.g. 5"
+                            style="width: 100px; padding: 0.5rem; border-radius: 6px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: inherit; font-family: inherit;">
+                    </div>
+                </div>
                 <div class="upload-area" id="drop-zone">
                     <input type="file" id="file-input" accept=".pdf" hidden>
                     <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
@@ -37,12 +52,34 @@
 
             <!-- Results -->
             <div class="results-section glass-panel hidden" id="results-section">
-                <div class="controls">
-                    <div class="indicator-select-wrapper">
-                        <label for="item-select">Select an item:</label>
-                        <select id="item-select">
-                            <option value="" disabled selected>Choose a table or chart...</option>
-                        </select>
+                <div class="controls" style="flex-wrap: wrap;">
+                    <!-- New Result Filter -->
+                    <div class="result-filter-controls"
+                        style="display: flex; gap: 0.5rem; align-items: center; width: 100%; margin-bottom: 0.5rem; background: rgba(255,255,255,0.05); padding: 0.5rem; border-radius: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600;"><i class="fa-solid fa-filter"></i> Filter
+                            Extracted Results:</label>
+                        <input type="number" id="filter-page-start" min="1" placeholder="Start Page"
+                            style="width: 100px; padding: 0.4rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: inherit; font-size: 0.85rem;">
+                        <span>-</span>
+                        <input type="number" id="filter-page-end" min="1" placeholder="End Page"
+                            style="width: 100px; padding: 0.4rem; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: inherit; font-size: 0.85rem;">
+                        <button id="apply-filter-btn" class="btn-secondary"
+                            style="padding: 0.4rem 0.8rem; font-size: 0.85rem;">Apply</button>
+                    </div>
+                    <div class="indicator-select-wrapper" style="flex: 1; min-width: 300px; position: relative;">
+                        <label>Select tables/charts to include:</label>
+                        <div class="custom-multiselect" id="custom-multiselect"
+                            style="position: relative; cursor: pointer; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; margin-top: 0.4rem;">
+                            <div class="multiselect-header" id="multiselect-header"
+                                style="padding: 0.6rem; display: flex; justify-content: space-between; align-items: center;">
+                                <span id="multiselect-header-text">Choose tables/charts...</span>
+                                <i class="fa-solid fa-chevron-down"></i>
+                            </div>
+                            <div class="multiselect-options hidden" id="multiselect-options"
+                                style="position: absolute; top: 100%; left: 0; right: 0; background: #2c3e50; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; margin-top: 4px; z-index: 1000; max-height: 250px; overflow-y: auto;">
+                                <!-- Checkboxes populated by JS -->
+                            </div>
+                        </div>
                     </div>
                     <button id="download-csv-btn" class="btn-primary" disabled>
                         <i class="fa-solid fa-download"></i> Download CSV
@@ -52,23 +89,12 @@
                     </button>
                 </div>
 
-                <!-- Table display -->
-                <div class="table-scroll-wrapper hidden" id="table-display">
-                    <div class="empty-state">
-                        <i class="fa-solid fa-table"></i>
-                        <p>Select an item from the dropdown above.</p>
-                    </div>
-                </div>
-
-                <!-- Chart display -->
-                <div class="chart-display hidden" id="chart-display">
-                    <div class="chart-image-wrapper">
-                        <img id="chart-image" src="" alt="Chart">
-                    </div>
-                    <div class="ai-description" id="chart-description"></div>
-                    <div class="chart-data-section hidden" id="chart-data-section">
-                        <h4><i class="fa-solid fa-table-cells"></i> AI-Extracted Data</h4>
-                        <div class="ai-table-wrapper" id="chart-table-container"></div>
+                <!-- Dynamic Results List -->
+                <div id="results-container" style="display: flex; flex-direction: column; gap: 2rem; margin-top: 1rem;">
+                    <div class="empty-state" id="empty-selection-state"
+                        style="position: static; transform: none; padding: 3rem 0;">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <p>Select one or more items from the list above.</p>
                     </div>
                 </div>
             </div>

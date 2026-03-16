@@ -28,7 +28,11 @@ with DAG(
         ],
     )
  
-    cleanup = create_cleanup_task(dag, source_bucket=RAW_BUCKET, triggered_by="transform_worldbank_countries")
- 
+    cleanup = create_cleanup_task(
+    dag,
+    source_bucket="02-transformed",   # 👈 pas RAW_BUCKET
+    triggered_by="transform_worldbank_countries",
+    target_folder="WORLD_BANK",     # 👈 dossier dans ce bucket
+)
     zip_common >> transform_countries >> cleanup
  

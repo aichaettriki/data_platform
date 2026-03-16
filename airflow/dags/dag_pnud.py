@@ -75,6 +75,10 @@ with DAG(
     )
 
     # ── Tâche 3 : nettoyage du zip ────────────────────────────────────────────
-    cleanup = create_cleanup_task(dag, source_bucket=RAW_BUCKET, triggered_by="Transform_PNUD")
-
+    cleanup = create_cleanup_task(
+    dag,
+    source_bucket="02-transformed",   # 👈 pas RAW_BUCKET
+    triggered_by="Transform_PNUD",
+    target_folder="PNUD/hdi",     # 👈 dossier dans ce bucket
+)
     zip_common >> spark_transform >> cleanup

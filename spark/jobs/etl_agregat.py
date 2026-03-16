@@ -387,7 +387,7 @@ log.info(f"📄 Found 1 FACT file: {FACT_FILE}")
 for fact_file in fact_files:
 
     file_name       = fact_file.split("/")[-1].replace(".csv", "")
-    source_category = "INS"
+    source_category = extract_category_path(fact_file, RAW_ROOT)
 
     print(f"\n{'='*80}")
     print(f"🚀 Processing FACT file : {file_name}")
@@ -538,17 +538,18 @@ for fact_file in fact_files:
         .withColumn("dim_id",  col("dim_id").cast(StringType()))
         .withColumnRenamed(fact_dim_key_col, "dim_key")
         .withColumn("dim_key", col("dim_key").cast(StringType()))
-        .withColumnRenamed("year",           "annee")
+        .withColumnRenamed("year",           "periode")
+        .withColumn("periode",col("periode").cast(StringType()))
         .withColumnRenamed("value",          "valeur")
         .withColumnRenamed("indicator_name", "Variable")
-        .withColumn("version",      lit("N/A"))
+        .withColumn("version",      lit("NA"))
         .withColumn("pays",         lit("Tunisie"))
-        .withColumn("lib_secteur",  lit("N/A"))
-        .withColumn("code_secteur", lit("N/A"))
+        .withColumn("lib_secteur",  lit("NA"))
+        .withColumn("code_secteur", lit("NA"))
         .withColumn("base",         lit("2015"))
-        .withColumn("source",       lit(source_category))
+        .withColumn("source",       lit("INS"))
         .select(
-            "annee",
+            "periode",
             "dim_id",
             "dim_key",
             "Variable",
@@ -579,7 +580,7 @@ for fact_file in fact_files:
     renamed_cols_t4 = {
         "dim_id":   (fact_dim_id_col,  f"Renamed from '{fact_dim_id_col}', cast to StringType()"),
         "dim_key":  (fact_dim_key_col, f"Renamed from '{fact_dim_key_col}', cast to StringType()"),
-        "annee":    ("year",           "Renamed from 'year' in fact CSV"),
+        "periode":    ("year",           "Renamed from 'year' in fact CSV"),
         "valeur":   ("value",          "Renamed from 'value' in fact CSV"),
         "Variable": ("indicator_name", "Renamed from 'indicator_name' (dimension FULLNAME) brought in by JOIN"),
     }
@@ -629,7 +630,7 @@ for fact_file in fact_files:
         description=(
             f"Final column renaming and business column injection. "
             f"Renamed: {fact_dim_id_col}→dim_id (StringType), {fact_dim_key_col}→dim_key (StringType), "
-            f"year→annee, value→valeur, indicator_name→Variable. "
+            f"year→periode, value→valeur, indicator_name→Variable. "
             f"Added constants: version='N/A', pays='Tunisie', lib_secteur='N/A', "
             f"code_secteur='N/A', base='2015', source='{source_category}'. "
             f"Dropped: rang. "
@@ -655,7 +656,7 @@ for fact_file in fact_files:
     # ══════════════════════════════════════════════════════════════════════
     print(f"\n[TASK 5] Delta Detection & Write — Processing by year")
 
-    years = [row["annee"] for row in structured_df.select("annee").distinct().collect()]
+    years = [row["periode"] for row in structured_df.select("periode").distinct().collect()]
 
     sc         = spark.sparkContext
     Path       = sc._jvm.org.apache.hadoop.fs.Path
@@ -663,7 +664,7 @@ for fact_file in fact_files:
     conf       = sc._jsc.hadoopConfiguration()
 
     for y in years:
-        df_year     = structured_df.filter(col("annee") == y)
+        df_year     = structured_df.filter(col("periode") == y)
         output_path = os.path.join(SILVER_BASE, str(y))
 
         print(f"\n  📅 Processing Year  : {y}")
@@ -678,7 +679,7 @@ for fact_file in fact_files:
             history_exists = True
             print(f"  ✅ History found for year {y}, checking new rows...")
 
-            compare_cols = ["annee", "dim_id", "dim_key", "Variable", "valeur", "base", "source"]
+            compare_cols = ["periode", "dim_id", "dim_key", "Variable", "valeur", "base", "source"]
 
             new_rows  = df_year.join(
                 existing_df.select(compare_cols),
@@ -705,7 +706,7 @@ for fact_file in fact_files:
             final_df = df_year
 
         # ── Recompute version_active on the full final_df ─────────────
-        window_spec = Window.partitionBy("annee", "dim_id", "dim_key", "Variable").orderBy(desc("date_chargement"))
+        window_spec = Window.partitionBy("periode", "dim_id", "dim_key", "Variable").orderBy(desc("date_chargement"))
         final_df = (
             final_df
             .withColumn("_rank", row_number().over(window_spec))
@@ -728,7 +729,7 @@ for fact_file in fact_files:
                     ],
                     "transformationDescription": (
                         "SCD Type 2 flag: ROW_NUMBER() OVER "
-                        "(PARTITION BY annee, dim_id, dim_key, Variable ORDER BY date_chargement DESC) "
+                        "(PARTITION BY periode, dim_id, dim_key, Variable ORDER BY date_chargement DESC) "
                         "— rank=1 → version_active=1, others → 0. "
                         + (
                             f"{new_count} new rows appended to existing history via unionByName."
@@ -765,7 +766,7 @@ for fact_file in fact_files:
                     f"New/changed rows: {new_count} (left_anti join on compare_cols). "
                     f"Appended to history via unionByName. "
                     f"Recomputed version_active: ROW_NUMBER() OVER "
-                    f"(PARTITION BY annee, dim_id, dim_key, Variable ORDER BY date_chargement DESC)."
+                    f"(PARTITION BY periode, dim_id, dim_key, Variable ORDER BY date_chargement DESC)."
                     if history_exists
                     else "No history — full write. version_active computed from scratch."
                 )

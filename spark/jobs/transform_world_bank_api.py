@@ -9,7 +9,7 @@ from datetime import datetime
 import logging
 import uuid
 import os
-
+from pyspark.sql.types import StringType
 from common.spark_session import create_spark_session, stop_spark_session
 
 # =====================================================
@@ -233,6 +233,9 @@ def list_csv_files(spark, base_path):
         current = stack.pop()
         for status in fs.listStatus(current):
             if status.isDirectory():
+                path_str = status.getPath().toString().lower()
+                if "/countries" in path_str:
+                    continue
                 stack.append(status.getPath())
             elif status.isFile() and status.getPath().toString().endswith(".csv"):
                 files.append(status.getPath().toString())
@@ -384,19 +387,34 @@ for file_path in csv_files:
     transformed_df = (
         df
         .withColumnRenamed("indicator_name", "Variable")
-        .withColumnRenamed("year",           "annee")
+        .withColumnRenamed("year",           "periode")
         .withColumnRenamed("value",          "valeur")
         .withColumnRenamed("country_iso3",   "pays")
+        .withColumn("periode", col("periode").cast(StringType()) )
         .withColumn("pays",            coalesce(col("pays"), lit("UNKNOWN")))
         .withColumn("date_chargement", current_timestamp())
-        .withColumn("source",          lit("WORLD_BANK_API"))
-        .withColumn("valeur",          spark_round(col("valeur"), 6))
+        .withColumn("source",          lit("WORLD_BANK"))
+        .withColumn("valeur",          spark_round(col("valeur").cast("double"), 6))
+        # colonnes business communes (standard data lake)
+        .withColumn("code_secteur", lit("NA"))
+        .withColumn("lib_secteur", lit("NA"))
+        .withColumn("dim_id", lit("NA"))
+        .withColumn("dim_key", lit("NA"))
+        .withColumn("version", lit("NA"))
+        .withColumn("base", lit("NA"))
+
         # NULL values on valeur are preserved intentionally (e.g. HCI 2015)
-        .select("annee", "Variable", "valeur", "pays", "date_chargement", "source")
+        .select("periode", "Variable", "valeur", "pays", "date_chargement", "code_secteur",
+        "lib_secteur",
+        "dim_id",
+        "dim_key",
+        "version",
+        "base",
+        "source")
     )
 
     # SCD2 — version_active via ROW_NUMBER()
-    window_spec = Window.partitionBy("annee", "Variable", "pays").orderBy(desc("date_chargement"))
+    window_spec = Window.partitionBy("periode", "Variable", "pays").orderBy(desc("date_chargement"))
     transformed_df = (
         transformed_df
         .withColumn("_rank", row_number().over(window_spec))
@@ -412,7 +430,7 @@ for file_path in csv_files:
 
     renamed_cols_t3 = {
         "Variable": ("indicator_name", "Renamed from 'indicator_name' in WORLD_BANK CSV"),
-        "annee":    ("year",           "Renamed from 'year' in WORLD_BANK CSV"),
+        "periode":    ("year",           "Renamed from 'year' in WORLD_BANK CSV"),
         "valeur":   ("value",          "Renamed from 'value'. spark_round(valeur, 6). NULL values preserved intentionally."),
         "pays":     ("country_iso3",   "Renamed from 'country_iso3'. coalesce(pays, 'UNKNOWN') applied."),
     }
@@ -434,7 +452,7 @@ for file_path in csv_files:
                 ],
                 "transformationDescription": (
                     "SCD Type 2 flag: ROW_NUMBER() OVER "
-                    "(PARTITION BY annee, Variable, pays ORDER BY date_chargement DESC) "
+                    "(PARTITION BY periode, Variable, pays ORDER BY date_chargement DESC) "
                     "— rank=1 → version_active=1, others → 0. "
                     "Computed before delta detection to initialize new records."
                 ),
@@ -470,11 +488,11 @@ for file_path in csv_files:
         step_name=f"03_Transformation_{indicator_folder}",
         description=(
             f"Transformed WORLD_BANK CSV '{indicator_folder}/{file_name}' ({transformed_count} rows). "
-            f"Renamed: indicator_name→Variable, year→annee, value→valeur, country_iso3→pays. "
+            f"Renamed: indicator_name→Variable, year→periode, value→valeur, country_iso3→pays. "
             f"coalesce(pays, 'UNKNOWN'). spark_round(valeur, 6). "
             f"NULL valeur preserved (e.g. HCI 2015 case). "
             f"Added: date_chargement=now(), source='WORLD_BANK_API'. "
-            f"SCD2: version_active=ROW_NUMBER() OVER (PARTITION BY annee, Variable, pays ORDER BY date_chargement DESC)."
+            f"SCD2: version_active=ROW_NUMBER() OVER (PARTITION BY periode, Variable, pays ORDER BY date_chargement DESC)."
         ),
         trans_type="TRANSFORMATION",
         inputs=[_raw_path],
@@ -488,7 +506,7 @@ for file_path in csv_files:
     # ══════════════════════════════════════════════════════════════════════
     print(f"\n[STEP 4] Delta Detection & Write — Processing by year")
 
-    years = [row["annee"] for row in transformed_df.select("annee").distinct().collect()]
+    years = [row["periode"] for row in transformed_df.select("periode").distinct().collect()]
     log.info(f"📆 Years found in CSV: {sorted(years)}")
 
     _transformed_path = f"memory://spark_df/world_bank/transform/{indicator_folder}/transformed"
@@ -496,7 +514,7 @@ for file_path in csv_files:
 
     for y in years:
 
-        df_year     = transformed_df.filter(col("annee") == y)
+        df_year     = transformed_df.filter(col("periode") == y)
         output_path = os.path.join(TARGET_BASE, indicator_folder, str(y))
 
         print(f"\n  📅 Processing Year  : {y}")
@@ -512,8 +530,10 @@ for file_path in csv_files:
             log.info(f"📂 Existing dataset found for year {y}")
 
             # ── Normalise types before join ───────────────────────────
-            existing_df = existing_df.withColumn("valeur", col("valeur").cast(DecimalType(38, 6)))
-            df_year     = df_year.withColumn("valeur",     col("valeur").cast(DecimalType(38, 6)))
+            # existing_df = existing_df.withColumn("valeur", col("valeur").cast(DecimalType(38, 6)))
+            # df_year     = df_year.withColumn("valeur",     col("valeur").cast(DecimalType(38, 6)))
+            existing_df = existing_df.withColumn("valeur", col("valeur").cast("double"))
+            df_year     = df_year.withColumn("valeur", col("valeur").cast("double"))
             existing_df = existing_df.withColumn("pays", coalesce(col("pays"), lit("UNKNOWN")))
             df_year     = df_year.withColumn("pays",     coalesce(col("pays"), lit("UNKNOWN")))
 
@@ -521,7 +541,7 @@ for file_path in csv_files:
             df_year_cmp  = df_year.withColumn("valeur_cmp",    coalesce(col("valeur"), lit(NULL_SENTINEL)))
             existing_cmp = existing_df.withColumn("valeur_cmp", coalesce(col("valeur"), lit(NULL_SENTINEL)))
 
-            compare_cols = ["annee", "Variable", "pays", "valeur_cmp"]
+            compare_cols = ["periode", "Variable", "pays", "valeur_cmp"]
 
             new_rows  = df_year_cmp.join(
                 existing_cmp.select(compare_cols),
@@ -548,7 +568,7 @@ for file_path in csv_files:
             final_df = df_year
 
         # ── Recompute version_active on full final_df ─────────────────
-        window_spec = Window.partitionBy("annee", "Variable", "pays").orderBy(desc("date_chargement"))
+        window_spec = Window.partitionBy("periode", "Variable", "pays").orderBy(desc("date_chargement"))
         final_df = (
             final_df
             .withColumn("_rank", row_number().over(window_spec))
@@ -563,13 +583,13 @@ for file_path in csv_files:
                 column_lineage_t4[field.name] = {
                     "inputFields": [
                         {"namespace": _ns_transformed, "name": _transformed_path, "field": "date_chargement"},
-                        {"namespace": _ns_transformed, "name": _transformed_path, "field": "annee"},
+                        {"namespace": _ns_transformed, "name": _transformed_path, "field": "periode"},
                         {"namespace": _ns_transformed, "name": _transformed_path, "field": "Variable"},
                         {"namespace": _ns_transformed, "name": _transformed_path, "field": "pays"},
                     ],
                     "transformationDescription": (
                         "SCD Type 2 flag recomputed on final_df after union. "
-                        "ROW_NUMBER() OVER (PARTITION BY annee, Variable, pays ORDER BY date_chargement DESC) "
+                        "ROW_NUMBER() OVER (PARTITION BY periode, Variable, pays ORDER BY date_chargement DESC) "
                         "— rank=1 → version_active=1, others → 0. "
                         + (
                             f"{new_count} new/changed rows detected via NULL_SENTINEL left_anti join. "
@@ -593,7 +613,7 @@ for file_path in csv_files:
                             f"{new_count} new row(s) appended to history via unionByName."
                             if history_exists and field.name == "valeur"
                             else (
-                                f"Delta via left_anti join on (annee, Variable, pays, valeur_cmp). "
+                                f"Delta via left_anti join on (periode, Variable, pays, valeur_cmp). "
                                 f"{new_count} new row(s) appended via unionByName."
                                 if history_exists
                                 else "New dataset — full write."
@@ -616,7 +636,7 @@ for file_path in csv_files:
                     f"New/changed rows: {new_count}. "
                     f"Appended to history via unionByName. "
                     f"Recomputed version_active: ROW_NUMBER() OVER "
-                    f"(PARTITION BY annee, Variable, pays ORDER BY date_chargement DESC)."
+                    f"(PARTITION BY periode, Variable, pays ORDER BY date_chargement DESC)."
                     if history_exists
                     else "No history — full write. version_active already set in STEP 3."
                 )

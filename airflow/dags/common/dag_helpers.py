@@ -50,16 +50,20 @@ def create_zip_task(dag):
         dag=dag,
     )
 
-def create_cleanup_task(dag, source_bucket: str, triggered_by: str):
+def create_cleanup_task(dag, source_bucket: str, triggered_by: str, target_folder: str = None):
+    conf = {
+        "triggered_by":  triggered_by,
+        "source_bucket": source_bucket,
+    }
+    if target_folder:
+        conf["target_folder"] = target_folder   # 👈 ajouté seulement si fourni
+
     return TriggerDagRunOperator(
         task_id="trigger_cleanup_minio",
         trigger_dag_id="99-Tech__Cleanup_Minio",
         wait_for_completion=True,
         poke_interval=30,
         reset_dag_run=False,
-        conf={
-            "triggered_by": triggered_by,
-            "source_bucket": source_bucket,
-        },
+        conf=conf,
         dag=dag,
     )

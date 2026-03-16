@@ -14,6 +14,7 @@ import re
 import os
 from io import BytesIO
 from common.spark_session import create_spark_session, stop_spark_session
+from pyspark.sql.types import StringType
 
 # =====================================================
 # LOGGING
@@ -448,7 +449,7 @@ class CompetitifScoresProcessor:
     # STEP 4 — TRANSFORM DATA (wide → long, Score rows)
     # ══════════════════════════════════════════════════════════════════════
     def transform_data(self):
-        print(f"\n[STEP 4] Transform Data — Unpivoting wide Excel layout to (pays, annee, variable, valeur)")
+        print(f"\n[STEP 4] Transform Data — Unpivoting wide Excel layout to (pays, periode, variable, valeur)")
 
         df, all_records = self.raw_data, []
 
@@ -483,17 +484,17 @@ class CompetitifScoresProcessor:
                     if pd.notna(score):
                         all_records.append({
                             'pays':     str(country).strip(),
-                            'annee':    int(year),
+                            'periode':    int(year),
                             'variable': section['title'].strip() + ' - Score',
                             'valeur':   float(score),
                         })
 
         self.transformed_data = pd.DataFrame(all_records).drop_duplicates(
-            subset=['pays', 'annee', 'variable']
+            subset=['pays', 'periode', 'variable']
         )
 
         record_count = len(self.transformed_data)
-        logger.info(f"📊 Transformed: {record_count} records across {self.transformed_data['annee'].nunique()} years")
+        logger.info(f"📊 Transformed: {record_count} records across {self.transformed_data['periode'].nunique()} years")
 
         # ── Convert Pandas → Spark for the emit ──────────────────────────
         transformed_spark = self.spark.createDataFrame(self.transformed_data)
@@ -514,7 +515,7 @@ class CompetitifScoresProcessor:
                 ),
                 "transformationType": "DIRECT",
             },
-            "annee": {
+            "periode": {
                 "inputFields": [
                     {
                         "namespace": resolve_namespace("memory://spark_df/competitivite/raw_excel"),
@@ -563,12 +564,12 @@ class CompetitifScoresProcessor:
             spark_df=transformed_spark,
             step_name="04_Transform_Data",
             description=(
-                f"Unpivoted wide Excel layout → long format (pays, annee, variable, valeur). "
+                f"Unpivoted wide Excel layout → long format (pays, periode, variable, valeur). "
                 f"Iterated over {len(self.title_sections)} detected sections. "
                 f"For each section: located years header row (integers in [2000, 2030]), "
                 f"iterated country rows, zipped with years to produce score records. "
                 f"Variable = section title + ' - Score'. "
-                f"drop_duplicates on (pays, annee, variable). "
+                f"drop_duplicates on (pays, periode, variable). "
                 f"Result: {record_count} records."
             ),
             trans_type="TRANSFORMATION",
@@ -598,7 +599,7 @@ class CompetitifScoresProcessor:
         )
 
         # Define ranking window per base indicator and year (descending valeur)
-        window_spec = Window.partitionBy("base_variable", "annee").orderBy(F.col("valeur").desc())
+        window_spec = Window.partitionBy("base_variable", "periode").orderBy(F.col("valeur").desc())
         spark_df    = spark_df.withColumn("rang_value", F.rank().over(window_spec))
 
         # ── Score rows: keep variable as-is, drop helper columns ─────────
@@ -607,7 +608,7 @@ class CompetitifScoresProcessor:
         # ── Rang rows: new rows with " - Rang" variable and rank as valeur
         df_rangs = spark_df.select(
             F.col("pays"),
-            F.col("annee"),
+            F.col("periode"),
             F.concat(F.col("base_variable"), F.lit(" - Rang")).alias("variable"),
             F.col("rang_value").cast("double").alias("valeur"),
         )
@@ -626,9 +627,9 @@ class CompetitifScoresProcessor:
             df_scores = df_scores.withColumn(col_name, col_expr)
             df_rangs  = df_rangs.withColumn(col_name, col_expr)
 
-        # Cast annee to int on both sides
-        df_scores = df_scores.withColumn("annee", F.col("annee").cast("int"))
-        df_rangs  = df_rangs.withColumn("annee",  F.col("annee").cast("int"))
+        # Cast periode to int on both sides
+        df_scores = df_scores.withColumn("periode", F.col("periode").cast(StringType()))
+        df_rangs  = df_rangs.withColumn("periode",  F.col("periode").cast(StringType()))
 
         # Union Score rows and Rang rows
         self.ranked_data = df_scores.unionByName(df_rangs)
@@ -656,8 +657,8 @@ class CompetitifScoresProcessor:
                 "transformationDescription": "Directly passed through from transformed DataFrame",
                 "transformationType": "DIRECT",
             },
-            "annee": {
-                "inputFields": [{"namespace": _ns, "name": _transformed_path, "field": "annee"}],
+            "periode": {
+                "inputFields": [{"namespace": _ns, "name": _transformed_path, "field": "periode"}],
                 "transformationDescription": "Directly passed through. Cast to int.",
                 "transformationType": "DIRECT",
             },
@@ -674,7 +675,7 @@ class CompetitifScoresProcessor:
                 "inputFields": [{"namespace": _ns, "name": _transformed_path, "field": "valeur"}],
                 "transformationDescription": (
                     "Score rows: original score value passed through. "
-                    "Rang rows: RANK() OVER (PARTITION BY base_variable, annee ORDER BY valeur DESC) "
+                    "Rang rows: RANK() OVER (PARTITION BY base_variable, periode ORDER BY valeur DESC) "
                     "cast to double. Both sets unioned via unionByName."
                 ),
                 "transformationType": "AGGREGATE",
@@ -695,7 +696,7 @@ class CompetitifScoresProcessor:
             step_name="05_Calculate_Rankings",
             description=(
                 f"Computed rankings from Score rows using Spark window function. "
-                f"RANK() OVER (PARTITION BY base_variable, annee ORDER BY valeur DESC). "
+                f"RANK() OVER (PARTITION BY base_variable, periode ORDER BY valeur DESC). "
                 f"Generated new '- Rang' rows with rank as valeur. "
                 f"Unioned Score + Rang rows via unionByName. "
                 f"Added metadata constants: base=null, version=null, source='competitivité positionnement', "
@@ -721,8 +722,8 @@ class CompetitifScoresProcessor:
         spark_df_new = self.ranked_data \
             .withColumn("valeur", F.col("valeur").cast("double"))
 
-        years_rows = spark_df_new.select("annee").distinct().collect()
-        years      = sorted([int(row['annee']) for row in years_rows])
+        years_rows = spark_df_new.select("periode").distinct().collect()
+        years      = sorted([int(row['periode']) for row in years_rows])
 
         sc         = self.spark.sparkContext
         FileSystem = sc._jvm.org.apache.hadoop.fs.FileSystem
@@ -731,7 +732,7 @@ class CompetitifScoresProcessor:
 
         for year in years:
             print(f"\n  📅 Processing Year  : {year}")
-            df_year_new = spark_df_new.filter(F.col("annee") == year)
+            df_year_new = spark_df_new.filter(F.col("periode") == year)
             df_year_new.createOrReplaceTempView("v_new_data")
 
             output_path      = f"s3a://{self.minio_config.bucket_transformed}/{self.output_path}{year}"

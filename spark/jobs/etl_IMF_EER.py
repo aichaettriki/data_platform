@@ -1,10 +1,11 @@
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, current_timestamp, lit, trim, when, regexp_extract, expr, row_number, desc, lpad
+from pyspark.sql.functions import col, current_timestamp, lit, trim, when, regexp_extract, expr, row_number, desc, lpad, concat, floor
 from pyspark.sql.types import DecimalType
- 
 from pyspark.sql.window import Window
 from pyspark.sql.utils import AnalysisException
 from pyspark.sql.types import StringType
+from pyspark.sql.functions import create_map
+from itertools import chain
 import logging
 import os
  
@@ -122,16 +123,33 @@ stack_expr = "stack({},{}) as (period,value)".format(
  
 long_df = df.select(
     col("`COUNTRY.ID`").alias("pays"),
-    col("INDICATOR").alias("variable"),
-    col("`INDICATOR.ID`").alias("variable_id"),
+    # col("INDICATOR").alias("variable"),
+    col("`INDICATOR.ID`").alias("variable"),
     # col("FREQUENCY").alias("freq"),
     expr(stack_expr)
 # ).filter(col("value").isNotNull())
 ).filter(col("value").cast("double").isNotNull())
+ 
+ 
+ 
+variable_mapping = {
+    "NEER_IX_RY2010_ACW": "Taux_de_Change_Effectif_Nominal_NEER",
+    "REER_IX_RY2010_ACW_RCPI": "Taux_de_Change_Effectif_Réel_REER"
+}
+ 
+mapping_expr = create_map([lit(x) for x in chain(*variable_mapping.items())])
+ 
+long_df = long_df.withColumn(
+    "variable",
+    when(
+        mapping_expr[col("variable")].isNotNull(),
+        mapping_expr[col("variable")]
+    ).otherwise(col("variable"))
+)
+ 
 # =====================================================
 # PERIOD EXTRACTION
 # =====================================================
-from pyspark.sql.functions import col, concat, lpad, floor
  
 long_df = long_df.withColumn(
     "periode",
@@ -182,18 +200,17 @@ for r in samples:
 # =====================================================
  
 final_df = long_df.select(
-    "pays","variable","variable_id",
-    "periode",
-    # col("value").cast("double").alias("valeur"),
- 
-    col("value").cast(DecimalType(20,15)).alias("valeur"),
-    lit(None).cast(StringType()).alias("base"),
-    lit(None).cast(StringType()).alias("version"),
-    lit(None).cast(StringType()).alias("code_secteur"),
-    lit(None).cast(StringType()).alias("lib_secteur"),
-    lit(None).cast(StringType()).alias("dim_id"),
-    lit(None).cast(StringType()).alias("dim_key"),
-    lit("FMI/EER").alias("source"),
+    "pays","variable","periode",
+    col("value").cast("double").alias("valeur"),
+    # col("value").cast(DecimalType(20,15)).alias("valeur"),
+    lit("NA").cast(StringType()).alias("base"),
+    lit("NA").cast(StringType()).alias("version"),
+    lit("NA").cast(StringType()).alias("code_secteur"),
+    lit("NA").cast(StringType()).alias("lib_secteur"),
+    lit("NA").cast(StringType()).alias("dim_id"),
+    lit("NA").cast(StringType()).alias("dim_key"),
+
+    lit("FMI").alias("source"),
     current_timestamp().alias("date_chargement"),
     lit(1).cast("int").alias("version_active")
 )
@@ -201,12 +218,13 @@ final_df = final_df.withColumn(
     "year_partition",
     col("periode").substr(1,4)
 )
+  
  
 # =====================================================
 # DELTA KEYS
 # =====================================================
  
-BUSINESS_KEYS = ["pays","variable_id","periode"]
+BUSINESS_KEYS = ["pays","variable","periode"]
  
 years = sorted([r["year_partition"] for r in final_df.select("year_partition").distinct().collect()])
 # =====================================================
@@ -290,7 +308,7 @@ for y in years:
             for r in new_rows.limit(5).collect():
  
                 log.info(
-                    f"   🆕 {r['pays']} | {r['variable_id']} | {r['periode']} | {r['valeur']}"
+                    f"   🆕 {r['pays']} | {r['variable']} | {r['periode']} | {r['valeur']}"
                 )
  
         # samples modified
@@ -303,7 +321,7 @@ for y in years:
                 (col("new.valeur") != col("old.valeur"))
             ).select(
                 col("new.pays").alias("pays"),
-                col("new.variable_id").alias("variable_id"),
+                col("new.variable").alias("variable"),
                
                 col("new.periode").alias("periode"),
                 col("old.valeur").alias("old_val"),
@@ -313,7 +331,7 @@ for y in years:
             for r in samples:
  
                 log.info(
-                    f"   ✏️ {r['pays']} | {r['variable_id']} | {r['periode']} | {r['old_val']} → {r['new_val']}"
+                    f"   ✏️ {r['pays']} | {r['variable']} | {r['periode']} | {r['old_val']} → {r['new_val']}"
                 )
  
         changed_rows = new_rows.union(modified_rows).cache()
@@ -363,7 +381,7 @@ for y in years:
         .withColumn("version_active",(col("_rank")==1).cast("int"))
         .drop("_rank")
     )
- 
+    
     total_rows = final_merged.count()
  
     (

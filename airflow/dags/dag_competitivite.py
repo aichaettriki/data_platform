@@ -72,6 +72,10 @@ with DAG(
         py_files=SPARK_COMMON_ZIP,
     )
 
-    cleanup = create_cleanup_task(dag, source_bucket=RAW_BUCKET, triggered_by="Transform_Competitivite")
-
+    cleanup = create_cleanup_task(
+    dag,
+    source_bucket="02-transformed",   # 👈 pas RAW_BUCKET
+    triggered_by="Transform_Competitivite",
+    target_folder="ITCEQ/competitivite/Positionnement",     # 👈 dossier dans ce bucket
+)
     zip_common >> run_spark_job >> cleanup

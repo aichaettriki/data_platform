@@ -56,6 +56,28 @@ with DAG(
         poke_interval=30,
         reset_dag_run=True,
     )
+    trigger_pnud = TriggerDagRunOperator(
+        task_id="trigger_pnud",
+        trigger_dag_id="02-TRANS_PNUD",
+        wait_for_completion=True,
+        poke_interval=30,
+        reset_dag_run=True,
+    )
+    trigger_worldbank_countries = TriggerDagRunOperator(
+        task_id="trigger_worldbank_countries",
+        trigger_dag_id="02-TRANS__worldbank_countries",
+        wait_for_completion=True,
+        poke_interval=30,
+        reset_dag_run=True,
+    )
+    trigger_fmi = TriggerDagRunOperator(
+        task_id="trigger_fmi",
+        trigger_dag_id="02-TRANS__imf_data",
+        wait_for_completion=True,
+        poke_interval=30,
+        reset_dag_run=True,
+    )
+
 
     # Exécution séquentielle
-    trigger_world_bank >> trigger_agregat >> trigger_competitivite >> trigger_tre
+    trigger_world_bank >> trigger_agregat >> trigger_competitivite >> trigger_tre >> trigger_pnud >> trigger_worldbank_countries >> trigger_fmi
