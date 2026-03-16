@@ -31,7 +31,18 @@ with DAG(
         wait_for_completion=True,
         poke_interval=30,
     )
-
+    ingest_WorldBank_country_data = TriggerDagRunOperator(
+        task_id="trigger_ingest_WorldBank_country_data",
+        trigger_dag_id="01-ING__ingest_worldbank_countries",
+        wait_for_completion=True,
+        poke_interval=30,
+    )
+    ingest_PNUD_data = TriggerDagRunOperator(
+        task_id="trigger_ingest_PNUD_data",
+        trigger_dag_id="01-ING__PNUD_HDI_to_Raw",
+        wait_for_completion=True,
+        poke_interval=30,
+    )
     ingest_from_data_folder = TriggerDagRunOperator(
         task_id="trigger_ingest_from_data_folder",
         trigger_dag_id="01-ING__Ingest_data_to_Raw",
@@ -40,5 +51,6 @@ with DAG(
     )
 
 
+
     # ORCHESTRATION ORDER
-    ingest_from_data_folder >> ingest_WorldBank_data >> ingest_INS_sources >> ingest_INS_dimensions
+    ingest_from_data_folder >> ingest_PNUD_data >> ingest_WorldBank_country_data >> ingest_WorldBank_data >> ingest_INS_sources >> ingest_INS_dimensions

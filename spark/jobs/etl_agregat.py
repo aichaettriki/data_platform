@@ -387,7 +387,7 @@ log.info(f"📄 Found 1 FACT file: {FACT_FILE}")
 for fact_file in fact_files:
 
     file_name       = fact_file.split("/")[-1].replace(".csv", "")
-    source_category = extract_category_path(fact_file, RAW_ROOT)
+    source_category = "INS"
 
     print(f"\n{'='*80}")
     print(f"🚀 Processing FACT file : {file_name}")

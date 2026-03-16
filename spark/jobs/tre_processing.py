@@ -1805,7 +1805,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
             .withColumn("date_chargement", current_timestamp())
             .withColumn("Pays",   F.lit("Tunisie"))
             .withColumn("Rang",   F.lit(None).cast("int"))
-            .withColumn("Source", F.lit("TRE"))
+            .withColumn("Source", F.lit("INS"))
             .withColumn("Base",   F.lit(None).cast("int"))
             .withColumn("code_secteur", F.trim(F.col("code_secteur")))
             .withColumn("lib_secteur",  F.trim(F.col("lib_secteur")))
