@@ -1,5 +1,5 @@
 -- Create a dedicated DB for your Spark → PostgreSQL pipeline
-CREATE DATABASE icteq_db;
+CREATE DATABASE itceq_db;
 
 \connect icteq_db;
 

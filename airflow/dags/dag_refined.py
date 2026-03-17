@@ -57,7 +57,6 @@ SPARK_APP_PATH = "/opt/spark/jobs/refined_job.py"
 with DAG(
     dag_id="03-REF__transformed_to_refined_pipeline",
     default_args=default_args,
-    schedule_interval="@daily",
     catchup=False,
     max_active_runs=1,
     tags=["spark", "minio", "refined", "medallion"],

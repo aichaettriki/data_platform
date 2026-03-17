@@ -358,7 +358,7 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
         .withColumn("lib_secteur",      F.lit("NA").cast("string"))
         .withColumn("dim_id",           F.lit("NA").cast("string"))
         .withColumn("dim_key",          F.lit("NA").cast("string"))
-        .withColumn("periode",          F.lit("NA").cast("string"))
+        .withColumn("periode",          F.col("periode").cast("string"))
         .withColumn("date_chargement",  F.current_timestamp())
         .withColumnRenamed("country_name", "pays")
         .select(

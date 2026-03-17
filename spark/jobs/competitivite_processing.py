@@ -615,13 +615,13 @@ class CompetitifScoresProcessor:
 
         # ── Metadata columns injected on both Score and Rang rows ─────────
         meta_cols = {
-            "base":         F.lit(None).cast("string"),
-            "version":      F.lit(None).cast("string"),
+            "base":         F.lit("NA").cast("string"),
+            "version":      F.lit("NA").cast("string"),
             "source":       F.lit("competitivité positionnement"),
-            "dim_id":       F.lit(None).cast("string"),
-            "dim_key":      F.lit(None).cast("string"),
-            "code_secteur": F.lit(None).cast("string"),
-            "lib_secteur":  F.lit(None).cast("string"),
+            "dim_id":       F.lit("NA").cast("string"),
+            "dim_key":      F.lit("NA").cast("string"),
+            "code_secteur": F.lit("NA").cast("string"),
+            "lib_secteur":  F.lit("NA").cast("string"),
         }
         for col_name, col_expr in meta_cols.items():
             df_scores = df_scores.withColumn(col_name, col_expr)
