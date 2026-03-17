@@ -258,7 +258,7 @@ body {
 /* Results Container */
 .results-container {
     flex: 1;
-    overflow: hidden;
+    overflow: auto;
     min-width: 0; /* ← clé absolue dans un flex container */
 }
 

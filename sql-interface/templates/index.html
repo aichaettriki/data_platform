@@ -4,101 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interface SQL pour MinIO - DuckDB</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=1.1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="shortcut icon" href="{{ url_for('static', filename='img/logo.ico') }}">
-    <style>
-        /* ── Streaming / Pagination additions ─────────────────────────── */
-        .stream-toggle {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            color: var(--text-secondary, #888);
-            cursor: pointer;
-            user-select: none;
-        }
-        .stream-toggle input { cursor: pointer; accent-color: var(--accent, #4f8ef7); }
-
-        .pagination-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            background: var(--bg-secondary, #1e1e2e);
-            border-top: 1px solid var(--border, #333);
-            font-size: 0.82rem;
-            color: var(--text-secondary, #aaa);
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .pagination-bar .page-controls { display: flex; align-items: center; gap: 6px; }
-        .pagination-bar button {
-            background: var(--bg-tertiary, #2a2a3e);
-            border: 1px solid var(--border, #444);
-            color: var(--text, #eee);
-            border-radius: 4px;
-            padding: 3px 10px;
-            cursor: pointer;
-            font-size: 0.82rem;
-        }
-        .pagination-bar button:disabled { opacity: 0.35; cursor: not-allowed; }
-        .pagination-bar button:hover:not(:disabled) { background: var(--accent, #4f8ef7); color: #fff; border-color: var(--accent, #4f8ef7); }
-        .pagination-bar select {
-            background: var(--bg-tertiary, #2a2a3e);
-            border: 1px solid var(--border, #444);
-            color: var(--text, #eee);
-            border-radius: 4px;
-            padding: 3px 6px;
-            font-size: 0.82rem;
-            cursor: pointer;
-        }
-
-        /* Progress bar shown during streaming */
-        .stream-progress {
-            height: 3px;
-            background: var(--bg-tertiary, #333);
-            overflow: hidden;
-            border-radius: 2px;
-            margin-bottom: 4px;
-        }
-        .stream-progress-bar {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #4f8ef7, #a78bfa);
-            border-radius: 2px;
-            transition: width 0.2s ease;
-            animation: indeterminate 1.4s ease infinite;
-        }
-        @keyframes indeterminate {
-            0%   { transform: translateX(-100%); width: 60%; }
-            100% { transform: translateX(200%);  width: 60%; }
-        }
-        .stream-progress-bar.done {
-            animation: none;
-            width: 100%;
-            background: #22c55e;
-        }
-
-        /* Row count badge */
-        .row-badge {
-            display: inline-block;
-            background: var(--accent, #4f8ef7);
-            color: #fff;
-            border-radius: 10px;
-            padding: 1px 8px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-left: 6px;
-        }
-
-        /* Fade-in rows */
-        @keyframes rowIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .results-table tbody tr { animation: rowIn 0.15s ease both; }
-    </style>
 </head>
 <body>
     <div class="container">
@@ -106,9 +14,10 @@
         <header class="header">
             <div class="header-content">
                 <h1>
-                    <img src="{{ url_for('static', filename='img/logo.png') }}"
-                         alt="Logo" class="logo-img">
-                    Interface SQL pour MinIO
+                <img src="{{ url_for('static', filename='img/logo.png') }}" 
+                    alt="Logo" 
+                    class="logo-img">
+                Interface SQL pour MinIO
                 </h1>
                 <p class="subtitle">Propulsé par DuckDB</p>
             </div>
@@ -160,7 +69,7 @@
                         </button>
                     </div>
                 </div>
-
+                
                 <div class="query-container">
                     <textarea id="queryEditor" class="query-editor" placeholder="-- Entrez votre requête SQL ici
 -- Exemple:
@@ -173,27 +82,11 @@ SELECT * FROM read_parquet('s3://mybucket/data.parquet') LIMIT 10;
 "></textarea>
                 </div>
 
-                <div class="query-actions" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+                <div class="query-actions">
                     <button class="btn btn-success btn-large" onclick="executeQuery()">
-                        <i class="fas fa-play"></i> Exécuter
+                        <i class="fas fa-play"></i> Exécuter la requête
                     </button>
-                    <label class="stream-toggle" title="Affiche les lignes au fur et à mesure (recommandé pour les gros volumes)">
-                        <input type="checkbox" id="streamToggle" checked>
-                        <i class="fas fa-stream"></i> Streaming progressif
-                    </label>
                     <span id="executionInfo" class="execution-info"></span>
-                </div>
-
-                <!-- Page size selector -->
-                <div style="display:flex; align-items:center; gap:8px; margin-top:8px; font-size:0.83rem; color:var(--text-secondary,#888);">
-                    <label for="pageSizeSelect"><i class="fas fa-list-ol"></i> Lignes / page :</label>
-                    <select id="pageSizeSelect" style="background:var(--bg-secondary,#1e1e2e); border:1px solid var(--border,#444); color:var(--text,#eee); border-radius:4px; padding:3px 6px; font-size:0.83rem;">
-                        <option value="50">50</option>
-                        <option value="100" selected>100</option>
-                        <option value="250">250</option>
-                        <option value="500">500</option>
-                        <option value="1000">1000</option>
-                    </select>
                 </div>
 
                 <!-- Examples Dropdown -->
@@ -206,10 +99,7 @@ SELECT * FROM read_parquet('s3://mybucket/data.parquet') LIMIT 10;
             <!-- Right Panel - Results -->
             <div class="right-panel">
                 <div class="panel-header">
-                    <h2>
-                        <i class="fas fa-table"></i> Résultats
-                        <span id="rowBadge" class="row-badge" style="display:none;"></span>
-                    </h2>
+                    <h2><i class="fas fa-table"></i> Résultats</h2>
                     <div class="header-actions">
                         <button class="btn btn-secondary" onclick="exportResults('csv')" id="exportCsvBtn" disabled>
                             <i class="fas fa-download"></i> CSV
@@ -220,32 +110,16 @@ SELECT * FROM read_parquet('s3://mybucket/data.parquet') LIMIT 10;
                     </div>
                 </div>
 
-                <!-- Progress bar (streaming) -->
-                <div id="streamProgressWrap" class="stream-progress" style="display:none;">
-                    <div id="streamProgressBar" class="stream-progress-bar"></div>
-                </div>
-
                 <div id="resultsContainer" class="results-container">
                     <div class="empty-state">
                         <i class="fas fa-search"></i>
                         <p>Exécutez une requête pour voir les résultats</p>
                     </div>
                 </div>
-
-                <!-- Pagination bar -->
-                <div id="paginationBar" class="pagination-bar" style="display:none;">
-                    <span id="paginationInfo">—</span>
-                    <div class="page-controls">
-                        <button id="btnFirst"  onclick="goToPage(1)"           title="Première page"><i class="fas fa-angle-double-left"></i></button>
-                        <button id="btnPrev"   onclick="goToPage(currentPage - 1)" title="Page précédente"><i class="fas fa-angle-left"></i></button>
-                        <span>Page <strong id="pageNum">1</strong></span>
-                        <button id="btnNext"   onclick="goToPage(currentPage + 1)" title="Page suivante"><i class="fas fa-angle-right"></i></button>
-                        <button id="btnLast"   onclick="goToPage(totalPages)"  title="Dernière page" id="btnLast"><i class="fas fa-angle-double-right"></i></button>
-                    </div>
-                </div>
             </div>
         </div>
 
+        <!-- Footer -->
         <footer class="footer">
             <p>DuckDB SQL Interface pour MinIO | Formats supportés: Parquet, CSV, JSON</p>
         </footer>
@@ -254,292 +128,9 @@ SELECT * FROM read_parquet('s3://mybucket/data.parquet') LIMIT 10;
     <!-- Loading Overlay -->
     <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="spinner"></div>
-        <p id="loadingText">Exécution de la requête...</p>
+        <p>Exécution de la requête...</p>
     </div>
 
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-    <script>
-    // ═══════════════════════════════════════════════════════════════════
-    //  State
-    // ═══════════════════════════════════════════════════════════════════
-    let currentPage  = 1;
-    let totalPages   = 1;
-    let lastQuery    = '';
-    let allColumns   = [];
-    let allRows      = [];        // only used in paginated (non-stream) mode
-    let isStreaming  = false;
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  Helpers
-    // ═══════════════════════════════════════════════════════════════════
-    const $ = id => document.getElementById(id);
-
-    function getPageSize() {
-        return parseInt($('pageSizeSelect').value, 10);
-    }
-
-    function showProgress(on) {
-        $('streamProgressWrap').style.display = on ? 'block' : 'none';
-        const bar = $('streamProgressBar');
-        bar.classList.remove('done');
-        if (!on) bar.style.width = '0%';
-    }
-
-    function finishProgress() {
-        const bar = $('streamProgressBar');
-        bar.classList.add('done');
-        setTimeout(() => showProgress(false), 800);
-    }
-
-    function updateRowBadge(n, suffix = '') {
-        const badge = $('rowBadge');
-        badge.textContent = n.toLocaleString('fr-FR') + (suffix ? ' ' + suffix : '') + ' lignes';
-        badge.style.display = 'inline-block';
-    }
-
-    function buildTableHead(columns) {
-        return `<thead><tr>${columns.map(c => `<th>${escHtml(c)}</th>`).join('')}</tr></thead>`;
-    }
-
-    function buildRow(row, columns) {
-        return `<tr>${columns.map(c => `<td>${escHtml(row[c] ?? '')}</td>`).join('')}</tr>`;
-    }
-
-    function escHtml(v) {
-        return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-
-    function showError(msg) {
-        $('resultsContainer').innerHTML = `<div class="error-message"><i class="fas fa-exclamation-triangle"></i> ${escHtml(msg)}</div>`;
-        $('rowBadge').style.display = 'none';
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  Pagination UI
-    // ═══════════════════════════════════════════════════════════════════
-    function updatePaginationUI(page, pages, rowCount, hasMore) {
-        currentPage = page;
-        totalPages  = pages || (hasMore ? page + 1 : page);
-
-        $('paginationBar').style.display = 'flex';
-        $('pageNum').textContent = page;
-
-        const info = pages
-            ? `Page ${page} / ${pages}`
-            : (hasMore ? `Page ${page} (suite disponible)` : `Page ${page} — dernière page`);
-        $('paginationInfo').textContent = info + ` · ${rowCount.toLocaleString('fr-FR')} lignes`;
-
-        $('btnFirst').disabled = page <= 1;
-        $('btnPrev').disabled  = page <= 1;
-        $('btnNext').disabled  = !hasMore && page >= totalPages;
-        $('btnLast').disabled  = !pages || page >= pages;
-    }
-
-    function goToPage(page) {
-        if (page < 1 || page > totalPages) return;
-        currentPage = page;
-        executePaginated(lastQuery, page);
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  Main entry point
-    // ═══════════════════════════════════════════════════════════════════
-    function executeQuery() {
-        const query = $('queryEditor').value.trim();
-        if (!query) return;
-
-        lastQuery   = query;
-        currentPage = 1;
-        allRows     = [];
-        allColumns  = [];
-
-        const useStream = $('streamToggle').checked;
-
-        $('exportCsvBtn').disabled  = true;
-        $('exportJsonBtn').disabled = true;
-        $('paginationBar').style.display = 'none';
-        $('rowBadge').style.display      = 'none';
-
-        if (useStream) {
-            executeStream(query);
-        } else {
-            executePaginated(query, 1);
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  Mode 1 — Streaming (NDJSON)
-    // ═══════════════════════════════════════════════════════════════════
-    async function executeStream(query) {
-        isStreaming = true;
-        showProgress(true);
-        $('loadingOverlay').style.display = 'none'; // pas d'overlay en streaming
-
-        const container = $('resultsContainer');
-        container.innerHTML = '';
-
-        let table   = null;
-        let tbody   = null;
-        let columns = [];
-        let rowCount = 0;
-        const startTime = Date.now();
-
-        try {
-            const resp = await fetch('/api/query/stream', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ query, pageSize: getPageSize() })
-            });
-
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-
-            const reader  = resp.body.getReader();
-            const decoder = new TextDecoder();
-            let   buffer  = '';
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                buffer = lines.pop(); // keep incomplete line
-
-                for (const line of lines) {
-                    if (!line.trim()) continue;
-                    let msg;
-                    try { msg = JSON.parse(line); } catch { continue; }
-
-                    if (msg.type === 'columns') {
-                        columns    = msg.columns;
-                        allColumns = columns;
-                        // Build table skeleton
-                        table = document.createElement('table');
-                        table.className = 'results-table';
-                        table.innerHTML = buildTableHead(columns);
-                        tbody = document.createElement('tbody');
-                        table.appendChild(tbody);
-                        container.appendChild(table);
-
-                    } else if (msg.type === 'rows') {
-                        for (const row of msg.rows) {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = columns.map(c => `<td>${escHtml(row[c] ?? '')}</td>`).join('');
-                            tbody.appendChild(tr);
-                            rowCount++;
-                        }
-                        allRows = allRows.concat(msg.rows);
-                        updateRowBadge(rowCount, 'chargées');
-
-                    } else if (msg.type === 'done') {
-                        const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
-                        $('executionInfo').textContent = `✓ ${rowCount.toLocaleString('fr-FR')} lignes en ${elapsed}s`;
-                        updateRowBadge(rowCount);
-                        finishProgress();
-                        $('exportCsvBtn').disabled  = false;
-                        $('exportJsonBtn').disabled = false;
-
-                    } else if (msg.type === 'error') {
-                        showError(msg.error);
-                        showProgress(false);
-                    }
-                }
-            }
-        } catch (err) {
-            showError(err.message);
-            showProgress(false);
-        }
-
-        isStreaming = false;
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  Mode 2 — Paginated (classique)
-    // ═══════════════════════════════════════════════════════════════════
-    async function executePaginated(query, page) {
-        $('loadingOverlay').style.display = 'flex';
-        $('loadingText').textContent = `Chargement page ${page}…`;
-
-        try {
-            const resp = await fetch('/api/query', {
-                method:  'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({
-                    query,
-                    page,
-                    pageSize:   getPageSize(),
-                    countTotal: false
-                })
-            });
-
-            const data = await resp.json();
-            $('loadingOverlay').style.display = 'none';
-
-            if (!data.success) {
-                showError(data.error);
-                return;
-            }
-
-            allColumns = data.columns;
-            allRows    = data.data;
-
-            // Render table
-            const container = $('resultsContainer');
-            if (!data.data.length) {
-                container.innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Aucun résultat</p></div>';
-                $('paginationBar').style.display = 'none';
-                return;
-            }
-
-            let html = `<table class="results-table">${buildTableHead(data.columns)}<tbody>`;
-            for (const row of data.data) html += buildRow(row, data.columns);
-            html += '</tbody></table>';
-            container.innerHTML = html;
-
-            updateRowBadge(data.rowCount);
-            updatePaginationUI(data.page, data.totalPages || null, data.rowCount, data.hasMore);
-
-            const info = `✓ ${data.rowCount} lignes · ${data.executionTime}s`;
-            $('executionInfo').textContent = info;
-            $('exportCsvBtn').disabled  = false;
-            $('exportJsonBtn').disabled = false;
-
-        } catch (err) {
-            $('loadingOverlay').style.display = 'none';
-            showError(err.message);
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════════════
-    //  Export (utilise allRows en mémoire)
-    // ═══════════════════════════════════════════════════════════════════
-    function exportResults(format) {
-        if (!allRows.length) return;
-        let content, mime, ext;
-
-        if (format === 'csv') {
-            const header = allColumns.join(',');
-            const rows   = allRows.map(r =>
-                allColumns.map(c => {
-                    const v = String(r[c] ?? '');
-                    return v.includes(',') || v.includes('"') ? `"${v.replace(/"/g,'""')}"` : v;
-                }).join(',')
-            );
-            content = [header, ...rows].join('\n');
-            mime = 'text/csv'; ext = 'csv';
-        } else {
-            content = JSON.stringify(allRows, null, 2);
-            mime = 'application/json'; ext = 'json';
-        }
-
-        const blob = new Blob([content], { type: mime });
-        const url  = URL.createObjectURL(blob);
-        const a    = document.createElement('a');
-        a.href     = url;
-        a.download = `resultats_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.${ext}`;
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-    </script>
 </body>
 </html>
