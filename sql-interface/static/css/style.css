@@ -249,7 +249,6 @@ body {
 /* ─── Results Container ─────────────────────────────────────── */
 .results-container {
     flex: 1;
-    overflow: auto;
     min-width: 0;
 }
 
@@ -268,90 +267,94 @@ body {
     opacity: 0.3;
 }
 
-.results-table-wrapper {
-    width: 100%;
-    border-radius: 6px;
-    border: 1px solid var(--border-color);
-    overflow: hidden;
+/* ─── Warning Banner (données tronquées) ────────────────────── */
+.warning-banner {
+    background: #fffbeb;
+    border: 2px solid var(--warning-color);
+    border-radius: 8px;
+    padding: 12px 15px;
+    margin-bottom: 12px;
+    color: #92400e;
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.warning-banner i {
+    color: var(--warning-color);
+    flex-shrink: 0;
 }
 
 /* ─── Results Info Bar ──────────────────────────────────────── */
 .results-info {
-    padding: 15px;
+    padding: 12px 15px;
     background: var(--bg-secondary);
     border-radius: 8px;
-    margin-bottom: 15px;
+    margin-bottom: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .results-info-item {
     display: flex;
     align-items: center;
     gap: 5px;
+    font-size: 0.9em;
 }
 
 .results-info-item i {
     color: var(--primary-color);
 }
 
-/* ─── DataTables Overrides ──────────────────────────────────── */
-
-/* Conteneur général */
-div.dt-container {
-    font-family: inherit;
-    color: var(--text-primary);
-    font-size: 0.9em;
-}
-
-/* Barre supérieure : pageLength + search */
-div.dt-container .dt-layout-row {
-    margin-bottom: 10px;
-}
-
-div.dt-container .dt-search input {
-    border: 2px solid var(--border-color);
+/* ─── Table Wrapper (scroll horizontal + vertical) ──────────── */
+.results-table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 520px;
+    width: 100%;
     border-radius: 8px;
-    padding: 6px 10px;
-    font-size: 0.9em;
-    font-family: inherit;
-    transition: all 0.2s;
+    border: 1px solid var(--border-color);
+    position: relative;
 }
 
-div.dt-container .dt-search input:focus {
-    outline: none;
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+/* ─── Results Table ─────────────────────────────────────────── */
+.results-table {
+    min-width: max-content;
+    width: 100%;
+    border-collapse: collapse;
 }
 
-div.dt-container .dt-length select {
-    border: 2px solid var(--border-color);
-    border-radius: 8px;
-    padding: 5px 8px;
-    font-family: inherit;
-    cursor: pointer;
-}
-
-/* Thead – 1ère ligne : noms des colonnes */
-table.dataTable thead tr:nth-child(1) th {
+/* Header ligne 1 : noms des colonnes — sticky */
+.results-table thead tr:nth-child(1) th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
     background: var(--bg-secondary);
-    color: var(--text-primary);
+    padding: 10px 14px;
+    text-align: left;
     font-weight: 600;
     font-size: 0.88em;
-    padding: 10px 12px;
+    color: var(--text-primary);
     border-bottom: 2px solid var(--border-color);
     white-space: nowrap;
 }
 
-/* Thead – 2ème ligne : selects de filtre */
-table.dataTable thead tr:nth-child(2) th {
+/* Header ligne 2 : filtres select — sticky juste en dessous */
+.results-table thead tr:nth-child(2) th {
+    position: sticky;
+    top: 38px; /* hauteur de la 1ère ligne */
+    z-index: 9;
     background: var(--bg-tertiary);
     padding: 5px 8px;
     border-bottom: 2px solid var(--border-color);
 }
 
-table.dataTable thead tr:nth-child(2) select {
+/* Select de filtre par colonne */
+.col-filter-select {
     width: 100%;
     padding: 4px 6px;
     border: 1.5px solid var(--border-color);
@@ -365,7 +368,7 @@ table.dataTable thead tr:nth-child(2) select {
     min-width: 80px;
 }
 
-table.dataTable thead tr:nth-child(2) select:focus {
+.col-filter-select:focus {
     outline: none;
     border-color: var(--primary-color);
     box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
@@ -379,56 +382,42 @@ table.dataTable thead tr:nth-child(2) select:focus {
     text-align: center;
 }
 
-/* Cellules du tbody */
-table.dataTable tbody td {
-    padding: 8px 12px;
+/* Cellules */
+.results-table tbody td {
+    padding: 8px 14px;
     border-bottom: 1px solid var(--border-color);
     white-space: nowrap;
     font-size: 0.88em;
 }
 
-table.dataTable tbody tr:hover {
-    background: var(--bg-secondary) !important;
+.results-table tbody tr:hover {
+    background: var(--bg-secondary);
 }
 
-/* Pagination */
-div.dt-container .dt-paging .dt-paging-button {
-    border-radius: 6px !important;
-    padding: 4px 10px !important;
-    margin: 0 2px !important;
-    border: 1.5px solid var(--border-color) !important;
-    background: white !important;
-    color: var(--text-primary) !important;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-div.dt-container .dt-paging .dt-paging-button:hover {
-    background: var(--bg-tertiary) !important;
-    border-color: var(--primary-color) !important;
-    color: var(--primary-color) !important;
-}
-
-div.dt-container .dt-paging .dt-paging-button.current,
-div.dt-container .dt-paging .dt-paging-button.current:hover {
-    background: var(--primary-color) !important;
-    color: white !important;
-    border-color: var(--primary-color) !important;
-    font-weight: 600;
-}
-
-div.dt-container .dt-paging .dt-paging-button.disabled,
-div.dt-container .dt-paging .dt-paging-button.disabled:hover {
-    opacity: 0.4;
-    cursor: not-allowed;
-    color: var(--text-secondary) !important;
-}
-
-/* Info ligne ("Affichage de X à Y sur Z entrées") */
-div.dt-container .dt-info {
+/* ─── Load More Indicator (infinite scroll) ─────────────────── */
+.load-more-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 14px;
     color: var(--text-secondary);
-    font-size: 0.85em;
-    padding-top: 6px;
+    font-size: 0.9em;
+    background: var(--bg-secondary);
+    border-top: 1px solid var(--border-color);
+}
+
+.load-more-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border-color);
+    border-top-color: var(--primary-color);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 /* ─── Buttons ───────────────────────────────────────────────── */
@@ -464,32 +453,12 @@ div.dt-container .dt-info {
     box-shadow: none;
 }
 
-.btn-primary {
-    background: var(--primary-color);
-    color: white;
-}
-
-.btn-primary:hover {
-    background: #1d4ed8;
-}
-
-.btn-secondary {
-    background: var(--secondary-color);
-    color: white;
-}
-
-.btn-secondary:hover {
-    background: #475569;
-}
-
-.btn-success {
-    background: var(--success-color);
-    color: white;
-}
-
-.btn-success:hover {
-    background: #15803d;
-}
+.btn-primary  { background: var(--primary-color);  color: white; }
+.btn-primary:hover  { background: #1d4ed8; }
+.btn-secondary { background: var(--secondary-color); color: white; }
+.btn-secondary:hover { background: #475569; }
+.btn-success  { background: var(--success-color);  color: white; }
+.btn-success:hover  { background: #15803d; }
 
 .btn-config {
     padding: 10px 20px;
@@ -518,10 +487,7 @@ div.dt-container .dt-info {
 /* ─── Loading Overlay ───────────────────────────────────────── */
 .loading-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    top: 0; left: 0; right: 0; bottom: 0;
     background: rgba(0, 0, 0, 0.7);
     display: flex;
     flex-direction: column;
@@ -537,10 +503,6 @@ div.dt-container .dt-info {
     border-top-color: white;
     border-radius: 50%;
     animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
 }
 
 .loading-overlay p {
@@ -586,44 +548,63 @@ div.dt-container .dt-info {
 }
 
 /* ─── Responsive ────────────────────────────────────────────── */
-@media (max-width: 1200px) {
-    .main-content {
-        grid-template-columns: 1fr;
-    }
-}
-
 @media (max-width: 768px) {
-    .header {
-        flex-direction: column;
-        gap: 15px;
-    }
-
-    .panel-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-
-    .config-form {
-        grid-template-columns: 1fr;
-    }
+    .header { flex-direction: column; gap: 15px; }
+    .panel-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .config-form { grid-template-columns: 1fr; }
 }
 
 /* ─── Scrollbar Styling ─────────────────────────────────────── */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg-secondary); }
+::-webkit-scrollbar-thumb { background: var(--secondary-color); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--primary-color); }
+
+/* ─── Filtre combiné select + input par colonne ─────────────── */
+.col-filter-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 100px;
 }
 
-::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
+.col-filter-wrapper select {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.8em;
+    font-family: inherit;
+    background: white;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: border-color 0.2s;
 }
 
-::-webkit-scrollbar-thumb {
-    background: var(--secondary-color);
-    border-radius: 5px;
+.col-filter-wrapper select:focus {
+    outline: none;
+    border-color: var(--primary-color);
 }
 
-::-webkit-scrollbar-thumb:hover {
-    background: var(--primary-color);
+.col-filter-input {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.8em;
+    font-family: inherit;
+    background: white;
+    color: var(--text-primary);
+    transition: border-color 0.2s;
+}
+
+.col-filter-input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+.col-filter-input::placeholder {
+    color: #aab;
+    font-style: italic;
 }

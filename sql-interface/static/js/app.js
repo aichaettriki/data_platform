@@ -3,12 +3,10 @@ let currentResults = null;
 let currentConfig = null;
 let dataTableInstance = null;
 
-// Charger la configuration au démarrage
 document.addEventListener('DOMContentLoaded', () => {
     loadConfig();
 });
 
-// Toggle Configuration Panel
 function toggleConfig() {
     const panel = document.getElementById('configPanel');
     if (panel.style.display === 'none') {
@@ -19,7 +17,6 @@ function toggleConfig() {
     }
 }
 
-// Charger la configuration actuelle
 async function loadConfig() {
     try {
         const response = await fetch('/api/config');
@@ -32,7 +29,6 @@ async function loadConfig() {
     }
 }
 
-// Sauvegarder la configuration
 async function saveConfig() {
     const endpoint  = document.getElementById('endpoint').value;
     const accessKey = document.getElementById('accessKey').value;
@@ -50,10 +46,9 @@ async function saveConfig() {
                 s3_use_ssl: useSSL ? 'true' : 'false'
             })
         });
-
         const data = await response.json();
         if (data.success) {
-            showNotification('Configuration sauvegardée avec succès!', 'success');
+            showNotification('Configuration sauvegardee avec succes!', 'success');
             toggleConfig();
         } else {
             showNotification('Erreur: ' + data.error, 'error');
@@ -63,12 +58,11 @@ async function saveConfig() {
     }
 }
 
-// Exécuter une requête SQL
 async function executeQuery() {
     const query = document.getElementById('queryEditor').value.trim();
 
     if (!query) {
-        showNotification('Veuillez entrer une requête SQL', 'warning');
+        showNotification('Veuillez entrer une requete SQL', 'warning');
         return;
     }
 
@@ -94,7 +88,7 @@ async function executeQuery() {
 
             document.getElementById('executionInfo').innerHTML = `
                 <i class="fas fa-check-circle" style="color: var(--success-color);"></i>
-                Exécuté en ${data.executionTime}s
+                Execute en ${data.executionTime}s
             `;
         } else {
             displayError(data.error, data.stackTrace);
@@ -108,7 +102,6 @@ async function executeQuery() {
     }
 }
 
-// Afficher les résultats avec DataTables
 function displayResults(data) {
     const container = document.getElementById('resultsContainer');
 
@@ -116,13 +109,12 @@ function displayResults(data) {
         container.innerHTML = `
             <div class="empty-state">
                 <i class="fas fa-inbox"></i>
-                <p>Aucun résultat trouvé</p>
+                <p>Aucun resultat trouve</p>
             </div>
         `;
         return;
     }
 
-    // Détruire l'instance précédente
     if (dataTableInstance) {
         dataTableInstance.destroy();
         dataTableInstance = null;
@@ -145,46 +137,48 @@ function displayResults(data) {
         </div>
     `;
 
-    // Deux lignes de thead :
-    // - 1ère : noms des colonnes (pour le tri)
-    // - 2ème : vide, remplie par DataTables avec les selects de filtre
     const tableHTML = `
         ${infoBar}
         <div class="results-table-wrapper">
             <table id="resultsTable" class="display nowrap" style="width:100%">
                 <thead>
                     <tr>
-                        ${data.columns.map(col => `<th>${escapeHtml(col)}</th>`).join('')}
+                        ${data.columns.map(col => '<th>' + escapeHtml(col) + '</th>').join('')}
                     </tr>
                     <tr>
-                        ${data.columns.map(() => `<th></th>`).join('')}
+                        ${data.columns.map(() => '<th></th>').join('')}
                     </tr>
                 </thead>
-                <tbody>
-                    ${data.data.map(row => `
-                        <tr>
-                            ${data.columns.map(col => {
-                                const value = row[col];
-                                return `<td>${value !== null && value !== undefined ? escapeHtml(String(value)) : ''}</td>`;
-                            }).join('')}
-                        </tr>
-                    `).join('')}
-                </tbody>
+                <tbody></tbody>
             </table>
         </div>
     `;
 
     container.innerHTML = tableHTML;
 
-    // Initialiser DataTables
+    // Préparer les données pour DataTables (tableau de tableaux)
+    const dtData = data.data.map(function(row) {
+        return data.columns.map(function(col) {
+            const v = row[col];
+            return (v !== null && v !== undefined) ? String(v) : '';
+        });
+    });
+
     dataTableInstance = new DataTable('#resultsTable', {
-        orderCellsTop: true,   // Tri uniquement sur la 1ère ligne de thead
+        orderCellsTop: true,
         fixedHeader: true,
         scrollX: true,
         scrollY: '420px',
         scrollCollapse: true,
         pageLength: 25,
         lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Tout']],
+        data: dtData,
+        columns: data.columns.map(function(col) {
+            return {
+                title: escapeHtml(col),
+                defaultContent: '<em style="color:#999;">NULL</em>'
+            };
+        }),
         language: {
             url: 'https://cdn.datatables.net/plug-ins/2.0.8/i18n/fr-FR.json'
         },
@@ -194,40 +188,65 @@ function displayResults(data) {
             bottomStart: 'info',
             bottomEnd: 'paging'
         },
-        initComplete: function () {
-            // Ajouter un select de filtre dans la 2ème ligne de thead pour chaque colonne
-            this.api().columns().every(function () {
+        initComplete: function() {
+            this.api().columns().every(function() {
                 const column     = this;
                 const headerCell = $(column.header(1));
 
+                // Valeurs uniques de la colonne
                 const uniqueValues = [...new Set(
-                    column.data().toArray().map(v =>
-                        (v === '' || v === null || v === undefined) ? 'NULL' : String(v)
-                    )
-                )].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+                    column.data().toArray().map(function(v) {
+                        return (v === '' || v === null || v === undefined) ? 'NULL' : String(v);
+                    })
+                )].sort(function(a, b) {
+                    return a.localeCompare(b, undefined, { numeric: true });
+                });
 
-                // Pas de filtre si trop de valeurs uniques (colonne numérique continue, etc.)
-                if (uniqueValues.length > 200) {
-                    headerCell.html('<span class="filter-na" title="Trop de valeurs uniques">—</span>');
-                    return;
+                const wrapper = $('<div class="col-filter-wrapper"></div>');
+
+                // ── Select valeurs uniques ────────────────────
+                if (uniqueValues.length <= 200) {
+                    const select = $('<select><option value="">Tous</option></select>');
+                    uniqueValues.forEach(function(val) {
+                        select.append('<option value="' + escapeHtml(val) + '">' + escapeHtml(val) + '</option>');
+                    });
+                    wrapper.append(select);
+                } else {
+                    wrapper.append('<span class="filter-na" title="Trop de valeurs uniques">-</span>');
                 }
 
-                const select = $('<select><option value="">Tous</option></select>')
-                    .appendTo(headerCell.empty())
-                    .on('change', function () {
-                        const val = $(this).val();
-                        column.search(val ? `^${$.fn.dataTable.util.escapeRegex(val)}$` : '', true, false).draw();
-                    });
+                // ── Input texte libre ─────────────────────────
+                const input = $('<input type="text" class="col-filter-input" placeholder="Rechercher...">');
+                wrapper.append(input);
+                headerCell.empty().append(wrapper);
 
-                uniqueValues.forEach(val => {
-                    select.append(`<option value="${escapeHtml(val)}">${escapeHtml(val)}</option>`);
-                });
+                // ── Filtre combiné ────────────────────────────
+                function applyColumnFilter() {
+                    const selectVal = wrapper.find('select').val() || '';
+                    const inputVal  = wrapper.find('input').val().trim();
+
+                    if (selectVal && inputVal) {
+                        // Les deux actifs : lookahead regex
+                        column.search(
+                            '(?=.*^' + $.fn.dataTable.util.escapeRegex(selectVal) + '$)(?=.*' + $.fn.dataTable.util.escapeRegex(inputVal) + ')',
+                            true, false
+                        ).draw();
+                    } else if (selectVal) {
+                        column.search('^' + $.fn.dataTable.util.escapeRegex(selectVal) + '$', true, false).draw();
+                    } else if (inputVal) {
+                        column.search($.fn.dataTable.util.escapeRegex(inputVal), true, false).draw();
+                    } else {
+                        column.search('', true, false).draw();
+                    }
+                }
+
+                wrapper.find('select').on('change', applyColumnFilter);
+                wrapper.find('input').on('input', applyColumnFilter);
             });
         }
     });
 }
 
-// Afficher une erreur
 function displayError(error, stackTrace) {
     const container = document.getElementById('resultsContainer');
 
@@ -240,7 +259,7 @@ function displayError(error, stackTrace) {
     if (stackTrace) {
         errorHTML += `
             <details>
-                <summary>Détails techniques</summary>
+                <summary>Details techniques</summary>
                 <div class="error-details">${escapeHtml(stackTrace)}</div>
             </details>
         `;
@@ -250,7 +269,6 @@ function displayError(error, stackTrace) {
     container.innerHTML = errorHTML;
 }
 
-// Charger les exemples
 async function loadExamples() {
     const dropdown = document.getElementById('examplesDropdown');
 
@@ -264,7 +282,7 @@ async function loadExamples() {
         const data = await response.json();
 
         let examplesHTML = '';
-        data.examples.forEach(example => {
+        data.examples.forEach(function(example) {
             examplesHTML += `
                 <div class="example-item" onclick="selectExample(\`${escapeHtml(example.query)}\`)">
                     <h4>${escapeHtml(example.name)}</h4>
@@ -280,24 +298,21 @@ async function loadExamples() {
     }
 }
 
-// Sélectionner un exemple
 function selectExample(query) {
     document.getElementById('queryEditor').value = query;
     document.getElementById('examplesDropdown').style.display = 'none';
 }
 
-// Effacer la requête
 function clearQuery() {
-    if (confirm('Êtes-vous sûr de vouloir effacer la requête ?')) {
+    if (confirm('Etes-vous sur de vouloir effacer la requete ?')) {
         document.getElementById('queryEditor').value = '';
         document.getElementById('executionInfo').innerHTML = '';
     }
 }
 
-// Exporter les résultats
 function exportResults(format) {
     if (!currentResults || !currentResults.data) {
-        showNotification('Aucun résultat à exporter', 'warning');
+        showNotification('Aucun resultat a exporter', 'warning');
         return;
     }
 
@@ -323,21 +338,20 @@ function exportResults(format) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    showNotification(`Résultats exportés en ${format.toUpperCase()}`, 'success');
+    showNotification('Resultats exportes en ' + format.toUpperCase(), 'success');
 }
 
-// Convertir en CSV
 function convertToCSV(data) {
     const columns = data.columns;
     const rows    = data.data;
 
-    let csv = columns.map(col => `"${col}"`).join(',') + '\n';
+    let csv = columns.map(function(col) { return '"' + col + '"'; }).join(',') + '\n';
 
-    rows.forEach(row => {
-        const values = columns.map(col => {
+    rows.forEach(function(row) {
+        const values = columns.map(function(col) {
             const value = row[col];
             if (value === null || value === undefined) return '';
-            return `"${String(value).replace(/"/g, '""')}"`;
+            return '"' + String(value).replace(/"/g, '""') + '"';
         });
         csv += values.join(',') + '\n';
     });
@@ -345,33 +359,27 @@ function convertToCSV(data) {
     return csv;
 }
 
-// Afficher une notification
-function showNotification(message, type = 'info') {
+function showNotification(message, type) {
+    type = type || 'info';
     const notification = document.createElement('div');
-    notification.style.cssText = `
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 25px;
-        background: ${type === 'success' ? '#16a34a' : type === 'error' ? '#dc2626' : type === 'warning' ? '#f59e0b' : '#2563eb'};
-        color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-        font-weight: 600;
-    `;
+    const bg = type === 'success' ? '#16a34a' : type === 'error' ? '#dc2626' : type === 'warning' ? '#f59e0b' : '#2563eb';
+    const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle';
 
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
-        ${message}
-    `;
+    notification.style.cssText = [
+        'position:fixed', 'top:20px', 'right:20px',
+        'padding:15px 25px', 'background:' + bg,
+        'color:white', 'border-radius:8px',
+        'box-shadow:0 4px 6px rgba(0,0,0,0.1)',
+        'z-index:10000', 'animation:slideIn 0.3s ease',
+        'font-weight:600'
+    ].join(';');
 
+    notification.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + message;
     document.body.appendChild(notification);
 
-    setTimeout(() => {
+    setTimeout(function() {
         notification.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => {
+        setTimeout(function() {
             if (document.body.contains(notification)) {
                 document.body.removeChild(notification);
             }
@@ -379,21 +387,12 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-// Échapper le HTML
 function escapeHtml(text) {
-    const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;',
-        '`': '&#96;'
-    };
-    return String(text).replace(/[&<>"'`]/g, m => map[m]);
+    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;', '`': '&#96;' };
+    return String(text).replace(/[&<>"'`]/g, function(m) { return map[m]; });
 }
 
-// Raccourcis clavier
-document.addEventListener('keydown', (e) => {
+document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         executeQuery();
@@ -403,8 +402,7 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// Fermer le dropdown des exemples en cliquant ailleurs
-document.addEventListener('click', (e) => {
+document.addEventListener('click', function(e) {
     const dropdown = document.getElementById('examplesDropdown');
     const button   = e.target.closest('button');
     if (dropdown.style.display === 'block' && (!button || !button.textContent.includes('Exemples'))) {
@@ -414,14 +412,8 @@ document.addEventListener('click', (e) => {
 
 // Animations CSS
 const style = document.createElement('style');
-style.textContent = `
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to   { transform: translateX(0);    opacity: 1; }
-    }
-    @keyframes slideOut {
-        from { transform: translateX(0);    opacity: 1; }
-        to   { transform: translateX(100%); opacity: 0; }
-    }
-`;
+style.textContent = [
+    '@keyframes slideIn { from { transform:translateX(100%); opacity:0; } to { transform:translateX(0); opacity:1; } }',
+    '@keyframes slideOut { from { transform:translateX(0); opacity:1; } to { transform:translateX(100%); opacity:0; } }'
+].join(' ');
 document.head.appendChild(style);
