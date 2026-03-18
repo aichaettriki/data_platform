@@ -1,6 +1,7 @@
 // Variables globales
 let currentResults = null;
 let currentConfig = null;
+let dataTableInstance = null;
 
 // Charger la configuration au démarrage
 document.addEventListener('DOMContentLoaded', () => {
@@ -24,7 +25,6 @@ async function loadConfig() {
         const response = await fetch('/api/config');
         const data = await response.json();
         currentConfig = data;
-        
         document.getElementById('endpoint').value = data.endpoint || '';
         document.getElementById('useSSL').checked = data.s3_use_ssl === 'true';
     } catch (error) {
@@ -34,17 +34,15 @@ async function loadConfig() {
 
 // Sauvegarder la configuration
 async function saveConfig() {
-    const endpoint = document.getElementById('endpoint').value;
+    const endpoint  = document.getElementById('endpoint').value;
     const accessKey = document.getElementById('accessKey').value;
     const secretKey = document.getElementById('secretKey').value;
-    const useSSL = document.getElementById('useSSL').checked;
-    
+    const useSSL    = document.getElementById('useSSL').checked;
+
     try {
         const response = await fetch('/api/config', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 endpoint: endpoint,
                 s3_access_key_id: accessKey,
@@ -52,9 +50,8 @@ async function saveConfig() {
                 s3_use_ssl: useSSL ? 'true' : 'false'
             })
         });
-        
+
         const data = await response.json();
-        
         if (data.success) {
             showNotification('Configuration sauvegardée avec succès!', 'success');
             toggleConfig();
@@ -69,39 +66,32 @@ async function saveConfig() {
 // Exécuter une requête SQL
 async function executeQuery() {
     const query = document.getElementById('queryEditor').value.trim();
-    
+
     if (!query) {
         showNotification('Veuillez entrer une requête SQL', 'warning');
         return;
     }
-    
-    // Afficher le loading overlay
+
     document.getElementById('loadingOverlay').style.display = 'flex';
-    
-    // Désactiver les boutons d'export
     document.getElementById('exportCsvBtn').disabled = true;
     document.getElementById('exportJsonBtn').disabled = true;
-    
+
     try {
         const response = await fetch('/api/query', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ query: query })
         });
-        
+
         const data = await response.json();
-        
+
         if (data.success) {
             currentResults = data;
             displayResults(data);
-            
-            // Activer les boutons d'export
+
             document.getElementById('exportCsvBtn').disabled = false;
             document.getElementById('exportJsonBtn').disabled = false;
-            
-            // Afficher les infos d'exécution
+
             document.getElementById('executionInfo').innerHTML = `
                 <i class="fas fa-check-circle" style="color: var(--success-color);"></i>
                 Exécuté en ${data.executionTime}s
@@ -118,10 +108,10 @@ async function executeQuery() {
     }
 }
 
-// Afficher les résultats
+// Afficher les résultats avec DataTables
 function displayResults(data) {
     const container = document.getElementById('resultsContainer');
-    
+
     if (data.data.length === 0) {
         container.innerHTML = `
             <div class="empty-state">
@@ -131,7 +121,13 @@ function displayResults(data) {
         `;
         return;
     }
-    
+
+    // Détruire l'instance précédente
+    if (dataTableInstance) {
+        dataTableInstance.destroy();
+        dataTableInstance = null;
+    }
+
     const infoBar = `
         <div class="results-info">
             <div class="results-info-item">
@@ -148,44 +144,99 @@ function displayResults(data) {
             </div>
         </div>
     `;
-    
-    let tableHTML = `
+
+    // Deux lignes de thead :
+    // - 1ère : noms des colonnes (pour le tri)
+    // - 2ème : vide, remplie par DataTables avec les selects de filtre
+    const tableHTML = `
         ${infoBar}
         <div class="results-table-wrapper">
-            <table class="results-table">
+            <table id="resultsTable" class="display nowrap" style="width:100%">
                 <thead>
                     <tr>
+                        ${data.columns.map(col => `<th>${escapeHtml(col)}</th>`).join('')}
+                    </tr>
+                    <tr>
+                        ${data.columns.map(() => `<th></th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${data.data.map(row => `
+                        <tr>
+                            ${data.columns.map(col => {
+                                const value = row[col];
+                                return `<td>${value !== null && value !== undefined ? escapeHtml(String(value)) : ''}</td>`;
+                            }).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
     `;
-    
-    data.columns.forEach(col => {
-        tableHTML += `<th>${escapeHtml(col)}</th>`;
-    });
-    
-    tableHTML += `</tr></thead><tbody>`;
-    
-    data.data.forEach(row => {
-        tableHTML += '<tr>';
-        data.columns.forEach(col => {
-            const value = row[col];
-            tableHTML += `<td>${value !== null && value !== undefined ? escapeHtml(String(value)) : '<em style="color: #999;">NULL</em>'}</td>`;
-        });
-        tableHTML += '</tr>';
-    });
-    
-    tableHTML += `</tbody></table></div>`;
-    
+
     container.innerHTML = tableHTML;
+
+    // Initialiser DataTables
+    dataTableInstance = new DataTable('#resultsTable', {
+        orderCellsTop: true,   // Tri uniquement sur la 1ère ligne de thead
+        fixedHeader: true,
+        scrollX: true,
+        scrollY: '420px',
+        scrollCollapse: true,
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, 'Tout']],
+        language: {
+            url: 'https://cdn.datatables.net/plug-ins/2.0.8/i18n/fr-FR.json'
+        },
+        layout: {
+            topStart: 'pageLength',
+            topEnd: 'search',
+            bottomStart: 'info',
+            bottomEnd: 'paging'
+        },
+        initComplete: function () {
+            // Ajouter un select de filtre dans la 2ème ligne de thead pour chaque colonne
+            this.api().columns().every(function () {
+                const column     = this;
+                const headerCell = $(column.header(1));
+
+                const uniqueValues = [...new Set(
+                    column.data().toArray().map(v =>
+                        (v === '' || v === null || v === undefined) ? 'NULL' : String(v)
+                    )
+                )].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+                // Pas de filtre si trop de valeurs uniques (colonne numérique continue, etc.)
+                if (uniqueValues.length > 200) {
+                    headerCell.html('<span class="filter-na" title="Trop de valeurs uniques">—</span>');
+                    return;
+                }
+
+                const select = $('<select><option value="">Tous</option></select>')
+                    .appendTo(headerCell.empty())
+                    .on('change', function () {
+                        const val = $(this).val();
+                        column.search(val ? `^${$.fn.dataTable.util.escapeRegex(val)}$` : '', true, false).draw();
+                    });
+
+                uniqueValues.forEach(val => {
+                    select.append(`<option value="${escapeHtml(val)}">${escapeHtml(val)}</option>`);
+                });
+            });
+        }
+    });
 }
+
 // Afficher une erreur
 function displayError(error, stackTrace) {
     const container = document.getElementById('resultsContainer');
-    
+
     let errorHTML = `
         <div class="error-message">
             <strong><i class="fas fa-exclamation-triangle"></i> Erreur SQL</strong>
             <p>${escapeHtml(error)}</p>
     `;
-    
+
     if (stackTrace) {
         errorHTML += `
             <details>
@@ -194,25 +245,24 @@ function displayError(error, stackTrace) {
             </details>
         `;
     }
-    
+
     errorHTML += '</div>';
-    
     container.innerHTML = errorHTML;
 }
 
 // Charger les exemples
 async function loadExamples() {
     const dropdown = document.getElementById('examplesDropdown');
-    
+
     if (dropdown.style.display === 'block') {
         dropdown.style.display = 'none';
         return;
     }
-    
+
     try {
         const response = await fetch('/api/examples');
         const data = await response.json();
-        
+
         let examplesHTML = '';
         data.examples.forEach(example => {
             examplesHTML += `
@@ -222,7 +272,7 @@ async function loadExamples() {
                 </div>
             `;
         });
-        
+
         document.getElementById('examplesList').innerHTML = examplesHTML;
         dropdown.style.display = 'block';
     } catch (error) {
@@ -250,42 +300,39 @@ function exportResults(format) {
         showNotification('Aucun résultat à exporter', 'warning');
         return;
     }
-    
+
     let content, filename, mimeType;
-    
+
     if (format === 'csv') {
-        content = convertToCSV(currentResults);
+        content  = convertToCSV(currentResults);
         filename = 'results.csv';
         mimeType = 'text/csv';
     } else if (format === 'json') {
-        content = JSON.stringify(currentResults.data, null, 2);
+        content  = JSON.stringify(currentResults.data, null, 2);
         filename = 'results.json';
         mimeType = 'application/json';
     }
-    
-    // Télécharger le fichier
+
     const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
     a.download = filename;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
+
     showNotification(`Résultats exportés en ${format.toUpperCase()}`, 'success');
 }
 
 // Convertir en CSV
 function convertToCSV(data) {
     const columns = data.columns;
-    const rows = data.data;
-    
-    // En-têtes
+    const rows    = data.data;
+
     let csv = columns.map(col => `"${col}"`).join(',') + '\n';
-    
-    // Données
+
     rows.forEach(row => {
         const values = columns.map(col => {
             const value = row[col];
@@ -294,13 +341,12 @@ function convertToCSV(data) {
         });
         csv += values.join(',') + '\n';
     });
-    
+
     return csv;
 }
 
 // Afficher une notification
 function showNotification(message, type = 'info') {
-    // Créer l'élément de notification
     const notification = document.createElement('div');
     notification.style.cssText = `
         position: fixed;
@@ -315,19 +361,20 @@ function showNotification(message, type = 'info') {
         animation: slideIn 0.3s ease;
         font-weight: 600;
     `;
-    
+
     notification.innerHTML = `
         <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
         ${message}
     `;
-    
+
     document.body.appendChild(notification);
-    
-    // Supprimer après 3 secondes
+
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => {
-            document.body.removeChild(notification);
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
         }, 300);
     }, 3000);
 }
@@ -342,18 +389,15 @@ function escapeHtml(text) {
         "'": '&#039;',
         '`': '&#96;'
     };
-    return text.replace(/[&<>"'`]/g, m => map[m]);
+    return String(text).replace(/[&<>"'`]/g, m => map[m]);
 }
 
 // Raccourcis clavier
 document.addEventListener('keydown', (e) => {
-    // Ctrl+Enter ou Cmd+Enter pour exécuter
     if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         executeQuery();
     }
-    
-    // Échap pour fermer les dropdowns
     if (e.key === 'Escape') {
         document.getElementById('examplesDropdown').style.display = 'none';
     }
@@ -362,36 +406,22 @@ document.addEventListener('keydown', (e) => {
 // Fermer le dropdown des exemples en cliquant ailleurs
 document.addEventListener('click', (e) => {
     const dropdown = document.getElementById('examplesDropdown');
-    const button = e.target.closest('button');
-    
+    const button   = e.target.closest('button');
     if (dropdown.style.display === 'block' && (!button || !button.textContent.includes('Exemples'))) {
         dropdown.style.display = 'none';
     }
 });
 
-// Ajouter les animations CSS dynamiquement
+// Animations CSS
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
+        from { transform: translateX(100%); opacity: 0; }
+        to   { transform: translateX(0);    opacity: 1; }
     }
-    
     @keyframes slideOut {
-        from {
-            transform: translateX(0);
-            opacity: 1;
-        }
-        to {
-            transform: translateX(100%);
-            opacity: 0;
-        }
+        from { transform: translateX(0);    opacity: 1; }
+        to   { transform: translateX(100%); opacity: 0; }
     }
 `;
 document.head.appendChild(style);

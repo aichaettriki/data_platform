@@ -35,7 +35,7 @@ body {
     padding: 20px;
 }
 
-/* Header */
+/* ─── Header ───────────────────────────────────────────────── */
 .header {
     background: var(--bg-primary);
     border-radius: 12px;
@@ -47,17 +47,14 @@ body {
     align-items: center;
 }
 
-/* Style spécifique pour le logo flamingo */
 .logo-img {
-    height: 80px; /* On force une hauteur plus grande car le logo est vertical */
-    width: auto;  /* Garde les proportions */
+    height: 80px;
+    width: auto;
     vertical-align: middle;
     margin-right: 15px;
-    /* Optionnel : ajoute un petit effet de relief */
     filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1));
 }
 
-/* Ajustement du header pour laisser passer le grand logo */
 .header-content h1 {
     display: flex;
     align-items: center;
@@ -72,7 +69,7 @@ body {
     font-size: 0.9em;
 }
 
-/* Config Panel */
+/* ─── Config Panel ──────────────────────────────────────────── */
 .config-panel {
     background: var(--bg-primary);
     border-radius: 12px;
@@ -83,14 +80,8 @@ body {
 }
 
 @keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-10px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .config-panel h3 {
@@ -132,7 +123,7 @@ body {
     box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
-/* Main Content */
+/* ─── Main Content ──────────────────────────────────────────── */
 .main-content {
     display: grid;
     grid-template-columns: 1fr;
@@ -148,7 +139,7 @@ body {
     box-shadow: var(--shadow-md);
     display: flex;
     flex-direction: column;
-    min-width: 0; /* ← empêche le panel de déborder */
+    min-width: 0;
 }
 
 .panel-header {
@@ -170,7 +161,7 @@ body {
     gap: 10px;
 }
 
-/* Query Editor */
+/* ─── Query Editor ──────────────────────────────────────────── */
 .query-container {
     flex: 1;
     margin-bottom: 15px;
@@ -206,7 +197,7 @@ body {
     font-size: 0.9em;
 }
 
-/* Examples Dropdown */
+/* ─── Examples Dropdown ─────────────────────────────────────── */
 .examples-dropdown {
     position: absolute;
     background: white;
@@ -255,11 +246,11 @@ body {
     overflow-x: auto;
 }
 
-/* Results Container */
+/* ─── Results Container ─────────────────────────────────────── */
 .results-container {
     flex: 1;
     overflow: auto;
-    min-width: 0; /* ← clé absolue dans un flex container */
+    min-width: 0;
 }
 
 .empty-state {
@@ -267,7 +258,7 @@ body {
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    height: 200px;
     color: var(--text-secondary);
 }
 
@@ -278,58 +269,13 @@ body {
 }
 
 .results-table-wrapper {
-    overflow-x: auto;
-    overflow-y: auto;
-    max-height: 500px;
     width: 100%;
     border-radius: 6px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
 }
 
-.results-table {
-    min-width: max-content;  /* ← clé : le tableau prend toute la place qu'il veut */
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.results-table th {
-    position: sticky;
-    top: 0;              /* ← header reste visible quand on scrolle verticalement */
-    color: white;
-    z-index: 1;
-    white-space: nowrap; /* ← pas de retour à la ligne dans les headers */
-    padding: 10px 16px;
-}
-
-.results-table td {
-    white-space: nowrap; /* ← les cellules ne se cassent pas */
-    padding: 8px 16px;
-}
-
-.results-table thead {
-    background: var(--bg-secondary);
-    position: sticky;
-    top: 0;
-    z-index: 10;
-}
-
-.results-table th {
-    padding: 12px;
-    text-align: left;
-    font-weight: 600;
-    color: var(--text-primary);
-    border-bottom: 2px solid var(--border-color);
-}
-
-.results-table td {
-    padding: 10px 12px;
-    border-bottom: 1px solid var(--border-color);
-}
-
-.results-table tbody tr:hover {
-    background: var(--bg-secondary);
-}
-
+/* ─── Results Info Bar ──────────────────────────────────────── */
 .results-info {
     padding: 15px;
     background: var(--bg-secondary);
@@ -350,7 +296,142 @@ body {
     color: var(--primary-color);
 }
 
-/* Buttons */
+/* ─── DataTables Overrides ──────────────────────────────────── */
+
+/* Conteneur général */
+div.dt-container {
+    font-family: inherit;
+    color: var(--text-primary);
+    font-size: 0.9em;
+}
+
+/* Barre supérieure : pageLength + search */
+div.dt-container .dt-layout-row {
+    margin-bottom: 10px;
+}
+
+div.dt-container .dt-search input {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.9em;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+div.dt-container .dt-search input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+div.dt-container .dt-length select {
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* Thead – 1ère ligne : noms des colonnes */
+table.dataTable thead tr:nth-child(1) th {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.88em;
+    padding: 10px 12px;
+    border-bottom: 2px solid var(--border-color);
+    white-space: nowrap;
+}
+
+/* Thead – 2ème ligne : selects de filtre */
+table.dataTable thead tr:nth-child(2) th {
+    background: var(--bg-tertiary);
+    padding: 5px 8px;
+    border-bottom: 2px solid var(--border-color);
+}
+
+table.dataTable thead tr:nth-child(2) select {
+    width: 100%;
+    padding: 4px 6px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.8em;
+    font-family: inherit;
+    background: white;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: border-color 0.2s;
+    min-width: 80px;
+}
+
+table.dataTable thead tr:nth-child(2) select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+}
+
+/* Indicateur "—" pour colonnes sans filtre */
+.filter-na {
+    color: var(--border-color);
+    font-size: 0.9em;
+    display: block;
+    text-align: center;
+}
+
+/* Cellules du tbody */
+table.dataTable tbody td {
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border-color);
+    white-space: nowrap;
+    font-size: 0.88em;
+}
+
+table.dataTable tbody tr:hover {
+    background: var(--bg-secondary) !important;
+}
+
+/* Pagination */
+div.dt-container .dt-paging .dt-paging-button {
+    border-radius: 6px !important;
+    padding: 4px 10px !important;
+    margin: 0 2px !important;
+    border: 1.5px solid var(--border-color) !important;
+    background: white !important;
+    color: var(--text-primary) !important;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+div.dt-container .dt-paging .dt-paging-button:hover {
+    background: var(--bg-tertiary) !important;
+    border-color: var(--primary-color) !important;
+    color: var(--primary-color) !important;
+}
+
+div.dt-container .dt-paging .dt-paging-button.current,
+div.dt-container .dt-paging .dt-paging-button.current:hover {
+    background: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color) !important;
+    font-weight: 600;
+}
+
+div.dt-container .dt-paging .dt-paging-button.disabled,
+div.dt-container .dt-paging .dt-paging-button.disabled:hover {
+    opacity: 0.4;
+    cursor: not-allowed;
+    color: var(--text-secondary) !important;
+}
+
+/* Info ligne ("Affichage de X à Y sur Z entrées") */
+div.dt-container .dt-info {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    padding-top: 6px;
+}
+
+/* ─── Buttons ───────────────────────────────────────────────── */
 .btn {
     padding: 8px 15px;
     border: none;
@@ -434,7 +515,7 @@ body {
     font-size: 1.1em;
 }
 
-/* Loading Overlay */
+/* ─── Loading Overlay ───────────────────────────────────────── */
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -468,7 +549,7 @@ body {
     font-size: 1.1em;
 }
 
-/* Error Message */
+/* ─── Error Message ─────────────────────────────────────────── */
 .error-message {
     background: #fee;
     border: 2px solid var(--danger-color);
@@ -494,7 +575,7 @@ body {
     overflow: auto;
 }
 
-/* Footer */
+/* ─── Footer ────────────────────────────────────────────────── */
 .footer {
     background: var(--bg-primary);
     border-radius: 12px;
@@ -504,7 +585,7 @@ body {
     color: var(--text-secondary);
 }
 
-/* Responsive */
+/* ─── Responsive ────────────────────────────────────────────── */
 @media (max-width: 1200px) {
     .main-content {
         grid-template-columns: 1fr;
@@ -528,10 +609,10 @@ body {
     }
 }
 
-/* Scrollbar Styling */
+/* ─── Scrollbar Styling ─────────────────────────────────────── */
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
 }
 
 ::-webkit-scrollbar-track {
