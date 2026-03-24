@@ -908,8 +908,8 @@ stop_spark_session(spark)
 #     .withColumn("source", lit("WORLD_BANK_Countries"))
 #     .withColumn("base", lit("NA").cast(StringType()))
 #     .withColumn("version", lit("NA").cast(StringType()))
-#     .withColumn("code_secteur", lit("NA").cast(StringType()))
-#     .withColumn("lib_secteur", lit("NA").cast(StringType()))
+#     .withColumn("code_secteur/produit", lit("NA").cast(StringType()))
+#     .withColumn("lib_secteur/produit", lit("NA").cast(StringType()))
 #     .withColumn("dim_id", lit("NA").cast(StringType()))
 #     .withColumn("dim_key", lit("NA").cast(StringType()))
 #     .withColumn("variable", lit("NA").cast(StringType()))
@@ -945,8 +945,8 @@ stop_spark_session(spark)
 #     col("region_name"),
 #     col("base"),
 #     col("version"),
-#     col("code_secteur"),
-#     col("lib_secteur"),
+#     col("code_secteur/produit"),
+#     col("lib_secteur/produit"),
 #     col("dim_id"),
 #     col("dim_key"),
 #     col("source"),
@@ -975,8 +975,8 @@ stop_spark_session(spark)
 # #     StructField("region_name", StringType(), True),
 # #     StructField("base", StringType(), True),
 # #     StructField("version", StringType(), True),
-# #     StructField("code_secteur", StringType(), True),
-# #     StructField("lib_secteur", StringType(), True),
+# #     StructField("code_secteur/produit", StringType(), True),
+# #     StructField("lib_secteur/produit", StringType(), True),
 # #     StructField("dim_id", StringType(), True),
 # #     StructField("dim_key", StringType(), True),
 # #     StructField("source", StringType(), True),
@@ -1009,8 +1009,8 @@ stop_spark_session(spark)
 #     "source":          "Pipeline-injected: hardcoded constant = 'WORLD_BANK_Countries'",
 #     "base":            "Pipeline-injected: hardcoded null",
 #     "version":         "Pipeline-injected: hardcoded null",
-#     "code_secteur":    "Pipeline-injected: hardcoded null",
-#     "lib_secteur":     "Pipeline-injected: hardcoded null",
+#     "code_secteur/produit":    "Pipeline-injected: hardcoded null",
+#     "lib_secteur/produit":     "Pipeline-injected: hardcoded null",
 #     "dim_id":          "Pipeline-injected: hardcoded null",
 #     "dim_key":         "Pipeline-injected: hardcoded null",
 #     "variable":        "Pipeline-injected: hardcoded null (no indicator variable for this referential)",
@@ -1054,7 +1054,7 @@ stop_spark_session(spark)
 #         f"Applied TRIM() on: id, iso2_code, name, region_id, region_iso2, region_name. "
 #         f"Renamed: name→pays. "
 #         f"Added constants: source='WORLD_BANK_Countries', date_chargement=now(), "
-#         f"base=null, version=null, code_secteur=null, lib_secteur=null, "
+#         f"base=null, version=null, code_secteur/produit=null, lib_secteur/produit=null, "
 #         f"dim_id=null, dim_key=null, variable=null, periode=null. "
 #         f"Dropped: rang. "
 #         f"Final columns: {', '.join(transformed_df.columns)}."

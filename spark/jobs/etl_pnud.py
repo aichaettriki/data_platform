@@ -7,7 +7,7 @@ Conventions du projet :
   - Output  : s3a://02-transformed/PNUD/hdr/hdr_hdi_by_country/  (Parquet, partitionné par year)
   - Colonnes finales :
       periode, Variable, version, base, valeur, date_chargement, source, version_active,
-      pays, code_secteur, lib_secteur, dim_id, dim_key
+      pays, code_secteur/produit, lib_secteur/produit, dim_id, dim_key
   - Delta   : SCD Type 2 — clé (pays, periode, Variable)
               version_active=1 (actif) / version_active=0 (historique)
 """
@@ -354,8 +354,8 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
         .withColumn("version_active",   F.lit("1"))
         .withColumn("base",             F.lit("NA").cast("string"))
         .withColumn("source",           F.lit("PNUD"))
-        .withColumn("code_secteur",     F.lit("NA").cast("string"))
-        .withColumn("lib_secteur",      F.lit("NA").cast("string"))
+        .withColumn("code_secteur/produit",     F.lit("NA").cast("string"))
+        .withColumn("lib_secteur/produit",      F.lit("NA").cast("string"))
         .withColumn("dim_id",           F.lit("NA").cast("string"))
         .withColumn("dim_key",          F.lit("NA").cast("string"))
         .withColumn("periode",          F.col("periode").cast("string"))
@@ -371,8 +371,8 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
             "source",
             "version_active",
             "pays",
-            "code_secteur",
-            "lib_secteur",
+            "code_secteur/produit",
+            "lib_secteur/produit",
             "dim_id",
             "dim_key",
         )
@@ -392,8 +392,8 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
         "version_active":  f"Pipeline-injected: hardcoded constant = '{VERSION_ACTIVE}' (will be managed by SCD2 in STEP 4)",
         "base":            f"Pipeline-injected: hardcoded constant = '{BASE_VALUE}'",
         "source":          f"Pipeline-injected: hardcoded constant = '{SOURCE_LABEL}'",
-        "code_secteur":    f"Pipeline-injected: hardcoded constant = '{CODE_SECTEUR}'",
-        "lib_secteur":     f"Pipeline-injected: hardcoded constant = '{LIB_SECTEUR}'",
+        "code_secteur/produit":    f"Pipeline-injected: hardcoded constant = '{CODE_SECTEUR}'",
+        "lib_secteur/produit":     f"Pipeline-injected: hardcoded constant = '{LIB_SECTEUR}'",
         "dim_id":          f"Pipeline-injected: hardcoded constant = '{DIM_ID_VALUE}' cast to StringType()",
         "dim_key":         "Pipeline-injected: hardcoded null (no dimension key for HDI global indicator)",
         "date_chargement": "Pipeline-injected: job execution timestamp (using F.current_timestamp()) — overwritten at write time in STEP 4",
@@ -442,7 +442,7 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
             f"Renamed: country_name→pays. "
             f"Added constants: Variable='{VARIABLE_LABEL}', version='{VERSION_VALUE}', "
             f"version_active='{VERSION_ACTIVE}', base='{BASE_VALUE}', source='{SOURCE_LABEL}', "
-            f"code_secteur='{CODE_SECTEUR}', lib_secteur='{LIB_SECTEUR}', "
+            f"code_secteur/produit='{CODE_SECTEUR}', lib_secteur/produit='{LIB_SECTEUR}', "
             f"dim_id='{DIM_ID_VALUE}', dim_key=null, date_chargement=current_timestamp(). "
             f"Ordered by pays, periode."
         ),
@@ -531,8 +531,8 @@ def run(spark: SparkSession, input_path: str, output_path: str) -> None:
                     n.source,
                     n.version_active,
                     n.pays,
-                    n.code_secteur,
-                    n.lib_secteur,
+                    n.code_secteur/produit,
+                    n.lib_secteur/produit,
                     n.dim_id,
                     n.dim_key
                 FROM v_new_data n

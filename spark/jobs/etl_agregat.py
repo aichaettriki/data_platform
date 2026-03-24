@@ -544,8 +544,8 @@ for fact_file in fact_files:
         .withColumnRenamed("indicator_name", "Variable")
         .withColumn("version",      lit("NA"))
         .withColumn("pays",         lit("Tunisie"))
-        .withColumn("lib_secteur",  lit("NA"))
-        .withColumn("code_secteur", lit("NA"))
+        .withColumn("lib_secteur/produit",  lit("NA"))
+        .withColumn("code_secteur/produit", lit("NA"))
         .withColumn("base",         lit("2015"))
         .withColumn("source",       lit("INS"))
         .select(
@@ -557,8 +557,8 @@ for fact_file in fact_files:
             "version",
             "base",
             "source",
-            "code_secteur",
-            "lib_secteur",
+            "code_secteur/produit",
+            "lib_secteur/produit",
             "pays",
             "date_chargement",
         )
@@ -571,8 +571,8 @@ for fact_file in fact_files:
     added_cols_t4 = {
         "version":      "Pipeline-injected: hardcoded constant = 'N/A'",
         "pays":         "Pipeline-injected: hardcoded constant = 'Tunisie'",
-        "lib_secteur":  "Pipeline-injected: hardcoded constant = 'N/A'",
-        "code_secteur": "Pipeline-injected: hardcoded constant = 'N/A'",
+        "lib_secteur/produit":  "Pipeline-injected: hardcoded constant = 'N/A'",
+        "code_secteur/produit": "Pipeline-injected: hardcoded constant = 'N/A'",
         "base":         "Pipeline-injected: hardcoded constant = '2015'",
         "source":       "Pipeline-injected: derived from extract_category_path() on fact file S3 path",
     }
@@ -631,8 +631,8 @@ for fact_file in fact_files:
             f"Final column renaming and business column injection. "
             f"Renamed: {fact_dim_id_col}→dim_id (StringType), {fact_dim_key_col}→dim_key (StringType), "
             f"year→periode, value→valeur, indicator_name→Variable. "
-            f"Added constants: version='N/A', pays='Tunisie', lib_secteur='N/A', "
-            f"code_secteur='N/A', base='2015', source='{source_category}'. "
+            f"Added constants: version='N/A', pays='Tunisie', lib_secteur/produit='N/A', "
+            f"code_secteur/produit='N/A', base='2015', source='{source_category}'. "
             f"Dropped: rang. "
             f"Final columns: {', '.join(structured_df.columns)}."
         ),

@@ -23,8 +23,8 @@ TARGET_SCHEMA = StructType([
     StructField("version_active", LongType(), True),
     StructField("pays", StringType(), True),
     StructField("pays_fr", StringType(), True),
-    StructField("code_secteur", StringType(), True),
-    StructField("lib_secteur", StringType(), True),
+    StructField("code_secteur/produit", StringType(), True),
+    StructField("lib_secteur/produit", StringType(), True),
     StructField("dim_id", StringType(), True),
     StructField("dim_key", StringType(), True),
 ])
@@ -372,25 +372,25 @@ class RefinedProcessor:
     # --------------------------------------------------
     def build_dimension_secteur(self, df):
         snapshot = self._get_tech_snapshot(df)
-        rows = df.select("code_secteur","lib_secteur",*self.tech_cols)\
-                 .groupBy("code_secteur","lib_secteur")\
+        rows = df.select("code_secteur/produit","lib_secteur/produit",*self.tech_cols)\
+                 .groupBy("code_secteur/produit","lib_secteur/produit")\
                  .agg(F.max("date_chargement").alias("date_chargement"),
                       F.max("version_active").alias("version_active"))\
-                 .orderBy("code_secteur").collect()
+                 .orderBy("code_secteur/produit").collect()
         data = []
         id_counter = 1
         for row in rows:
-            val = row["code_secteur"]
+            val = row["code_secteur/produit"]
             is_missing = (val is None or val == "NA")
             assigned_id = 0 if is_missing else id_counter
             if not is_missing:
                 id_counter += 1
-            data.append((assigned_id,row["code_secteur"],row["lib_secteur"],
+            data.append((assigned_id,row["code_secteur/produit"],row["lib_secteur/produit"],
                          row["date_chargement"],row["version_active"]))
         schema = StructType([
             StructField("id_secteur", LongType(), True),
-            StructField("code_secteur", StringType(), True),
-            StructField("lib_secteur", StringType(), True),
+            StructField("code_secteur/produit", StringType(), True),
+            StructField("lib_secteur/produit", StringType(), True),
             StructField("date_chargement", TimestampType(), True),
             StructField("version_active", LongType(), True),
         ])
@@ -446,9 +446,9 @@ class RefinedProcessor:
 
         # dimension secteur avec libellé
         dsec = dim_secteur.select(
-            "code_secteur",
+            "code_secteur/produit",
             "id_secteur",
-            "lib_secteur"
+            "lib_secteur/produit"
         ).alias("dsec")
 
         # -------------------------------
@@ -466,7 +466,7 @@ class RefinedProcessor:
             .join(ds, F.col("df.source") == F.col("ds.source"), "left")
             .join(db, F.col("df.base") == F.col("db.base"), "left")
             .join(dver, F.col("df.version") == F.col("dver.version"), "left")
-            .join(dsec, F.col("df.code_secteur") == F.col("dsec.code_secteur"), "left")
+            .join(dsec, F.col("df.code_secteur/produit") == F.col("dsec.code_secteur/produit"), "left")
             .select(
 
                 # keys
@@ -484,8 +484,8 @@ class RefinedProcessor:
                 F.coalesce(F.col("df.source"), F.lit("NA")).alias("source"),
                 F.coalesce(F.col("df.base"), F.lit("NA")).alias("base"),
                 F.coalesce(F.col("df.version"), F.lit("NA")).alias("version"),
-                F.coalesce(F.col("df.code_secteur"), F.lit("NA")).alias("code_secteur"),
-                F.coalesce(F.col("dsec.lib_secteur"), F.lit("NA")).alias("lib_secteur"),
+                F.coalesce(F.col("df.code_secteur/produit"), F.lit("NA")).alias("code_secteur/produit"),
+                F.coalesce(F.col("dsec.lib_secteur/produit"), F.lit("NA")).alias("lib_secteur/produit"),
 
                 # valeurs
                 F.col("df.valeur").cast(DoubleType()).alias("valeur"),
@@ -683,8 +683,8 @@ if __name__ == "__main__":
 #     StructField("source",          StringType(),    True),
 #     StructField("version_active",  LongType(),      True),
 #     StructField("pays",            StringType(),    True),
-#     StructField("code_secteur",    StringType(),    True),
-#     StructField("lib_secteur",     StringType(),    True),
+#     StructField("code_secteur/produit",    StringType(),    True),
+#     StructField("lib_secteur/produit",     StringType(),    True),
 #     StructField("dim_id",          StringType(),    True),
 #     StructField("dim_key",         StringType(),    True),
 # ])
@@ -1156,12 +1156,12 @@ if __name__ == "__main__":
 #     def build_dimension_secteur(self, df):
 #         print(f"\n[STEP 5] Build Dimension — secteur")
 
-#         is_missing   = (F.col("code_secteur") == "NA") | F.col("code_secteur").isNull()
-#         window_dedup = Window.partitionBy("code_secteur").orderBy(F.col("date_chargement").desc())
-#         window_id    = Window.orderBy("code_secteur")
+#         is_missing   = (F.col("code_secteur/produit") == "NA") | F.col("code_secteur/produit").isNull()
+#         window_dedup = Window.partitionBy("code_secteur/produit").orderBy(F.col("date_chargement").desc())
+#         window_id    = Window.orderBy("code_secteur/produit")
 
 #         dim = (
-#             df.select("code_secteur", "lib_secteur", *self.tech_cols)
+#             df.select("code_secteur/produit", "lib_secteur/produit", *self.tech_cols)
 #               .withColumn("rn", F.row_number().over(window_dedup))
 #               .filter(F.col("rn") == 1)
 #               .drop("rn")
@@ -1169,35 +1169,35 @@ if __name__ == "__main__":
 #                   "id_secteur",
 #                   F.when(is_missing, F.lit(0)).otherwise(F.row_number().over(window_id))
 #               )
-#               .select("id_secteur", "code_secteur", "lib_secteur", *self.tech_cols)
+#               .select("id_secteur", "code_secteur/produit", "lib_secteur/produit", *self.tech_cols)
 #         )
 #         dim = self._enforce_tech_cols(dim, df)
 
 #         _ns = resolve_namespace(self._SOURCE_PATH)
 #         column_lineage = {
 #             "id_secteur": {
-#                 "inputFields": [{"namespace": _ns, "name": self._SOURCE_PATH, "field": "code_secteur"}],
+#                 "inputFields": [{"namespace": _ns, "name": self._SOURCE_PATH, "field": "code_secteur/produit"}],
 #                 "transformationDescription": (
-#                     "Surrogate key: ROW_NUMBER() OVER (ORDER BY code_secteur). "
-#                     "code_secteur='NA' or NULL → id_secteur=0."
+#                     "Surrogate key: ROW_NUMBER() OVER (ORDER BY code_secteur/produit). "
+#                     "code_secteur/produit='NA' or NULL → id_secteur=0."
 #                 ),
 #                 "transformationType": "AGGREGATE",
 #             },
-#             "code_secteur": {
-#                 "inputFields": [{"namespace": _ns, "name": self._SOURCE_PATH, "field": "code_secteur"}],
-#                 "transformationDescription": "Sector code. Dedup by ROW_NUMBER() OVER (PARTITION BY code_secteur ORDER BY date_chargement DESC).",
+#             "code_secteur/produit": {
+#                 "inputFields": [{"namespace": _ns, "name": self._SOURCE_PATH, "field": "code_secteur/produit"}],
+#                 "transformationDescription": "Sector code. Dedup by ROW_NUMBER() OVER (PARTITION BY code_secteur/produit ORDER BY date_chargement DESC).",
 #                 "transformationType": "DIRECT",
 #             },
-#             "lib_secteur": {
-#                 "inputFields": [{"namespace": _ns, "name": self._SOURCE_PATH, "field": "lib_secteur"}],
-#                 "transformationDescription": "Sector label. Deduplicated with code_secteur.",
+#             "lib_secteur/produit": {
+#                 "inputFields": [{"namespace": _ns, "name": self._SOURCE_PATH, "field": "lib_secteur/produit"}],
+#                 "transformationDescription": "Sector label. Deduplicated with code_secteur/produit.",
 #                 "transformationType": "DIRECT",
 #             },
 #         }
 #         for tc in self.tech_cols:
 #             column_lineage[tc] = {
 #                 "inputFields": [{"namespace": _ns, "name": self._SOURCE_PATH, "field": tc}],
-#                 "transformationDescription": "Tech column passed through (latest row per code_secteur).",
+#                 "transformationDescription": "Tech column passed through (latest row per code_secteur/produit).",
 #                 "transformationType": "DIRECT",
 #             }
 
@@ -1206,8 +1206,8 @@ if __name__ == "__main__":
 #             step_name="05_Build_Dim_secteur",
 #             description=(
 #                 "Built dimension 'secteur' from source_clean. "
-#                 "Dedup: ROW_NUMBER() OVER (PARTITION BY code_secteur ORDER BY date_chargement DESC). "
-#                 "Surrogate key 'id_secteur': ROW_NUMBER() OVER (ORDER BY code_secteur), NA→0. "
+#                 "Dedup: ROW_NUMBER() OVER (PARTITION BY code_secteur/produit ORDER BY date_chargement DESC). "
+#                 "Surrogate key 'id_secteur': ROW_NUMBER() OVER (ORDER BY code_secteur/produit), NA→0. "
 #                 f"Result: {dim.count()} distinct sectors."
 #             ),
 #             trans_type="TRANSFORMATION",
@@ -1231,7 +1231,7 @@ if __name__ == "__main__":
 #         ds   = dim_source.select("source",       "id_source")
 #         db   = dim_base.select("base",           "id_base")
 #         dver = dim_version.select("version",     "id_version")
-#         dsec = dim_secteur.select("code_secteur","id_secteur")
+#         dsec = dim_secteur.select("code_secteur/produit","id_secteur")
 
 #         fact = (
 #             df.join(dp,   "pays",         "left")
@@ -1240,7 +1240,7 @@ if __name__ == "__main__":
 #               .join(ds,   "source",       "left")
 #               .join(db,   "base",         "left")
 #               .join(dver, "version",      "left")
-#               .join(dsec, "code_secteur", "left")
+#               .join(dsec, "code_secteur/produit", "left")
 #               .select(
 #                   "id_pays", "id_variable", "id_periode",
 #                   "id_source", "id_base", "id_version", "id_secteur",
@@ -1260,7 +1260,7 @@ if __name__ == "__main__":
 #             "id_source":   (self._DIM_SOURCE_PATH,   "source",       "LEFT JOIN source_clean ON source → id_source from dim_source"),
 #             "id_base":     (self._DIM_BASE_PATH,     "base",         "LEFT JOIN source_clean ON base → id_base from dim_base"),
 #             "id_version":  (self._DIM_VERSION_PATH,  "version",      "LEFT JOIN source_clean ON version → id_version from dim_version"),
-#             "id_secteur":  (self._DIM_SECTEUR_PATH,  "code_secteur", "LEFT JOIN source_clean ON code_secteur → id_secteur from dim_secteur"),
+#             "id_secteur":  (self._DIM_SECTEUR_PATH,  "code_secteur/produit", "LEFT JOIN source_clean ON code_secteur/produit → id_secteur from dim_secteur"),
 #         }
 
 #         column_lineage_fact = {}
@@ -1292,7 +1292,7 @@ if __name__ == "__main__":
 #             description=(
 #                 "Built fact table 'fact_macroeco' by joining source_clean with all 7 dimensions. "
 #                 "LEFT JOINs on: pays→id_pays, variable→id_variable, periode→id_periode, "
-#                 "source→id_source, base→id_base, version→id_version, code_secteur→id_secteur. "
+#                 "source→id_source, base→id_base, version→id_version, code_secteur/produit→id_secteur. "
 #                 "valeur cast to DoubleType(). "
 #                 f"Result: {fact.count()} rows, {len(fact.columns)} columns."
 #             ),

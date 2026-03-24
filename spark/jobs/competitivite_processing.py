@@ -620,8 +620,8 @@ class CompetitifScoresProcessor:
             "source":       F.lit("competitivité positionnement"),
             "dim_id":       F.lit("NA").cast("string"),
             "dim_key":      F.lit("NA").cast("string"),
-            "code_secteur": F.lit("NA").cast("string"),
-            "lib_secteur":  F.lit("NA").cast("string"),
+            "code_secteur/produit": F.lit("NA").cast("string"),
+            "lib_secteur/produit":  F.lit("NA").cast("string"),
         }
         for col_name, col_expr in meta_cols.items():
             df_scores = df_scores.withColumn(col_name, col_expr)
@@ -647,8 +647,8 @@ class CompetitifScoresProcessor:
             "source":       "Pipeline-injected: hardcoded constant = 'competitivité positionnement'",
             "dim_id":       "Pipeline-injected: hardcoded null (no dimension mapping at this stage)",
             "dim_key":      "Pipeline-injected: hardcoded null (no dimension key at this stage)",
-            "code_secteur": "Pipeline-injected: hardcoded null (no sector code for this source)",
-            "lib_secteur":  "Pipeline-injected: hardcoded null (no sector label for this source)",
+            "code_secteur/produit": "Pipeline-injected: hardcoded null (no sector code for this source)",
+            "lib_secteur/produit":  "Pipeline-injected: hardcoded null (no sector label for this source)",
         }
 
         column_lineage_t5 = {
@@ -700,7 +700,7 @@ class CompetitifScoresProcessor:
                 f"Generated new '- Rang' rows with rank as valeur. "
                 f"Unioned Score + Rang rows via unionByName. "
                 f"Added metadata constants: base=null, version=null, source='competitivité positionnement', "
-                f"dim_id=null, dim_key=null, code_secteur=null, lib_secteur=null. "
+                f"dim_id=null, dim_key=null, code_secteur/produit=null, lib_secteur/produit=null. "
                 f"Total rows after union: {ranked_count}."
             ),
             trans_type="TRANSFORMATION",

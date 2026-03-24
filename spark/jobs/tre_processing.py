@@ -4,6 +4,7 @@ import logging
 import re
 import uuid
 import pandas as pd
+import numpy as np
 import openpyxl
 from datetime import datetime
 from pyspark.sql import SparkSession
@@ -11,7 +12,7 @@ from pyspark.sql import functions as F
 from common.spark_session import create_spark_session, stop_spark_session
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import current_timestamp
-
+from pyspark.sql.types import LongType, DoubleType, StringType
 # --- LINEAGE IMPORTS ---
 from openlineage.client import OpenLineageClient
 from openlineage.client.run import Job, Run, RunEvent, Dataset, RunState
@@ -209,14 +210,19 @@ def download_from_s3(spark, full_s3_path, local_path):
         return False
 
 
+import pandas as pd
+
 def extract_tables_from_sheet(wb, sheet_name):
+    print(f"\n🟢 [EXTRACTION] Début de l'analyse de la feuille : '{sheet_name}'")
     ws = wb[sheet_name]
     max_row = ws.max_row
     max_col = ws.max_column
 
     data_start_row = None
-    header_row = None
+    header_row_idx = None
 
+    print("   🔍 Recherche de l'en-tête (colonnes 01, 06, etc.)...")
+    # 1. Trouver l'en-tête commun en haut du fichier
     for row_idx in range(1, min(15, max_row + 1)):
         first_cell = ws.cell(row=row_idx, column=1).value
         if first_cell:
@@ -227,30 +233,61 @@ def extract_tables_from_sheet(wb, sheet_name):
                 first_cell_str.isdigit() or first_cell_str.upper() in ["CR1", "CR2", "CR3", "CR"]
             ):
                 data_start_row = row_idx
-                header_row = row_idx - 1
+                header_row_idx = row_idx - 1
+                print(f"   ✅ Début des données trouvé ligne {data_start_row}. En-tête supposé à la ligne {header_row_idx}.")
                 break
 
     if data_start_row is None:
+        print("   ❌ Aucun début de tableau détecté (les 15 premières lignes ont été ignorées).")
         return []
 
-    all_data = []
-    for row_idx in range(header_row, max_row + 1):
+    # 2. Sauvegarder la ligne d'en-tête pour la donner à tous les tableaux
+    header_data = []
+    for col_idx in range(1, max_col + 1):
+        header_data.append(ws.cell(row=header_row_idx, column=col_idx).value)
+
+    all_tables_extracted = []
+    current_block = [header_data] # On initialise le premier tableau avec l'en-tête
+    block_count = 1
+
+    print(f"   ▶️  Lecture du bloc N°{block_count}...")
+    
+    # 3. Parcourir toutes les données jusqu'en bas
+    for row_idx in range(data_start_row, max_row + 1):
         first_cell = ws.cell(row=row_idx, column=1).value
-        if first_cell and row_idx > data_start_row:
-            first_str = str(first_cell).strip().lower()
-            if any(
-                keyword in first_str
-                for keyword in ["total", "totaux", "somme", "equilibre", "emplois totaux", "ressources totales"]
-            ):
-                break
+        first_str = str(first_cell).strip().lower() if first_cell else ""
 
+        # Lire la ligne entière
         row_data = []
+        is_empty = True
         for col_idx in range(1, max_col + 1):
-            cell_val = ws.cell(row=row_idx, column=col_idx).value
-            row_data.append(cell_val)
-        all_data.append(row_data)
+            val = ws.cell(row=row_idx, column=col_idx).value
+            row_data.append(val)
+            if val is not None and str(val).strip() != "":
+                is_empty = False
 
-    return [{"data": all_data, "sheet": sheet_name}]
+        if is_empty:
+            continue # Ignorer les lignes totalement vides
+
+        current_block.append(row_data)
+
+        # 4. Découpage : Si on lit "Total"
+        if first_str and any(keyword in first_str for keyword in ["total", "totaux", "somme", "equilibre", "emplois totaux", "ressources totales"]):
+            print(f"   🛑 Mot-clé de fin ('{first_str}') trouvé à la ligne Excel {row_idx}. Fin du bloc N°{block_count} (Taille : {len(current_block)} lignes).")
+            all_tables_extracted.append({"data": current_block, "sheet": sheet_name})
+            
+            # On prépare le bloc suivant en lui réinjectant l'en-tête !
+            block_count += 1
+            current_block = [header_data] 
+            print(f"   ▶️  Création du bloc N°{block_count} et réinjection de l'en-tête des colonnes...")
+
+    # S'il reste des données à la fin du fichier sans ligne "Total" finale
+    if len(current_block) > 1: 
+        print(f"   🛑 Fin du fichier atteinte. Enregistrement du bloc N°{block_count} (Taille : {len(current_block)} lignes).")
+        all_tables_extracted.append({"data": current_block, "sheet": sheet_name})
+
+    print(f"🟢 [EXTRACTION TERMINÉE] {len(all_tables_extracted)} tableau(x) extrait(s) de '{sheet_name}'.\n")
+    return all_tables_extracted
 
 
 def is_numeric_string(s):
@@ -264,7 +301,8 @@ def is_numeric_string(s):
         return False
 
 
-def clean_table(data_rows):
+def clean_table(data_rows, table_index=1):
+    print(f"🔵 [NETTOYAGE] Nettoyage du tableau N°{table_index} (Contient {len(data_rows)} lignes brutes).")
     if not data_rows:
         return None
 
@@ -285,10 +323,16 @@ def clean_table(data_rows):
             data_start_idx = i
             break
 
+    if data_start_idx == 0:
+        print("   ⚠️  Aucun code court trouvé en colonne 1. On force le début des données à l'index 1 (Ligne 0 = En-tête).")
+        data_start_idx = 1
+    else:
+        print(f"   ✓ Début des données détecté à l'index {data_start_idx}.")
+
     header_row_idx = data_start_idx - 1 if data_start_idx > 0 else 0
     raw_headers = data_rows[header_row_idx] if header_row_idx < len(data_rows) else data_rows[0]
 
-    print(f"  🔍 Detecting CI matrix region from header structure...")
+    print(f"   🔍 Recherche de la région CI (Consommations Intermédiaires)...")
     matrice_start_col = None
 
     for row_idx in range(min(data_start_idx, len(data_rows))):
@@ -298,7 +342,7 @@ def clean_table(data_rows):
         for col_idx, cell in enumerate(row):
             if cell and "MATRICE" in str(cell).strip().upper():
                 matrice_start_col = col_idx
-                print(f"     ✓ Found 'MATRICE' label at row {row_idx}, column {col_idx} → all columns from here are CI")
+                print(f"      ✓ Label 'MATRICE' trouvé à la colonne {col_idx}.")
                 break
         if matrice_start_col is not None:
             break
@@ -315,7 +359,7 @@ def clean_table(data_rows):
                 if len(matrice_ci_columns) >= 2:
                     break
     else:
-        print(f"     ⚠️  No 'MATRICE' label found — falling back to numeric header detection")
+        print(f"      ⚠️  Pas de label 'MATRICE'. Détection par numéros d'en-tête...")
         non_id_seen = False
         ci_started = False
         consecutive = 0
@@ -347,7 +391,7 @@ def clean_table(data_rows):
                     ci_started = False
                     consecutive = 0
 
-    print(f"     → Found {len(matrice_ci_columns)} CI columns")
+    print(f"      → {len(matrice_ci_columns)} colonnes CI trouvées.")
 
     headers = []
     header_counts = {}
@@ -365,7 +409,6 @@ def clean_table(data_rows):
             try:
                 num_val = float(header_str)
                 base_name = f"CI_{int(num_val):02d}"
-                print(f"     → Renaming column {i}: '{header_str}' → '{base_name}'")
             except (ValueError, OverflowError):
                 base_name = f"CI_col{i}"
 
@@ -389,72 +432,164 @@ def clean_table(data_rows):
         body.append(row)
 
     if not body:
+        print("   ❌ Le corps du tableau est vide après extraction.")
         return None
 
     df = pd.DataFrame(body, columns=headers)
 
-    if df.shape[1] >= 2:
-        headers[0] = "code_secteur"
-        headers[1] = "lib_secteur"
-        df.columns = headers
+    # =====================================================================
+    # NOUVEAU FILTRE INTELLIGENT QUI GÈRE LES TABLEAUX DÉCALÉS (COLONNE O)
+    # =====================================================================
+    print("   🧹 Nettoyage des lignes vides (Vérification sur TOUTES les colonnes)...")
+    
+    # 1. On transforme les "None" et "nan" textuels en vraies valeurs nulles
+    df.replace(r'^\s*(?i)(none|nan|<na>|\s*)\s*$', pd.NA, regex=True, inplace=True)
 
-        df = df[df["code_secteur"].astype(str) != "None"]
-        df = df[
-            ~df["code_secteur"]
-            .astype(str)
-            .str.contains("Unité|TABLEAUX|millions|source", case=False, na=False)
-        ]
+    # 2. On supprime les lignes qui sont TOTALEMENT vides de A à Z
+    lignes_avant = len(df)
+    df.dropna(how='all', inplace=True)
+    lignes_apres = len(df)
+    print(f"   ✓ Lignes conservées : {lignes_apres} / {lignes_avant}")
 
-        df["code_secteur"] = df["code_secteur"].astype(str).str.strip()
-        df["lib_secteur"] = df["lib_secteur"].astype(str).str.strip()
+    if df.empty:
+        print("   ❌ Le tableau est entièrement vide.")
+        return None
 
-        df = df.dropna(how="all")
+    # 3. Détection de la colonne de départ du tableau (Exemple: Colonne O)
+    first_valid_col_idx = 0
+    for idx, col in enumerate(df.columns):
+        if df[col].notna().any(): # Dès qu'une colonne contient du texte
+            first_valid_col_idx = idx
+            break
 
-    df = df.dropna(axis=1, how="all")
-    df = df.reset_index(drop=True)
+    if first_valid_col_idx > 1:
+        print(f"   📐 Tableau décalé détecté ! Les labels commencent à la colonne d'index {first_valid_col_idx}.")
 
+    # 4. Renommage dynamique
+    new_headers = list(df.columns)
+    if first_valid_col_idx == 0:
+        # Tableau classique (Haut de page)
+        new_headers[0] = "code_secteur/produit"
+        if len(new_headers) > 1:
+            new_headers[1] = "lib_secteur/produit"
+    else:
+        # Tableau décalé (Bas de page, colonne O)
+        new_headers[first_valid_col_idx] = "lib_secteur/produit"
+        if first_valid_col_idx > 0:
+            new_headers[first_valid_col_idx - 1] = "code_secteur/produit"
+
+    df.columns = new_headers
+
+    # 5. On supprime les lignes parasites (Titres, Unités)
+    if "code_secteur/produit" in df.columns:
+        df = df[~df["code_secteur/produit"].astype(str).str.contains("Unité|TABLEAUX|millions|source", case=False, na=False)]
+    if "lib_secteur/produit" in df.columns:
+        df = df[~df["lib_secteur/produit"].astype(str).str.contains("Unité|TABLEAUX|millions|source", case=False, na=False)]
+
+    # 6. On supprime les colonnes totalement vides (Les colonnes A à N disparaissent ici !)
+    df.dropna(axis=1, how="all", inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    # =====================================================================
+
+    # Nettoyage final des doublons
     cols_to_drop = []
-    if "code_secteur" in df.columns and "lib_secteur" in df.columns:
-        ref_code = df["code_secteur"]
-        ref_label = df["lib_secteur"]
+    if "code_secteur/produit" in df.columns and "lib_secteur/produit" in df.columns:
+        ref_code = df["code_secteur/produit"].astype(str).str.strip()
+        ref_label = df["lib_secteur/produit"].astype(str).str.strip()
 
         for col in df.columns:
-            if col in ["code_secteur", "lib_secteur"]:
+            if col in ["code_secteur/produit", "lib_secteur/produit"]:
                 continue
             if col.startswith("CI_"):
                 continue
 
             curr_col_data = df[col].astype(str).str.strip()
-            if curr_col_data.equals(ref_code):
+            # On vérifie que la colonne de référence n'est pas vide avant de la comparer
+            if df["code_secteur/produit"].notna().any() and curr_col_data.equals(ref_code):
                 cols_to_drop.append(col)
-            elif curr_col_data.equals(ref_label):
+            elif df["lib_secteur/produit"].notna().any() and curr_col_data.equals(ref_label):
                 cols_to_drop.append(col)
             elif (
                 str(col).startswith("Col_")
                 and len(df) > 0
-                and str(df[col].iloc[0]) == str(df["code_secteur"].iloc[0])
+                and str(df[col].iloc[0]) == str(df["code_secteur/produit"].iloc[0])
             ):
                 cols_to_drop.append(col)
 
     if cols_to_drop:
-        print(f"     → Removing {len(cols_to_drop)} spacer columns")
+        print(f"   🗑️  Suppression de {len(cols_to_drop)} colonnes espacement/doublons.")
         df = df.drop(columns=cols_to_drop)
 
     if not df.columns.is_unique:
         df.columns = pd.io.parsers.ParserBase({"names": df.columns})._maybe_dedup_names(df.columns)
 
+    print(f"🔵 [FIN NETTOYAGE] Tableau prêt : {df.shape[0]} lignes x {df.shape[1]} colonnes.\n")
     return df
 
 
 def merge_sheet_tables_horizontally(table_list):
+    print(f"\n🟡 [FUSION] Début de la fusion des {len(table_list)} tableaux extraits...")
     if not table_list:
+        print("   ❌ Aucun tableau à fusionner.")
         return None
-    return clean_table(table_list[0]["data"])
+    
+    cleaned_tables = []
+    for i, table_dict in enumerate(table_list):
+        df_cleaned = clean_table(table_dict["data"], table_index=i+1)
+        if df_cleaned is not None and not df_cleaned.empty:
+            cleaned_tables.append(df_cleaned)
+            
+    if not cleaned_tables:
+        print("   ❌ Aucun tableau n'a survécu au nettoyage.")
+        return None
+        
+    # Le premier tableau est la matrice principale (Les CI)
+    df_final = cleaned_tables[0].copy()
+    
+    # Fonction de sécurité pour garantir que '1', '1.0' et '01' matchent parfaitement
+    def safe_format_code(val):
+        v = str(val).replace('.0', '').strip()
+        if v.isdigit():
+            return f"{int(v):02d}"
+        return v
+    
+    # S'il y a d'autres tableaux (comme le tableau rouge en bas)
+    for i in range(1, len(cleaned_tables)):
+        print(f"   🔄 Transposition du tableau des indicateurs N°{i+1}...")
+        df_bottom = cleaned_tables[i].copy()
+        
+        if "lib_secteur/produit" in df_bottom.columns:
+            # 1. On place les noms d'indicateurs (Production, etc.) en index
+            df_bottom = df_bottom.set_index("lib_secteur/produit")
+            if "code_secteur/produit" in df_bottom.columns:
+                df_bottom = df_bottom.drop(columns=["code_secteur/produit"])
+            
+            # 2. On TRANSPOSE : Les colonnes (CI_01) deviennent des lignes, et les indicateurs deviennent des colonnes !
+            df_t = df_bottom.T.reset_index()
+            df_t = df_t.rename(columns={"index": "col_code"})
+            
+            # 3. On nettoie les noms des nouvelles colonnes (Production, Salaires...)
+            df_t.columns = [str(c).replace("\n", " ").strip() for c in df_t.columns]
+            
+            # 4. Préparation de la clé de jointure (ex: "CI_01" -> "01")
+            df_t["join_code"] = df_t["col_code"].astype(str).str.replace(r"^CI_", "", regex=True).apply(safe_format_code)
+            df_final["join_code"] = df_final["code_secteur/produit"].apply(safe_format_code)
+            
+            # 5. Jointure horizontale ! On ajoute les indicateurs au secteur correspondant.
+            print("   🔗 Intégration des indicateurs comme nouvelles colonnes du tableau principal...")
+            df_final = pd.merge(df_final, df_t.drop(columns=["col_code"]), on="join_code", how="left")
+            df_final = df_final.drop(columns=["join_code"])
+        else:
+            print(f"   ⚠️ Impossible de transposer le tableau N°{i+1} (colonne 'lib_secteur/produit' absente). Concaténation classique.")
+            df_final = pd.concat([df_final, df_bottom], ignore_index=True)
+            
+    print(f"🟡 [FUSION TERMINÉE] Dimensions du DataFrame final : {df_final.shape[0]} lignes x {df_final.shape[1]} colonnes.\n")
+    return df_final
 
 
 def to_long_format_spark(df):
     id_vars = [
-        "code_secteur", "lib_secteur", "periode", "Version",
+        "code_secteur/produit", "lib_secteur/produit", "periode", "Version",
         "date_chargement", "Pays", "Source", "Base",
     ]
 
@@ -463,12 +598,19 @@ def to_long_format_spark(df):
     if not value_columns:
         return df
 
-    stack_parts = [f"'{c}', CAST(`{c}` AS STRING)" for c in value_columns]
-    stack_expr = f"stack({len(value_columns)}, {', '.join(stack_parts)}) as (Variable, Valeur)"
+    stack_parts = []
+    for c in value_columns:
+        # CORRECTION ICI : On échappe l'apostrophe (ex: "d'Exploitation" -> "d''Exploitation") 
+        # pour que le SQL de PySpark ne plante pas sur la chaîne de caractères littérale.
+        c_literal = c.replace("'", "''")
+        
+        # On utilise les backticks (`) pour le nom de la colonne, ça protège naturellement des apostrophes.
+        stack_parts.append(f"'{c_literal}', CAST(`{c}` AS STRING)")
 
+    stack_expr = f"stack({len(value_columns)}, {', '.join(stack_parts)}) as (Variable, Valeur)"
     long_df = df.select(
-        F.col("code_secteur"),
-        F.col("lib_secteur"),
+        F.col("code_secteur/produit"),
+        F.col("lib_secteur/produit"),
         F.col("periode"),
         F.col("Version"),
         F.col("date_chargement"),
@@ -524,19 +666,26 @@ def format_code_secteur(val):
 
 
 def format_excel_value(val):
+    # 1. Gérer les vraies cases vides
     if val is None or pd.isna(val) or str(val).strip().lower() in ["nan", "none", ""]:
-        return "0"
+        return None  
+    
     s_val = str(val).strip()
-
+    
+    # 2. Nettoyage format comptable (Espaces, espaces insécables, virgules)
+    # On fait ça sur une copie pour tester si c'est un nombre
+    clean_str = s_val.replace(" ", "").replace("\u202f", "").replace("\xa0", "").replace(",", ".")
+    
     try:
-        f = float(s_val)
+        # On essaie de convertir cette version "propre" en chiffre (float)
+        f = float(clean_str)
         if f.is_integer():
-            return str(int(f))
+            return str(int(f)) # Si c'est 0.0, ça renvoie "0"
+        return str(f)          # Si c'est -7756.1, ça renvoie "-7756.1"
     except (ValueError, OverflowError):
         pass
 
     return s_val
-
 
 # ──────────────────────────────────────────────────────────────────────────────
 # CALCUL DE version_active
@@ -595,15 +744,15 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
         # ══════════════════════════════════════════════════════════════════════
         print(f"\n[TASK 2] Normalization — Formatting values and sector codes")
 
-        id_cols = ["code_secteur", "lib_secteur", "periode", "Version"]
+        id_cols = ["code_secteur/produit", "lib_secteur/produit", "periode", "Version"]
         value_cols = [c for c in final_pd_df.columns if c not in id_cols]
 
         print(f"  🔧 Normalizing {len(value_cols)} value columns...")
         for col_name in value_cols:
             final_pd_df[col_name] = final_pd_df[col_name].apply(format_excel_value)
 
-        print(f"  🔧 Normalizing code_secteur (preserving leading zeros)...")
-        final_pd_df["code_secteur"] = final_pd_df["code_secteur"].apply(format_code_secteur)
+        print(f"  🔧 Normalizing code_secteur/produit (preserving leading zeros)...")
+        final_pd_df["code_secteur/produit"] = final_pd_df["code_secteur/produit"].apply(format_code_secteur)
 
         print(f"  ✅ TASK 2 complete")
 
@@ -621,14 +770,14 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
             .withColumn("Pays",   F.lit("Tunisie"))
             .withColumn("Source", F.lit("INS"))
             .withColumn("Base",   F.lit(None).cast("int"))
-            .withColumn("code_secteur", F.trim(F.col("code_secteur")))
-            .withColumn("lib_secteur",  F.trim(F.col("lib_secteur")))
+            .withColumn("code_secteur/produit", F.trim(F.col("code_secteur/produit")))
+            .withColumn("lib_secteur/produit",  F.trim(F.col("lib_secteur/produit")))
         )
 
         excel_source_cols = list(final_pd_df.columns)
         raw_schema_fields = []
         for col in excel_source_cols:
-            if col in ["code_secteur", "lib_secteur"]:
+            if col in ["code_secteur/produit", "lib_secteur/produit"]:
                 desc = "Sector identifier column — read directly from Excel row"
             elif col in ["periode", "Version"]:
                 desc = "Extracted from Excel sheet name (e.g. '2021 C' → periode=2021, Version=C)"
@@ -658,7 +807,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
                     "transformationType": "IDENTITY",
                 }
             else:
-                col_desc = "Trimmed with TRIM()" if field.name in ["code_secteur", "lib_secteur"] else "Directly mapped from Excel"
+                col_desc = "Trimmed with TRIM()" if field.name in ["code_secteur/produit", "lib_secteur/produit"] else "Directly mapped from Excel"
                 column_lineage_task3[field.name] = {
                     "inputFields": [
                         {
@@ -678,7 +827,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
                 f"Read Excel file '{file_name}' ({len(all_sheets_data)} sheets, {len(final_pd_df)} rows). "
                 f"Converted to Spark DataFrame ({len(spark_df.columns)} columns). "
                 f"Added pipeline columns: date_chargement=now(), Pays='Tunisie', Source='TRE', Base=null. "
-                f"Applied TRIM() on code_secteur and lib_secteur."
+                f"Applied TRIM() on code_secteur/produit and lib_secteur/produit."
             ),
             trans_type="EXTRACT",
             inputs=[full_s3_file_path],
@@ -693,7 +842,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
         # ══════════════════════════════════════════════════════════════════════
         print(f"\n[TASK 4] Long Format Pivot — Unpivoting wide columns to (Variable, Valeur)")
 
-        id_vars_wide = ["code_secteur", "lib_secteur", "periode", "Version",
+        id_vars_wide = ["code_secteur/produit", "lib_secteur/produit", "periode", "Version",
                         "date_chargement", "Pays", "Source", "Base"]
         value_cols_wide = [c for c in spark_df.columns if c not in id_vars_wide]
 
@@ -705,12 +854,6 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
         )
         long_df = long_df.withColumn("Variable", F.trim(F.col("Variable")))
 
-        # ── FIX 1: Force NULL Valeur → "0" to avoid false delta detection ────
-        long_df = long_df.withColumn(
-            "Valeur",
-            F.when(F.col("Valeur").isNull(), F.lit("0")).otherwise(F.col("Valeur"))
-        )
-
         print("  🔧 Converting all columns to lowercase...")
         long_df = long_df.toDF(*[c.lower() for c in long_df.columns])
 
@@ -720,7 +863,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
             .withColumn("dim_key", F.lit("None"))
         )
 
-        id_cols_lower = ["code_secteur", "lib_secteur", "periode", "version",
+        id_cols_lower = ["code_secteur/produit", "lib_secteur/produit", "periode", "version",
                          "date_chargement", "pays", "source", "base"]
 
         column_lineage_task4 = {}
@@ -841,7 +984,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
             ordered_cols = [
                 "periode", "variable", "version", "base", "valeur",
                 "date_chargement", "source", "version_active", "pays",
-                "code_secteur", "lib_secteur",
+                "code_secteur/produit", "lib_secteur/produit",
                 "dim_id", "dim_key",
             ]
             cols_to_select = [c for c in ordered_cols if c in df_new_batch.columns]
@@ -861,23 +1004,23 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
                 SELECT n.*
                 FROM v_new_data n
                 LEFT JOIN (
-                    SELECT code_secteur, lib_secteur, variable, version, valeur
+                    SELECT code_secteur/produit, lib_secteur/produit, variable, version, valeur
                     FROM (
                         SELECT *,
                             ROW_NUMBER() OVER (
-                                PARTITION BY code_secteur, lib_secteur, variable, version
+                                PARTITION BY code_secteur/produit, lib_secteur/produit, variable, version
                                 ORDER BY date_chargement DESC, version_active DESC
                             ) as rn
                         FROM v_history
                     )
                     WHERE rn = 1
                 ) h
-                ON  TRIM(n.code_secteur) = TRIM(h.code_secteur)
-                AND TRIM(n.lib_secteur)  = TRIM(h.lib_secteur)
+                ON  TRIM(n.code_secteur/produit) = TRIM(h.code_secteur/produit)
+                AND TRIM(n.lib_secteur/produit)  = TRIM(h.lib_secteur/produit)
                 AND TRIM(n.variable)     = TRIM(h.variable)
                 AND TRIM(n.version)      = TRIM(h.version)
                 WHERE
-                    h.code_secteur IS NULL
+                    h.code_secteur/produit IS NULL
                     OR CAST(COALESCE(n.valeur, '0') AS DECIMAL(38,12))
                        <> CAST(COALESCE(h.valeur, '0') AS DECIMAL(38,12))
                 """
@@ -898,7 +1041,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
                 if history_exists and change_count > 0:
                     df_history_full = spark.read.parquet(output_path)
 
-                    key_cols = ["code_secteur", "lib_secteur", "variable", "version", "periode"]
+                    key_cols = ["code_secteur/produit", "lib_secteur/produit", "variable", "version", "periode"]
                     keys_changed = df_to_write.select(key_cols).distinct()
 
                     df_history_updated = (
@@ -907,7 +1050,7 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
                         .withColumn(
                             "version_active",
                             F.when(
-                                F.col("k.code_secteur").isNotNull(),
+                                F.col("k.code_secteur/produit").isNotNull(),
                                 F.lit(0),
                             ).otherwise(F.col("h.version_active")),
                         )
@@ -919,7 +1062,6 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
                 else:
                     df_final = df_to_write
 
-                from pyspark.sql.types import LongType, DoubleType, StringType
 
                 df_final = (
                     df_final
@@ -931,8 +1073,8 @@ def process_single_file(spark, full_s3_file_path, raw_bucket_root, target_bucket
                     .withColumn("version",        F.col("version").cast(StringType()))
                     .withColumn("source",         F.col("source").cast(StringType()))
                     .withColumn("pays",           F.col("pays").cast(StringType()))
-                    .withColumn("code_secteur",   F.col("code_secteur").cast(StringType()))
-                    .withColumn("lib_secteur",    F.col("lib_secteur").cast(StringType()))
+                    .withColumn("code_secteur/produit",   F.col("code_secteur/produit").cast(StringType()))
+                    .withColumn("lib_secteur/produit",    F.col("lib_secteur/produit").cast(StringType()))
                     .withColumn("dim_id",         F.col("dim_id").cast(StringType()))
                     .withColumn("dim_key",        F.col("dim_key").cast(StringType()))
                 )

@@ -396,16 +396,16 @@ for file_path in csv_files:
         .withColumn("source",          lit("WORLD_BANK"))
         .withColumn("valeur",          spark_round(col("valeur").cast("double"), 6))
         # colonnes business communes (standard data lake)
-        .withColumn("code_secteur", lit("NA"))
-        .withColumn("lib_secteur", lit("NA"))
+        .withColumn("code_secteur/produit", lit("NA"))
+        .withColumn("lib_secteur/produit", lit("NA"))
         .withColumn("dim_id", lit("NA"))
         .withColumn("dim_key", lit("NA"))
         .withColumn("version", lit("NA"))
         .withColumn("base", lit("NA"))
 
         # NULL values on valeur are preserved intentionally (e.g. HCI 2015)
-        .select("periode", "Variable", "valeur", "pays", "date_chargement", "code_secteur",
-        "lib_secteur",
+        .select("periode", "Variable", "valeur", "pays", "date_chargement", "code_secteur/produit",
+        "lib_secteur/produit",
         "dim_id",
         "dim_key",
         "version",

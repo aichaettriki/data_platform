@@ -205,8 +205,8 @@ final_df = long_df.select(
     # col("value").cast(DecimalType(20,15)).alias("valeur"),
     lit("NA").cast(StringType()).alias("base"),
     lit("NA").cast(StringType()).alias("version"),
-    lit("NA").cast(StringType()).alias("code_secteur"),
-    lit("NA").cast(StringType()).alias("lib_secteur"),
+    lit("NA").cast(StringType()).alias("code_secteur/produit"),
+    lit("NA").cast(StringType()).alias("lib_secteur/produit"),
     lit("NA").cast(StringType()).alias("dim_id"),
     lit("NA").cast(StringType()).alias("dim_key"),
 
