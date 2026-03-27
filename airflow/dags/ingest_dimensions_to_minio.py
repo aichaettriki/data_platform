@@ -64,7 +64,62 @@ def read_minio_dimension_csv(client, path):
     except Exception:
         return pd.DataFrame()
  
+def get_last_two_levels(full_path: str) -> str:
+    if not full_path:
+        return ""
+
+    parts = full_path.split("\\")
+
+    if len(parts) >= 2:
+        return "\\".join(parts[-2:])
+    else:
+        return full_path
+
+def remove_first_level(full_path: str) -> str:
+    if not full_path:
+        return ""
+
+    parts = full_path.split("\\")
+
+    if len(parts) > 1:
+        return "\\".join(parts[1:])  # 🔥 skip first level
+    else:
+        return full_path
  
+def parse_fixed_dimension(element, parent_path="", parent_key=None, level=0):
+    rows = []
+
+    name = element.attrib.get("NAME", "")
+    key = element.attrib.get("KEY", "")
+
+    if parent_path:
+        full_path = f"{parent_path}\\{name}"
+    else:
+        full_path = name
+
+    rows.append({
+        "dimension_id": "OBJ11288499",
+        "key": key,
+        "name": name,
+        "parent_key": parent_key,
+        "level": level,
+        "full_path": remove_first_level(full_path),
+        "short_fullname": get_last_two_levels(full_path),
+    })
+
+    for child in element.findall("Element"):
+        rows.extend(
+            parse_fixed_dimension(
+                child,
+                parent_path=full_path,
+                parent_key=key,
+                level=level + 1
+            )
+        )
+
+    return rows
+
+    
 def write_minio_csv(client, df, path):
     buffer = io.StringIO()
     df.to_csv(buffer, index=False, sep=",")
@@ -83,138 +138,6 @@ def write_minio_csv(client, df, path):
  
     log.info(f"💾 Written → s3://{BUCKET}/{path}")
  
-# def detect_new_dimension_rows(minio_df, api_df):
- 
-#     log.info("--------------------------------------------------")
-#     log.info("📊 DEBUG DIMENSION COMPARISON")
- 
-#     log.info(f"API rows: {len(api_df)}")
-#     log.info(f"MinIO rows: {len(minio_df)}")
- 
-#     if minio_df.empty:
-#         log.info("🆕 MinIO vide → insertion complète")
-#         return api_df.copy()
- 
-#     # On utilise uniquement la clé métier
-#     if "KEY" not in api_df.columns or "KEY" not in minio_df.columns:
-#         log.warning("⚠️ Pas de colonne KEY → insertion complète")
-#         return api_df.copy()
- 
-#     engine = create_engine("sqlite:///:memory:")
- 
-#     minio_df.to_sql("minio_table", engine, index=False, if_exists="replace")
-#     api_df.to_sql("api_table", engine, index=False, if_exists="replace")
- 
-#     sql_query = """
-#     SELECT a.*
-#     FROM api_table a
-#     LEFT JOIN minio_table m
-#         ON a.dimension_id = m.dimension_id
-#        AND a.KEY = m.KEY
-#     WHERE m.KEY IS NULL
-#     """
- 
-#     new_rows_df = pd.read_sql(sql_query, engine)
- 
-#     log.info(f"🆕 Nouvelles lignes détectées: {len(new_rows_df)}")
-#     log.info("--------------------------------------------------")
- 
-#     return new_rows_df
- 
- 
-# =====================================================
-# MAIN TASK - with Detection of new rows 
-# =====================================================
- 
-# def ingest_all_dimensions():
- 
-#     client = get_minio_client()
- 
-#     if not client.bucket_exists(BUCKET):
-#         client.make_bucket(BUCKET)
- 
-#     # -------------------------------------------------
-#     # 1. GET STRUCTURE
-#     # -------------------------------------------------
-#     log.info("📡 Calling GetStructure")
-#     structure_root = post_xml("GetStructure", "<QueryMessage></QueryMessage>")
- 
-#     dimensions = {}
- 
-#     for src in structure_root.findall(".//Source"):
-#         for dim in src.findall("./Dimensions/Dimension"):
-#             dim_id = dim.attrib.get("Id")
-#             dim_name = dim.attrib.get("Name")
-#             dimensions[dim_id] = dim_name
- 
-#     log.info(f"✅ Total unique dimensions detected = {len(dimensions)}")
- 
-#     # -------------------------------------------------
-#     # 2. LOOP ON DIMENSIONS
-#     # -------------------------------------------------
-#     for idx, (dim_id, dim_name) in enumerate(dimensions.items(), start=1):
- 
-#         log.info("=" * 80)
-#         log.info(f"🔎 [{idx}] Processing dimension {dim_id} | {dim_name}")
- 
-#         body = f"""
-#         <QueryMessage>
-#             <DataWhere>
-#                 <DimensionId WithData='true'>{dim_id}</DimensionId>
-#             </DataWhere>
-#         </QueryMessage>
-#         """
- 
-#         dim_root = post_xml("GetDimensionElements", body)
- 
-#         # ATTRIBUTES dynamiques
-#         attributes = [
-#             attr.attrib["Id"]
-#             for attr in dim_root.findall("./Attributes/Attribute")
-#         ]
- 
-#         rows = []
- 
-#         for el in dim_root.findall(".//Element"):
-#             row = {
-#                 "dimension_id": dim_id,
-#                 "dimension_name": dim_name,
-#             }
-#             for attr in attributes:
-#                 row[attr] = el.attrib.get(attr, "")
-#             rows.append(row)
- 
-#         if not rows:
-#             log.warning(f"⚠️ No elements found for {dim_id}")
-#             continue
- 
-#         headers = ["dimension_id", "dimension_name"] + attributes
-#         api_df = pd.DataFrame(rows, columns=headers)
- 
-#         object_path = (
-#             f"2026/02/INS/Api-Dimensions/"
-#             # f"{dim_id}-{sanitize(dim_name)}/"
-#             f"{dim_id}-{sanitize(dim_name)}.csv"
-#         )
- 
-#         # -------------------------------------------------
-#         # INCREMENTAL CHECK
-#         # -------------------------------------------------
-#         minio_df = read_minio_dimension_csv(client, object_path)
- 
-#         new_rows_df = detect_new_dimension_rows(minio_df, api_df)
- 
-#         if new_rows_df.empty:
-#             log.info(f"🟢 No new elements for {dim_id}")
-#             continue
- 
-#         log.info(f"🆕 {len(new_rows_df)} nouvelles lignes détectées")
- 
-#         final_df = pd.concat([minio_df, new_rows_df], ignore_index=True)
- 
-#         write_minio_csv(client, final_df, object_path)
- 
-#     log.info("🎉 INS Dimension ingestion completed successfully")
  
 # =====================================================
 # MAIN TASK - SNAPSHOT ONLY
@@ -266,24 +189,49 @@ def ingest_all_dimensions():
             attr.attrib["Id"]
             for attr in dim_root.findall("./Attributes/Attribute")
         ]
+        # ==================================================
+        # 🔥 CAS SPÉCIAL DIMENSION FIX
+        # ==================================================
+        if dim_id == "OBJ11288499":
 
-        rows = []
+            log.info("⚙️ Applying custom parser for OBJ11288499")
 
-        for el in dim_root.findall(".//Element"):
-            row = {
-                "dimension_id": dim_id,
-                "dimension_name": dim_name,
-            }
-            for attr in attributes:
-                row[attr] = el.attrib.get(attr, "")
-            rows.append(row)
+            rows = []
 
-        if not rows:
-            log.warning(f"⚠️ No elements found for {dim_id}")
-            continue
+            for root_el in dim_root.findall("./Elements/Element"):
+                rows.extend(parse_fixed_dimension(root_el))
 
-        headers = ["dimension_id", "dimension_name"] + attributes
-        api_df = pd.DataFrame(rows, columns=headers)
+            if not rows:
+                log.warning(f"⚠️ No elements found for {dim_id}")
+                continue
+
+            api_df = pd.DataFrame(rows)
+
+            # optionnel mais recommandé (homogénéité)
+            api_df["dimension_name"] = dim_name
+
+        else:
+            # ==================================================
+            # 🟢 CAS STANDARD
+            # ==================================================
+            rows = []
+
+            for el in dim_root.findall(".//Element"):
+                row = {
+                    "dimension_id": dim_id,
+                    "dimension_name": dim_name,
+                }
+                for attr in attributes:
+                    row[attr] = el.attrib.get(attr, "")
+                rows.append(row)
+
+            if not rows:
+                log.warning(f"⚠️ No elements found for {dim_id}")
+                continue
+
+            headers = ["dimension_id", "dimension_name"] + attributes
+            api_df = pd.DataFrame(rows, columns=headers)
+
 
         # ✅ Path dynamique basé sur date
         object_path = (

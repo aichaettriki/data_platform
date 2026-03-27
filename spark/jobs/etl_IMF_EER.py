@@ -130,6 +130,28 @@ long_df = df.select(
 # ).filter(col("value").isNotNull())
 ).filter(col("value").cast("double").isNotNull())
  
+
+long_df = long_df.withColumn(
+    "base",
+    regexp_extract(col("`variable`"), r"RY(\d{4})", 1)
+)
+
+long_df = long_df.withColumn(
+    "base",
+    when(col("base") == "", "NA").otherwise(col("base"))
+)
+log.info("🔎 Sample BASE extraction")
+
+samples = (
+    long_df
+    .select("variable", "base")
+    .distinct()
+    .limit(10)
+    .collect()
+)
+
+for r in samples:
+    log.info(f"   {r['variable']}  →  base={r['base']}")
  
  
 variable_mapping = {
@@ -146,7 +168,7 @@ long_df = long_df.withColumn(
         mapping_expr[col("variable")]
     ).otherwise(col("variable"))
 )
- 
+
 # =====================================================
 # PERIOD EXTRACTION
 # =====================================================
@@ -203,7 +225,8 @@ final_df = long_df.select(
     "pays","variable","periode",
     col("value").cast("double").alias("valeur"),
     # col("value").cast(DecimalType(20,15)).alias("valeur"),
-    lit("NA").cast(StringType()).alias("base"),
+    # lit("NA").cast(StringType()).alias("base"),
+    "base",
     lit("NA").cast(StringType()).alias("version"),
     lit("NA").cast(StringType()).alias("code_secteur"),
     lit("NA").cast(StringType()).alias("lib_secteur"),

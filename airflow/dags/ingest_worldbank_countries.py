@@ -7,7 +7,7 @@ import io
 import logging
 from minio import Minio
 from minio.error import S3Error
- 
+
 # =====================================================
 # CONFIG
 # =====================================================
@@ -16,22 +16,22 @@ MINIO_ENDPOINT   = "minio:9000"
 MINIO_ACCESS_KEY = "minio"
 MINIO_SECRET_KEY = "minio123"
 BUCKET           = "01-raw"
- 
+
 today     = datetime.today()
 YEAR      = today.strftime("%Y")
 MONTH     = today.strftime("%m")
 DATE_PATH = f"{YEAR}/{MONTH}"
- 
-# Chemin de sortie dans MinIO
-# → 2025/01/WORLD_BANK/Countries/worldbank_countries.csv
-OBJECT_PATH = f"{DATE_PATH}/WORLD_BANK/Countries/worldbank_countries.csv"
- 
+
+# Chemins de sortie dans MinIO
+OBJECT_PATH_RAW   = f"{DATE_PATH}/WORLD_BANK/Countries/worldbank_countries_raw.csv"
+OBJECT_PATH_CLEAN = f"{DATE_PATH}/WORLD_BANK/Countries/worldbank_countries_clean.csv"
+
 # =====================================================
 # LOGGING
 # =====================================================
 log = logging.getLogger("WORLD_BANK_COUNTRIES_INGEST")
 log.setLevel(logging.INFO)
- 
+
 # =====================================================
 # MINIO CLIENT
 # =====================================================
@@ -42,7 +42,7 @@ def get_minio_client():
         secret_key=MINIO_SECRET_KEY,
         secure=False,
     )
- 
+
 # =====================================================
 # WRITE CSV TO MINIO
 # =====================================================
@@ -59,7 +59,7 @@ def write_minio_csv(client, df, path):
         content_type="text/csv",
     )
     log.info(f"💾 Fichier écrit → s3://{BUCKET}/{path}  ({len(df)} lignes)")
- 
+
 # =====================================================
 # FETCH ALL COUNTRIES (toutes les pages)
 # =====================================================
@@ -69,8 +69,7 @@ def fetch_all_countries():
         "per_page": 300,
         "page":     1,
     }
- 
-    # Page 1 pour récupérer le nombre total de pages
+
     log.info("📡 Récupération page 1 pour détecter le nombre de pages...")
     resp = requests.get(WORLD_BANK_COUNTRIES_URL, params=params, timeout=60)
     resp.raise_for_status()
@@ -79,9 +78,9 @@ def fetch_all_countries():
     total_pages = metadata["pages"]
     total       = metadata["total"]
     log.info(f"📄 Total entrées : {total} | Nombre de pages : {total_pages}")
- 
+
     all_rows = []
- 
+
     for page in range(1, total_pages + 1):
         log.info(f"   ↳ Fetching page {page}/{total_pages}")
         params["page"] = page
@@ -89,11 +88,11 @@ def fetch_all_countries():
         resp.raise_for_status()
         json_data = resp.json()
         countries = json_data[1]
- 
+
         if countries is None:
             log.warning(f"   ⚠️  Page {page} vide, ignorée.")
             continue
- 
+
         for c in countries:
             all_rows.append({
                 "id":                c.get("id", ""),
@@ -102,56 +101,58 @@ def fetch_all_countries():
                 "region_id":         c.get("region", {}).get("id", ""),
                 "region_iso2":       c.get("region", {}).get("iso2code", ""),
                 "region_name":       c.get("region", {}).get("value", ""),
-                "admin_region_id":   c.get("adminregion", {}).get("id", ""),
-                "admin_region_name": c.get("adminregion", {}).get("value", ""),
-                "income_level_id":   c.get("incomeLevel", {}).get("id", ""),
-                "income_level_name": c.get("incomeLevel", {}).get("value", ""),
-                "lending_type_id":   c.get("lendingType", {}).get("id", ""),
-                "lending_type_name": c.get("lendingType", {}).get("value", ""),
-                "capital_city":      c.get("capitalCity", ""),
-                "longitude":         c.get("longitude", ""),
-                "latitude":          c.get("latitude", ""),
+                # "admin_region_id":   c.get("adminregion", {}).get("id", ""),
+                # "admin_region_name": c.get("adminregion", {}).get("value", ""),
+                # "income_level_id":   c.get("incomeLevel", {}).get("id", ""),
+                # "income_level_name": c.get("incomeLevel", {}).get("value", ""),
+                # "lending_type_id":   c.get("lendingType", {}).get("id", ""),
+                # "lending_type_name": c.get("lendingType", {}).get("value", ""),
+                # "capital_city":      c.get("capitalCity", ""),
+                # "longitude":         c.get("longitude", ""),
+                # "latitude":          c.get("latitude", ""),
             })
- 
+
     df = pd.DataFrame(all_rows)
     log.info(f"✅ Total lignes récupérées : {len(df)}")
     return df
- 
+
 # =====================================================
 # MAIN INGEST FUNCTION
 # =====================================================
 def ingest_worldbank_countries():
- 
-    log.info("")
-    log.info("=" * 60)
+
+    log.info("\n" + "="*60)
     log.info("🚀 DÉMARRAGE INGESTION : World Bank Countries")
-    log.info("=" * 60)
- 
+    log.info("="*60)
+
     client = get_minio_client()
- 
+
     if not client.bucket_exists(BUCKET):
         client.make_bucket(BUCKET)
         log.info(f"🪣 Bucket '{BUCKET}' créé")
- 
-    # ── ÉTAPE 1 : Fetch toutes les pages ──────────────────
+
+    # ── Étape 1 : Fetch toutes les pages ───────────────
     df = fetch_all_countries()
- 
-    # ── ÉTAPE 2 : Stats avant écriture ────────────────────
+
+    # ── Étape 2 : Stats avant écriture ────────────────
     total         = len(df)
     vrais_pays    = df[df["region_name"] != "Aggregates"]
     agregats      = df[df["region_name"] == "Aggregates"]
- 
+
     log.info(f"📊 Total entrées      : {total}")
     log.info(f"🌍 Vrais pays         : {len(vrais_pays)}")
     log.info(f"🗂️  Agrégats/Régions  : {len(agregats)}")
- 
-    # ── ÉTAPE 3 : Écriture brute complète dans MinIO ──────
-    # On garde TOUT (pays + agrégats) dans le raw → le nettoyage se fait en aval
-    write_minio_csv(client, df, OBJECT_PATH)
- 
-    log.info(f"🏁 INGESTION TERMINÉE → s3://{BUCKET}/{OBJECT_PATH}")
-    log.info("=" * 60)
- 
+
+    # ── Étape 3 : Écriture brute complète dans MinIO ──
+    write_minio_csv(client, df, OBJECT_PATH_RAW)
+
+    # ── Étape 4 : Écriture CSV filtré (vrais pays) ─────
+    df_clean = vrais_pays[["id", "iso2_code", "name", "region_id", "region_iso2", "region_name"]]    
+    write_minio_csv(client, df_clean, OBJECT_PATH_CLEAN)
+
+    log.info(f"🏁 INGESTION TERMINÉE → CSV brut et CSV pays filtrés écrits")
+    log.info("="*60)
+
 # =====================================================
 # DAG
 # =====================================================
@@ -162,9 +163,8 @@ with DAG(
     catchup=False,
     tags=["API", "WORLD_BANK", "RAW", "COUNTRIES"],
 ) as dag:
- 
+
     PythonOperator(
         task_id="ingest_worldbank_countries",
         python_callable=ingest_worldbank_countries,
     )
- 

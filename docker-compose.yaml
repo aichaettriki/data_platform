@@ -641,19 +641,15 @@ services:
       - "9404:9404"
     restart: always
  
-  sql-exporter:
-    image: burningalchemist/sql_exporter:0.17.1
-    container_name: sql-exporter
-    command: ["-config.file=/config/sql_exporter.yml"]
-    volumes:
-      - ./sql_exporter.yml:/config/sql_exporter.yml
-    networks:
-      - traefik-public
-    ports:
-      - "9399:9399"
+  marquez-exporter:
+    build: ./marquez
+    container_name: marquez-exporter
+    networks: [traefik-public]
     depends_on:
-      marquez-postgres:
-        condition: service_healthy   # Also wait properly for postgres
+      marquez:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
     restart: always
  
   marquez-web:

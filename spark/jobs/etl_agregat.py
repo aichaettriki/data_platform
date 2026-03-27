@@ -321,7 +321,7 @@ dim_lookup = (
     .select(
         col("dimension_id"),
         col("KEY").alias("dim_indicator_key"),
-        col("FULLNAME").alias("indicator_name"),
+        col("full_path").alias("indicator_name"),
     )
     .dropDuplicates()
 )
@@ -354,8 +354,8 @@ dim_column_lineage = {
         "transformationType": "DIRECT",
     },
     "indicator_name": {
-        "inputFields": [{"namespace": resolve_namespace(DIM_FILE), "name": DIM_FILE, "field": "FULLNAME"}],
-        "transformationDescription": "Renamed from 'FULLNAME' in dimension CSV",
+        "inputFields": [{"namespace": resolve_namespace(DIM_FILE), "name": DIM_FILE, "field": "full_path"}],
+        "transformationDescription": "Renamed from 'full_path' in dimension CSV",
         "transformationType": "DIRECT",
     },
 }
@@ -366,7 +366,7 @@ emit_marquez_step(
     step_name="01_Dimension_Ingestion",
     description=(
         f"Read dimension CSV '{DIM_FILE.split('/')[-1]}' ({dim_count} rows). "
-        f"Selected: dimension_id, KEY→dim_indicator_key, FULLNAME→indicator_name. "
+        f"Selected: dimension_id, KEY→dim_indicator_key, full_path→indicator_name. "
         f"Applied dropDuplicates()."
     ),
     trans_type="EXTRACT",
@@ -494,7 +494,7 @@ for fact_file in fact_files:
         "transformationDescription": (
             f"Brought in via LEFT JOIN on "
             f"(f.{fact_dim_id_col}=d.dimension_id AND f.{fact_dim_key_col}=d.dim_indicator_key). "
-            f"Originates from FULLNAME column of dimension CSV."
+            f"Originates from full_path column of dimension CSV."
         ),
         "transformationType": "DIRECT",
     }
@@ -582,7 +582,7 @@ for fact_file in fact_files:
         "dim_key":  (fact_dim_key_col, f"Renamed from '{fact_dim_key_col}', cast to StringType()"),
         "periode":    ("year",           "Renamed from 'year' in fact CSV"),
         "valeur":   ("value",          "Renamed from 'value' in fact CSV"),
-        "Variable": ("indicator_name", "Renamed from 'indicator_name' (dimension FULLNAME) brought in by JOIN"),
+        "Variable": ("indicator_name", "Renamed from 'indicator_name' (dimension full_path) brought in by JOIN"),
     }
 
     column_lineage_t4 = {}
